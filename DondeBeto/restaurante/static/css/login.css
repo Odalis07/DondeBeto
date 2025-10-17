@@ -1,0 +1,162 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #f0f0f0;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.login-container {
+  width: 1474px;
+  height: 846px;
+  border-radius: 15px;
+  background: #FFF;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+  display: flex;
+  padding: 40px;
+  box-sizing: border-box;
+}
+
+.login-left {
+  width: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.logo-wrapper {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.login-right {
+  width: 50%;
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.23), 0 16px 48px rgba(0,0,0,0.35);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+/* caja interna */
+.login-box {
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 0 20px 20px;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+/* área de bienvenida */
+.welcome-text {
+  margin-bottom: 20px;
+  width: 100%;
+  text-align: center;
+}
+
+/* formulario */
+.login-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+/* inputs */
+.input-email,
+.input-password {
+  width: 100%;
+  height: 40px;
+  padding: 0 15px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.23);
+  font-size: 14px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+/* contenedor para links dentro del form */
+.form-links {
+  width: 100%;
+  display: flex;
+  justify-content: flex-start;
+}
+
+/* enlace olvidar contraseña */
+.f {
+  font-weight: 600;
+  font-size: 14px;
+  color: #000B3F;
+  letter-spacing: 0.7px;
+  cursor: pointer;
+  text-decoration: underline;
+  margin: 0;
+}
+
+/* botón iniciar sesión */
+.btn-login {
+  width: 100%;
+  max-width: 365px;
+  height: 46px;
+  border-radius: 10px;
+  background-color: #000B3F;
+  color: white;
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: 0.75px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.23);
+}
+
+.btn-login:hover {
+  background-color: #00125e;
+}
+
+/* enlace registrarse centrado */
+.register-link {
+  font-weight: 600;
+  font-size: 14px;
+  color: #000B3F;
+  text-decoration: none;
+  cursor: pointer;
+  margin-top: 15px;
+  text-align: center;
+  width: auto;
+  display: inline-block;
+  transition: color 0.3s ease;
+}
+
+.register-link:hover {
+  color: #00125e;
+}
+
+/* responsive: en pantallas pequeñas ocupa todo el ancho */
+@media (max-width: 768px) {
+  .login-right {
+    width: 100%;
+    border-radius: 12px;
+    padding: 16px;
+  }
+
+  .btn-login {
+    max-width: 100%;
+  }
+}
