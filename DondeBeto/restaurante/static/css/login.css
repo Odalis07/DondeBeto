@@ -4,6 +4,11 @@
   box-sizing: border-box;
 }
 
+.logo-mobile{
+  display: none;
+
+}
+
 body {
   font-family: 'Inter', sans-serif;
   background-color: #f0f0f0;
@@ -48,7 +53,11 @@ body {
   box-sizing: border-box;
 }
 
-/* caja interna */
+.container {
+  display: flex;
+   width: 100%;
+}
+
 .login-box {
   width: 100%;
   max-width: 400px;
@@ -61,14 +70,14 @@ body {
   text-align: center;
 }
 
-/* área de bienvenida */
+
 .welcome-text {
   margin-bottom: 20px;
   width: 100%;
   text-align: center;
 }
 
-/* formulario */
+
 .login-form {
   width: 100%;
   display: flex;
@@ -78,7 +87,7 @@ body {
   box-sizing: border-box;
 }
 
-/* inputs */
+
 .input-email,
 .input-password {
   width: 100%;
@@ -91,14 +100,28 @@ body {
   box-sizing: border-box;
 }
 
-/* contenedor para links dentro del form */
+.input-email:focus,
+.input-password:focus {
+  background-color: white;
+  color: black;
+  outline: none;
+  box-shadow: none;
+  border-color: rgba(0, 0, 0, 0.23);
+}
+input:-webkit-autofill {
+  background-color: white !important;
+  color: black !important;
+  box-shadow: 0 0 0 1000px white inset !important;
+  -webkit-text-fill-color: black !important;
+}
+
 .form-links {
   width: 100%;
   display: flex;
   justify-content: flex-start;
 }
 
-/* enlace olvidar contraseña */
+
 .f {
   font-weight: 600;
   font-size: 14px;
@@ -109,7 +132,7 @@ body {
   margin: 0;
 }
 
-/* botón iniciar sesión */
+
 .btn-login {
   width: 100%;
   max-width: 365px;
@@ -130,7 +153,7 @@ body {
   background-color: #00125e;
 }
 
-/* enlace registrarse centrado */
+
 .register-link {
   font-weight: 600;
   font-size: 14px;
@@ -147,16 +170,150 @@ body {
 .register-link:hover {
   color: #00125e;
 }
+/* Tablets y pantallas medianas */
+@media (max-width: 1024px) {
+  .login-container {
+    width: 100vw;
+    height: auto;
+    flex-direction: column;
+    padding: 30px 20px;
+  }
 
-/* responsive: en pantallas pequeñas ocupa todo el ancho */
-@media (max-width: 768px) {
+  .login-left,
   .login-right {
     width: 100%;
-    border-radius: 12px;
-    padding: 16px;
+    margin-bottom: 30px;
+  }
+
+  .login-left {
+    justify-content: center;
+  }
+
+  .login-right {
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    padding: 30px 20px;
+  }
+
+  .login-box {
+    max-width: 100%;
+    padding: 0;
+  }
+}
+
+@media (max-width: 767px) {
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    font-family: 'Inter', sans-serif;
+    background-color: #f0f0f0;
+  }
+
+  .login-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+    width: 100%;
+    height: 100vh;
+    background: #fff;
+    box-shadow: none;
+    border-radius: 0;
+  }
+
+  .login-left {
+    display: none;
+  }
+
+  .login-right {
+    width: 100%;
+    padding: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .login-box {
+    width: 100%;
+    max-width: 100%;
+    text-align: center;
+    padding: 0;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .logo-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .logo-wrapper img {
+    max-width: 120px;
+    height: auto;
+  }
+
+  .welcome-text {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #000B3F;
+  }
+
+  .login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+  }
+
+  .input-email,
+  .input-password {
+    width: 100%;
+    height: 44px;
+    font-size: 15px;
+    padding: 0 14px;
+    border: 1px solid rgba(0,0,0,0.2);
+    border-radius: 8px;
+    background-color: white;
+    color: black;
   }
 
   .btn-login {
-    max-width: 100%;
+    width: 100%;
+    height: 46px;
+    background-color: #000B3F;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .form-links {
+    justify-content: center;
+    font-size: 14px;
+    margin-top: 8px;
+  }
+
+  .register-link {
+    margin-top: 16px;
+    font-size: 14px;
+    text-align: center;
+    display: block;
+  }
+
+   .logo-mobile{
+    display: block;
+    justify-content: center;
+    margin-bottom: 16px;
   }
 }
