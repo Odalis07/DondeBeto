@@ -1,6 +1,8 @@
 # Donde Beto Resto Bar - Sistema de Gestión de Pedidos
 
-![Donde Beto Logo](DondeBeto/restaurante/static/img/logo.svg)
+<p align="center">
+  <img src="DondeBeto/restaurante/static/img/logo.svg" alt="Donde Beto Logo" width="150"/>
+</p>
 
 
 ## Descripción
