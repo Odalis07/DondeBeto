@@ -38,10 +38,10 @@
             <img src="{% static 'img/titleBienvenida.svg' %}" alt="Beto Bienvenida" class="login-welcome-image" />
           </div>
 
-         <form method="post" class="login-form">
+         <form  class="login-form" method="POST">
               {% csrf_token %}
           <input type="email" name="email" placeholder="Correo electrónico" class="input-email" required />
-          <input type="password" name="password" placeholder="Contraseña" class="input-password" required />
+          <input type="password" name="contraseña" placeholder="Contraseña" class="input-password" required />
 
           <div class="form-links">
             <a class="f" href="{% url 'Clave_Olvidada' %}">¿Olvidaste tu contraseña?</a>

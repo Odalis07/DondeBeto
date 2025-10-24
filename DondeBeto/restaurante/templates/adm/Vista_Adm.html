@@ -37,8 +37,11 @@
                 <a href="#" class="menu-item">
                     <img src="{% static 'img/icon-archivo.svg' %}" alt=""> Archivo
                 </a>
+                    <a href="#" class="menu-item">
+                    <img src="{% static 'img/icon-clientes.svg' %}" alt=""> Usuarios
+                </a>
 
-                <a href="#" class="menu-item logout">
+                <a href="{% url 'login' %}" class="menu-item logout">
                     <img src="{% static 'img/icon-cerrar.svg' %}" alt=""> Cerrar
                 </a>
             </nav>

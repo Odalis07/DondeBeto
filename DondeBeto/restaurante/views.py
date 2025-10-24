@@ -7,23 +7,26 @@ from .models import Usuario
 
 
 def login_view(request):
-    if request.method == 'POST':
-        email = request.POST.get('email')
-        password = request.POST.get('password')
+    if request.method == "POST":
+        # Recibimos los datos del formulario
+        email = request.POST.get("email")
+        contraseña = request.POST.get("contraseña")
 
-        # Intentar autenticar al usuario con email y contraseña
-        user = authenticate(request, username=email, password=password)
+        # Intentamos obtener al usuario con el email proporcionado
+        try:
+            usuario = Usuario.objects.get(email=email)
 
-        if user is not None:
-            login(request, user)  # Autenticamos y guardamos la sesión
-            return redirect('adm/Vista_Adm.html')  # Redirigir a la página Vista_Adm.html
+            # Verificamos si la contraseña es correcta
+            if usuario.checkpassword(contraseña):  # Usamos checkpassword de tu modelo personalizado
+                # Si la contraseña es correcta, establecemos manualmente la sesión
+                request.session['usuario_id'] = usuario.id  # Guardamos el id de usuario en la sesión
+                return redirect('vista_adm')  # Redirigir a la vista de administración
+            else:
+                messages.error(request, "Contraseña incorrecta.")
+        except Usuario.DoesNotExist:
+            messages.error(request, "El correo no está registrado.")
 
-        else:
-            messages.error(request, 'Correo electrónico o contraseña incorrectos.')
-
-    # Si el método no es POST, mostramos el formulario de login
-    return render(request, 'usuario/login.html')  # Ruta completa a la plantilla
-
+    return render(request, 'usuario/login.html')
 
 # Vista para manejar el registro de usuario
 def registro_view(request):
@@ -90,4 +93,10 @@ def clave_olvidada(request):
 def clave_cambiada(request):
     return render(request, 'usuario/clave_cambiada.html')
 def vista_adm(request):
+    # Verificamos si el usuario está logueado
+    if 'usuario_id' not in request.session:
+        return redirect('login')  # Si no está logueado, redirigir al login
+
+    # Si está logueado, continuar con la vista
+
     return render(request, 'adm/Vista_Adm.html')
