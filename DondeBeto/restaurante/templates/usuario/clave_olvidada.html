@@ -33,8 +33,12 @@
   <form class="login-form" action="#" method="POST">
     {% csrf_token %}
 
+    <!-- Campo para ingresar el correo -->
+    <label for="email">Tu correo electrónico:</label>
+    <input type="email" id="email" name="email" required placeholder="correo@ejemplo.com" />
+
     <!-- Suponemos que la pregunta viene "desde el sistema" -->
-    <label >Tu pregunta de seguridad:</label>
+    <label>Tu pregunta de seguridad:</label>
     <p class="pregunta-texto">¿Cuál es el nombre de tu primera mascota?</p>
 
     <!-- Campo oculto para enviar el identificador de la pregunta -->
@@ -43,9 +47,11 @@
     <!-- Campo visible solo para la respuesta -->
     <input type="text" id="respuesta" name="respuesta" required placeholder="Escribe tu respuesta" />
 
-     <a href="{% url 'login' %}" class="btn-continue">Continuar</a>
+    <!-- Mantengo el botón de continuar -->
+    <a href="{% url 'clave_cambiada' %}" class="btn-continue">Continuar</a>
   </form>
 </div>
+
 
 
 

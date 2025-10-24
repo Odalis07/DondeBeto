@@ -7,4 +7,7 @@ urlpatterns = [
     path('registro/', views.registro_view, name='registro'),
     path('registro_2/', views.registro_2_view, name='registro_2'),
     path('clave_olvidada/', views.claveOlvidada_view, name='Clave_Olvidada'),
+    path('clave_cambiada/', views.clave_cambiada, name='clave_cambiada'),
+
+
 ]

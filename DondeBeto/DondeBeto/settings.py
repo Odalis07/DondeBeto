@@ -77,7 +77,7 @@ WSGI_APPLICATION = 'DondeBeto.wsgi.application'
 
 DATABASES = {
     'default': dj_database_url.config(
-        default='postgresql://neondb_owner:npg_DPi51ewjhQYa@ep-patient-truth-afde8c1p-pooler.c-2.us-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require',
+        default='postgresql://neondb_owner:npg_DPi51ewjhQYa@ep-patient-truth-afde8c1p-pooler.c-2.us-west-2.aws.neon.tech/DonBeto?sslmode=require&channel_binding=require',
         conn_max_age=600,
         ssl_require=True
     )
