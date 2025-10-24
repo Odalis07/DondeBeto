@@ -16,13 +16,13 @@ def login_view(request):
 
         if user is not None:
             login(request, user)  # Autenticamos y guardamos la sesión
-            return redirect('vista_adm')  # Redirigir a la página Vista_Adm.html
+            return redirect('adm/Vista_Adm.html')  # Redirigir a la página Vista_Adm.html
 
         else:
             messages.error(request, 'Correo electrónico o contraseña incorrectos.')
 
     # Si el método no es POST, mostramos el formulario de login
-    return render(request, 'adm/Vista_Adm.html')  # Ruta completa a la plantilla
+    return render(request, 'usuario/login.html')  # Ruta completa a la plantilla
 
 
 # Vista para manejar el registro de usuario
