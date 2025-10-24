@@ -1,23 +1,7 @@
 from django.db import models
-from datetime import date
 from django.contrib.auth.hashers import make_password, check_password
 
-
-# Modelo de PreguntaClave
-class PreguntaClave(models.Model):
-    pregunta = models.CharField(max_length=255, unique=True, null=False, blank=False)
-    respuesta = models.CharField(max_length=255, null=False, blank=False)
-
-    class Meta:
-        db_table = "pregunta_clave"
-        verbose_name = "Pregunta Clave"
-        verbose_name_plural = "Preguntas Clave"
-
-    def __str__(self):
-        return self.pregunta
-
-
-# Modelo de Usuario con relación a PreguntaClave
+# Modelo de Usuario con pregunta y respuesta clave directamente en la misma tabla
 class Usuario(models.Model):
     cedula = models.CharField(max_length=10, unique=True, null=False, blank=False)
     nombre = models.CharField(max_length=100, null=False, blank=False)
@@ -26,8 +10,9 @@ class Usuario(models.Model):
     contraseña = models.CharField(max_length=128, null=False, blank=False)
     rol = models.CharField(default='usuario', max_length=20)
 
-    # Relación con PreguntaClave
-    pregunta_clave = models.ForeignKey(PreguntaClave, on_delete=models.SET_NULL, null=True, blank=True)
+    # Campos para la pregunta y respuesta de seguridad
+    pregunta_clave = models.CharField(max_length=255, null=True, blank=True)  # Pregunta de seguridad
+    respuesta_clave = models.CharField(max_length=255, null=True, blank=True)  # Respuesta de seguridad
 
     class Meta:
         db_table = "usuario"

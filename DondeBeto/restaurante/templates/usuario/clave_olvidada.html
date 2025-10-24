@@ -27,34 +27,26 @@
         </div>
       </div>
 
-<div class="login-right">
-  <h1>Recuperación de clave</h1>
+      <div class="login-right">
+        <h1>Recuperación de clave</h1>
 
-  <form class="login-form" action="#" method="POST">
-    {% csrf_token %}
+        <form class="login-form" action="{% url 'Clave_Olvidada' %}" method="POST">
+          {% csrf_token %}
 
-    <!-- Campo para ingresar el correo -->
-    <label for="email">Tu correo electrónico:</label>
-    <input type="email" id="email" name="email" required placeholder="correo@ejemplo.com" />
+          <!-- Campo para ingresar el correo -->
+          <label for="email">Tu correo electrónico:</label>
+          <input type="email" id="email" name="email" value="{{ email }}" required placeholder="correo@ejemplo.com" />
 
-    <!-- Suponemos que la pregunta viene "desde el sistema" -->
-    <label>Tu pregunta de seguridad:</label>
-    <p class="pregunta-texto">¿Cuál es el nombre de tu primera mascota?</p>
+          {% if pregunta_clave %}
+            <!-- Mostrar la pregunta de seguridad solo si existe -->
+            <label>Tu pregunta de seguridad:</label>
+            <p class="pregunta-texto">{{ pregunta_clave }}</p>
+            <input type="text" id="respuesta" name="respuesta" required placeholder="Escribe tu respuesta" />
+          {% endif %}
 
-    <!-- Campo oculto para enviar el identificador de la pregunta -->
-    <input type="hidden" name="pregunta" value="mascota">
-
-    <!-- Campo visible solo para la respuesta -->
-    <input type="text" id="respuesta" name="respuesta" required placeholder="Escribe tu respuesta" />
-
-    <!-- Mantengo el botón de continuar -->
-    <a href="{% url 'clave_cambiada' %}" class="btn-continue">Continuar</a>
-  </form>
-</div>
-
-
-
-
+          <button type="submit" class="btn-continue">Verificar</button>
+        </form>
+      </div>
     </div>
   </div>
 </body>

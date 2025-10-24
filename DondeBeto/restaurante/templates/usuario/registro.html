@@ -83,6 +83,18 @@
         <option value="cliente" selected>Cliente</option>
       </select>
     </div>
+      <label for="pregunta_clave">Pregunta clave:</label>
+    <select id="pregunta_clave" name="pregunta_clave" required>
+      <option value="">Seleccione una pregunta</option>
+      <option value="mascota">¿Cuál es el nombre de tu primera mascota?</option>
+      <option value="ciudad">¿En qué ciudad naciste?</option>
+      <option value="comida">¿Cuál es tu comida favorita?</option>
+      <option value="maestro">¿Cuál es el nombre de tu maestro o maestra favorita?</option>
+      <option value="trabajo">¿Cuál fue tu primer trabajo?</option>
+    </select>
+
+    <input type="text" id="respuesta_clave" name="respuesta_clave" required placeholder="Respuesta" />
+
 
     <div class="checkbox-group">
       <label>
@@ -95,7 +107,7 @@
       </label>
     </div>
 
-    <button type="submit" class="continuar">Registrar</button>
+    <button type="submit" class="continuar" onclick="mostrarMensaje()">Registrar</button>
   </form>
 </div>
 
@@ -131,5 +143,12 @@
       });
     });
   </script>
+
+    <script>
+    function mostrarMensaje() {
+        alert("¡Registro exitoso! Ahora puedes iniciar sesión.");
+    }
+</script>
+      </div>
 </body>
 </html>

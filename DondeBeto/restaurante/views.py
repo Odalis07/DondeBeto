@@ -1,12 +1,28 @@
+from django.contrib.auth import authenticate, login
 from django.contrib.auth.hashers import make_password
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from .forms import RegistroForm, PreguntaClaveForm
-from .models import Usuario, PreguntaClave
+
+from .models import Usuario
 
 
 def login_view(request):
-    return render(request, 'usuario/login.html')
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+
+        # Intentar autenticar al usuario con email y contraseña
+        user = authenticate(request, username=email, password=password)
+
+        if user is not None:
+            login(request, user)  # Autenticamos y guardamos la sesión
+            return redirect('vista_adm')  # Redirigir a la página Vista_Adm.html
+
+        else:
+            messages.error(request, 'Correo electrónico o contraseña incorrectos.')
+
+    # Si el método no es POST, mostramos el formulario de login
+    return render(request, 'adm/Vista_Adm.html')  # Ruta completa a la plantilla
 
 
 # Vista para manejar el registro de usuario
@@ -19,6 +35,8 @@ def registro_view(request):
         email = request.POST.get('email')
         password = request.POST.get('password')
         rol = request.POST.get('rol')
+        pregunta_clave = request.POST.get('pregunta_clave')  # Obtener la pregunta de seguridad
+        respuesta_clave = request.POST.get('respuesta_clave')  # Obtener la respuesta de seguridad
 
         # Crear un nuevo usuario
         usuario = Usuario(
@@ -27,7 +45,9 @@ def registro_view(request):
             apellido=apellido,
             email=email,
             contraseña=make_password(password),  # Encriptar la contraseña
-            rol=rol
+            rol=rol,
+            pregunta_clave=pregunta_clave,  # Almacenar la pregunta clave
+            respuesta_clave=respuesta_clave  # Almacenar la respuesta clave
         )
 
         # Guardar el usuario en la base de datos
@@ -37,55 +57,37 @@ def registro_view(request):
         request.session['usuario_id'] = usuario.id
 
         # Mostrar mensaje de éxito
-        messages.success(request, '¡Registro exitoso! Ahora puedes configurar tu pregunta de seguridad.')
+        messages.success(request, '¡Registro exitoso! Ahora puedes iniciar sesión.')
 
-        # Redirigir a la página del segundo paso (registro_2)
-        return redirect('registro_2')  # Asegúrate de tener configurada la URL 'registro_2'
+        # Redirigir a la página de login
+        return redirect('login')  # Redirigir a login después del registro
 
     return render(request, 'usuario/registro.html')  # Formulario de registro básico
 
 
-def registro_2_view(request):
+def clave_olvidada(request):
     if request.method == 'POST':
-        form = PreguntaClaveForm(request.POST)
-        if form.is_valid():
-            # Recuperar el ID del usuario desde la sesión
-            usuario_id = request.session.get('usuario_id')
-            if not usuario_id:
-                return redirect('registro')  # Redirigir al primer paso si no hay ID de usuario en sesión
+        email = request.POST.get('email')
+        respuesta = request.POST.get('respuesta')
 
-            # Obtener el usuario usando el ID
-            usuario = Usuario.objects.get(id=usuario_id)
+        try:
+            # Buscar el usuario por correo electrónico
+            usuario = Usuario.objects.get(email=email)
 
-            # Obtener la pregunta de seguridad y la respuesta del formulario
-            pregunta = form.cleaned_data['pregunta_clave']
-            respuesta = form.cleaned_data['respuesta']
+            # Verificar si la respuesta a la pregunta de seguridad es correcta
+            if usuario.respuesta_clave == respuesta:
+                # La respuesta es correcta, redirigir a la página de cambio de clave
+                return redirect('clave_cambiada')  # Cambiar a la URL que maneja la vista clave_cambiada
+            else:
+                # Si la respuesta es incorrecta
+                messages.error(request, 'La respuesta a la pregunta de seguridad es incorrecta.')
+        except Usuario.DoesNotExist:
+            # Si no se encuentra el usuario por correo
+            messages.error(request, 'No se encuentra un usuario con ese correo electrónico.')
 
-            # Crear una nueva entrada en la tabla PreguntaClave con la respuesta
-            pregunta_respuesta = PreguntaClave.objects.create(
-                pregunta=pregunta.pregunta,
-                respuesta=respuesta
-            )
-
-            # Asociar la pregunta clave con el usuario
-            usuario.pregunta_clave = pregunta_respuesta  # Usamos la instancia completa, no solo el texto de la pregunta
-            usuario.save()
-
-            # Limpiar la sesión después de completar el registro
-            del request.session['usuario_id']
-
-            # Redirigir al login o a una página de éxito
-            return redirect('login')  # O redirigir a una página de éxito
-
-    else:
-        form = PreguntaClaveForm()
-
-    return render(request, 'usuario/registro_dos.html', {'form': form})
-
-
-def claveOlvidada_view(request):
-    return render(request, 'usuario/clave_olvidada.html')
-
+    return render(request, 'usuario/clave_olvidada.html')  # Aquí sería tu plantilla clave_olvidada.html
 
 def clave_cambiada(request):
     return render(request, 'usuario/clave_cambiada.html')
+def vista_adm(request):
+    return render(request, 'adm/Vista_Adm.html')

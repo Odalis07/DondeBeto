@@ -1,0 +1,92 @@
+body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    background-color: #f7f8fa;
+}
+
+.admin-container {
+    display: flex;
+    height: 100vh;
+}
+
+.sidebar {
+    width: 220px;
+    background-color: #ffffff;
+    color: #000000;
+    display: flex;
+    flex-direction: column;
+    padding: 20px 0;
+}
+
+.logo {
+    display: flex; /
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 30px;
+    gap: 10px;
+}
+
+.logo-icon {
+    width: 40px;
+    height: auto;
+}
+
+.logo-text {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #000000;
+}
+
+.menu {
+    display: flex;
+    flex-direction: column;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    text-decoration: none;
+    color: #000000;
+    font-size: 15px;
+    transition: background 0.3s;
+}
+
+.menu-item img {
+    width: 22px;
+    margin-right: 10px;
+}
+
+.menu-item:hover {
+    background-color: #0d1b64;
+}
+
+.logout {
+    margin-top: auto;
+    background-color: #ff3333;
+}
+
+.logout:hover {
+    background-color: #e62929;
+}
+
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 30px;
+    background-color: white;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    font-weight: 600;
+}
+
+.content {
+    flex: 1;
+    padding:40px;
+}

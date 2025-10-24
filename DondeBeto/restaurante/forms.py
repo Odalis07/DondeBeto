@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.hashers import make_password
 
-from .models import Usuario, PreguntaClave
+from DondeBeto.restaurante.models import Usuario
 
 
 class RegistroForm(forms.ModelForm):
@@ -14,11 +14,3 @@ class RegistroForm(forms.ModelForm):
         password = self.cleaned_data.get('contraseña')
         return make_password(password)
 
-
-class PreguntaClaveForm(forms.Form):
-    # Este campo es para seleccionar la pregunta
-    pregunta_clave = forms.ModelChoiceField(queryset=PreguntaClave.objects.all(), empty_label="Selecciona una pregunta",
-                                            required=True)
-
-    # Este campo es para que el usuario ingrese la respuesta
-    respuesta = forms.CharField(max_length=255, required=True)

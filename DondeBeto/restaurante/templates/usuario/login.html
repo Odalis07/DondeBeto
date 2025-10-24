@@ -39,6 +39,7 @@
           </div>
 
          <form method="post" class="login-form">
+              {% csrf_token %}
           <input type="email" name="email" placeholder="Correo electrónico" class="input-email" required />
           <input type="password" name="password" placeholder="Contraseña" class="input-password" required />
 
