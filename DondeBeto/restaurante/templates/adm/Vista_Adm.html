@@ -49,9 +49,22 @@
 
         <main class="main-content">
             <header class="topbar">
-                <div class="caja">CAJA 1</div>
+                <div class="caja">
+    {% if rol %}
+        Rol: {{ rol }}
+    {% else %}
+        No disponible.
+    {% endif %}
+</div>
                 <div class="titulo">DONDE BETO RESTO BAR</div>
-                <div class="usuario">USUARIO</div>
+                <div class="usuario">
+    {% if usuario %}
+        ¡Hola, {{ usuario.nombre }} {{ usuario.apellido }}!
+    {% else %}
+        No has iniciado sesión.
+    {% endif %}
+</div>
+
             </header>
 
             <section class="content">

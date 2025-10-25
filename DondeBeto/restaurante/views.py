@@ -93,10 +93,16 @@ def clave_olvidada(request):
 def clave_cambiada(request):
     return render(request, 'usuario/clave_cambiada.html')
 def vista_adm(request):
-    # Verificamos si el usuario está logueado
-    if 'usuario_id' not in request.session:
-        return redirect('login')  # Si no está logueado, redirigir al login
 
-    # Si está logueado, continuar con la vista
+    usuario_id = request.session.get('usuario_id')
 
-    return render(request, 'adm/Vista_Adm.html')
+    if usuario_id:
+        try:
+
+            usuario = Usuario.objects.get(id=usuario_id)
+        except Usuario.DoesNotExist:
+            usuario = None
+    else:
+        usuario = None
+
+    return render(request, 'adm/Vista_Adm.html',{'usuario': usuario, 'rol': usuario.rol if usuario else None})
