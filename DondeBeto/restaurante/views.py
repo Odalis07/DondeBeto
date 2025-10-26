@@ -1,4 +1,5 @@
 from django.contrib.auth import authenticate, login
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
 from django.shortcuts import render, redirect
 from django.contrib import messages
@@ -74,21 +75,34 @@ def clave_olvidada(request):
         respuesta = request.POST.get('respuesta')
 
         try:
-            # Buscar el usuario por correo electrónico
             usuario = Usuario.objects.get(email=email)
-
-            # Verificar si la respuesta a la pregunta de seguridad es correcta
-            if usuario.respuesta_clave == respuesta:
-                # La respuesta es correcta, redirigir a la página de cambio de clave
-                return redirect('clave_cambiada')  # Cambiar a la URL que maneja la vista clave_cambiada
-            else:
-                # Si la respuesta es incorrecta
-                messages.error(request, 'La respuesta a la pregunta de seguridad es incorrecta.')
         except Usuario.DoesNotExist:
-            # Si no se encuentra el usuario por correo
             messages.error(request, 'No se encuentra un usuario con ese correo electrónico.')
+            return render(request, 'usuario/clave_olvidada.html')
 
-    return render(request, 'usuario/clave_olvidada.html')  # Aquí sería tu plantilla clave_olvidada.html
+        # Si el usuario ya está respondiendo la pregunta
+        if respuesta:
+            if usuario.respuesta_clave.strip().lower() == respuesta.strip().lower():
+                # Redirigir si la respuesta es correcta
+                return redirect('clave_cambiada')
+
+            else:
+                messages.error(request, 'La respuesta a la pregunta de seguridad es incorrecta.')
+                # Volver a mostrar la pregunta
+                return render(request, 'usuario/clave_olvidada.html', {
+                    'email': email,
+                    'pregunta_clave': usuario.pregunta_clave,
+                })
+
+        # Si solo se envió el email, mostrar la pregunta
+        else:
+            return render(request, 'usuario/clave_olvidada.html', {
+                'email': email,
+                'pregunta_clave': usuario.pregunta_clave,
+            })
+
+    # Si es GET
+    return render(request, 'usuario/clave_olvidada.html')
 
 def clave_cambiada(request):
     return render(request, 'usuario/clave_cambiada.html')
@@ -106,3 +120,42 @@ def vista_adm(request):
         usuario = None
 
     return render(request, 'adm/Vista_Adm.html',{'usuario': usuario, 'rol': usuario.rol if usuario else None})
+
+
+def usuarios_view(request):
+    usuario_id = request.session.get('usuario_id')
+
+    if usuario_id:
+        try:
+
+            usuario = Usuario.objects.get(id=usuario_id)
+        except Usuario.DoesNotExist:
+            usuario = None
+    else:
+        usuario = None
+    return render(request, 'adm/Usuarios.html',{'usuario': usuario, 'rol': usuario.rol if usuario else None})
+
+def clientes_view(request):
+    usuario_id = request.session.get('usuario_id')
+
+    # Verificamos si hay un usuario en la sesión
+    if usuario_id:
+        try:
+            usuario = Usuario.objects.get(id=usuario_id)  # El usuario logueado
+        except Usuario.DoesNotExist:
+            usuario = None
+    else:
+        usuario = None
+
+    # Filtrar los usuarios con el rol 'cliente'
+    clientes = Usuario.objects.filter(rol='cliente')
+
+    # Pasar a la plantilla
+    return render(request, 'adm/clientes.html', {'usuario': usuario, 'clientes': clientes})
+
+
+
+def lista_clientes(request):
+    # Filtramos solo los usuarios con rol 'cliente'
+    clientes = Usuario.objects.filter(rol='cliente')  # Asegúrate que los clientes tienen rol 'cliente'
+    return render(request, 'Clientes.html', {'clientes': clientes})

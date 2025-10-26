@@ -8,6 +8,7 @@ urlpatterns = [
     path('clave_olvidada/', views.clave_olvidada, name='Clave_Olvidada'),
     path('clave_cambiada/', views.clave_cambiada, name='clave_cambiada'),
 path('admin/', views.vista_adm, name='vista_adm'),
-
-
+    path('usuarios/', views.usuarios_view, name='usuarios'),
+    path('clientes/', views.clientes_view, name='clientes'),
+    path('clientes/', views.lista_clientes, name='clientes'),
 ]

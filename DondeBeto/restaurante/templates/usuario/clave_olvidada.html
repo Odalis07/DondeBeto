@@ -30,7 +30,7 @@
       <div class="login-right">
         <h1>Recuperación de clave</h1>
 
-        <form class="login-form" action="{% url 'Clave_Olvidada' %}" method="POST">
+        <form class="login-form"  method="POST">
           {% csrf_token %}
 
           <!-- Campo para ingresar el correo -->
