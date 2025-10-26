@@ -66,64 +66,40 @@
           </div>
         </header>
 
+
         <section class="content">
-          <!-- TABS -->
-          <div class="tabs">
-            <button class="tab active">Todos</button>
-            <button class="tab">Cajeros</button>
-            <button class="tab">Meseros</button>
-            <button class="tab">Repartidores</button>
-            <button class="tab">Administrador</button>
-          </div>
+  <!-- TABS -->
+  <div class="tabs">
+    <a href="?rol=Todos" class="tab {% if rol_seleccionado == 'todos' %}active{% endif %}">Todos</a>
+    <a href="?rol=cajero" class="tab {% if rol_seleccionado == 'cajero' %}active{% endif %}">Cajeros</a>
+    <a href="?rol=mesero" class="tab {% if rol_seleccionado == 'mesero' %}active{% endif %}">Meseros</a>
+    <a href="?rol=repartidor" class="tab {% if rol_seleccionado == 'repartidor' %}active{% endif %}">Repartidores</a>
+    <a href="?rol=administrador" class="tab {% if rol_seleccionado == 'administrador' %}active{% endif %}">Administrador</a>
+  </div>
 
-          <!-- GRID USUARIOS -->
-          <div class="usuarios-grid">
-            <div class="card-user">
-              <img src="{% static 'img/usuario1.svg' %}" alt="Foto usuario">
-              <div class="name">TEJENA MOREIRA FRANK DAVID</div>
-              <div class="detail">
-                <strong>Cédula:</strong> 0956348127 <br>
-                <strong>Nombre:</strong> Fernanda <br>
-                <strong>Apellido:</strong> Torres <br>
-                <strong>Email:</strong> fernanda.torres@example.com <br>
-                <strong>Contraseña:</strong> ******** <br>
-                <strong>Rol:</strong> Administrador <br>
-                <strong>Pregunta de seguridad:</strong> ¿Cómo se llama tu primera mascota? <br>
-                <strong>Respuesta de seguridad:</strong> Luna <br>
+  <!-- GRID USUARIOS -->
+  <div class="usuarios-grid">
+    {% for user in usuarios %}
+    <div class="card-user">
+      <img src="{% static 'img/usuario.png' %}" alt="Foto usuario">
+      <div class="name">{{ user.nombre }} {{ user.apellido }}</div>
+      <div class="detail">
+        <strong>Cédula:</strong> {{ user.cedula }} <br>
+        <strong>Nombre:</strong> {{ user.nombre }} <br>
+        <strong>Apellido:</strong> {{ user.apellido }} <br>
+        <strong>Email:</strong> {{ user.email }} <br>
+        <strong>Contraseña:</strong> ******** <br>
+        <strong>Rol:</strong> {{ user.rol }} <br>
+        <strong>Pregunta clave:</strong> {{ user.pregunta_clave }} <br>
+        <strong>Respuesta clave:</strong> {{ user.respuesta_clave }} <br>
+      </div>
+    </div>
+    {% empty %}
+    <p>No hay usuarios registrados para este rol.</p>
+    {% endfor %}
+  </div>
+</section>
 
-              </div>
-            </div>
-
-            <div class="card-user">
-              <img src="{% static 'img/usuario2.svg' %}" alt="Foto usuario">
-              <div class="name">TEJENA MOREIRA FRANK DAVID</div>
-              <div class="detail">
-                <strong>Cédula:</strong> 0956348127 <br>
-                <strong>Nombre:</strong> Fernanda <br>
-                <strong>Apellido:</strong> Torres <br>
-                <strong>Email:</strong> fernanda.torres@example.com <br>
-                <strong>Contraseña:</strong> ******** <br>
-                <strong>Rol:</strong> Administrador <br>
-                <strong>Pregunta de seguridad:</strong> ¿Cómo se llama tu primera mascota? <br>
-                <strong>Respuesta de seguridad:</strong> Luna <br>
-              </div>
-            </div>
-
-            <div class="card-user">
-              <img src="{% static 'img/usuario3.svg' %}" alt="Foto usuario">
-              <div class="name">TEJENA MOREIRA FRANK DAVID</div>
-              <div class="detail">
-                <strong>Cédula:</strong> 0956348127 <br>
-                <strong>Nombre:</strong> Fernanda <br>
-                <strong>Apellido:</strong> Torres <br>
-                <strong>Email:</strong> fernanda.torres@example.com <br>
-                <strong>Contraseña:</strong> ******** <br>
-                <strong>Rol:</strong> Administrador <br>
-                <strong>Pregunta de seguridad:</strong> ¿Cómo se llama tu primera mascota? <br>
-                <strong>Respuesta de seguridad:</strong> Luna <br>
-              </div>
-            </div>
-          </div>
 
           <!-- BOTONES DE ACCIÓN -->
           <div class="acciones">

@@ -123,17 +123,36 @@ def vista_adm(request):
 
 
 def usuarios_view(request):
-    usuario_id = request.session.get('usuario_id')
+    # Obtener el rol seleccionado desde la URL (por ejemplo, 'Todos', 'cajero', etc.)
+    rol_seleccionado = request.GET.get('rol', 'Todos').lower()  # Convertir siempre a minúsculas
 
+    if rol_seleccionado == 'todos':
+        # Excluir el rol 'cliente' para que no aparezca en la vista "Todos"
+        usuarios = Usuario.objects.exclude(rol='cliente')  # Excluimos 'cliente' en minúsculas
+    elif rol_seleccionado in ['cajero', 'mesero', 'repartidor', 'administrador']:
+        # Filtramos según el rol seleccionado en minúsculas
+        usuarios = Usuario.objects.filter(rol=rol_seleccionado)
+    else:
+        # Si no se pasa un rol válido, mostramos todos los usuarios
+        usuarios = Usuario.objects.all()
+
+    # Obtener el usuario actual (opcional)
+    usuario_id = request.session.get('usuario_id')
     if usuario_id:
         try:
-
             usuario = Usuario.objects.get(id=usuario_id)
         except Usuario.DoesNotExist:
             usuario = None
     else:
         usuario = None
-    return render(request, 'adm/Usuarios.html',{'usuario': usuario, 'rol': usuario.rol if usuario else None})
+
+    # Pasamos los usuarios y el rol seleccionado a la plantilla
+    return render(request, 'adm/Usuarios.html', {'usuario': usuario, 'usuarios': usuarios, 'rol_seleccionado': rol_seleccionado})
+
+
+
+
+
 
 def clientes_view(request):
     usuario_id = request.session.get('usuario_id')
