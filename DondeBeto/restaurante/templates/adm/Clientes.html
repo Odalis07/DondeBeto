@@ -69,8 +69,8 @@
        <section class="content">
   <!-- TABS -->
   <div class="tabs">
-    <button class="tab active">Todos</button>
-    <button class="tab">Clientes</button>
+    <button class="tab active">Clientes</button>
+
   </div>
 
   <!-- GRID USUARIOS -->
@@ -102,90 +102,72 @@
             <button id="btn-eliminar" class="btn-eliminar">ELIMINAR</button>
           </div>
 
-          <!-- MODAL NUEVO -->
-          <dialog id="modal">
-            <div id="modal-nuevo" class="modal">
-             <div class="login-right">
-                 <span class="close">&times;</span>
-  <h2>Ingreso de un nuevo usuario</h2>
-  <p class="subtitle">Nos encanta que añadas a un integrante más a nuestra familia</p>
+        <!-- MODAL NUEVO CLIENTE -->
+<dialog id="modal">
+  <div id="modal-nuevo" class="modal">
+    <div class="login-right">
+      <span class="close">&times;</span>
+      <h2>Registrar nuevo cliente</h2>
+      <p class="subtitle">Añade un nuevo cliente al sistema</p>
 
-  <form class="login-form" action="{% url 'registro' %}" method="POST">
-    {% csrf_token %}
-    <div class="form-column">
-      <input type="text" id="cedula" name="cedula" required placeholder="Cédula" />
-      <input type="text" id="nombre" name="nombre" required placeholder="Ingresa un nombre" />
-      <input type="text" id="apellido" name="apellido" required placeholder="Ingresa un apellido" />
+      <form class="login-form" action="{% url 'registrar_cliente' %}" method="POST">
+        {% csrf_token %}
+        <div class="form-column">
+          <input type="text" id="cedula" name="cedula" required placeholder="Cédula" />
+          <input type="text" id="nombre" name="nombre" required placeholder="Nombre" />
+          <input type="text" id="apellido" name="apellido" required placeholder="Apellido" />
+        </div>
+
+        <div class="form-column">
+          <input type="email" id="email" name="email" required placeholder="correo@ejemplo.com" />
+
+          <div class="password-wrapper">
+            <input
+              type="password"
+              id="password"
+              name="password"
+              required
+              placeholder="Contraseña"
+              pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,12}$"
+              title="8-12 caracteres, mayúsculas, minúsculas y número"
+            />
+            <button type="button" class="toggle-password" aria-label="Mostrar contraseña">
+              <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" fill="none"
+                viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M2.458 12C3.732 7.943 7.523 5 12 5s8.268 2.943 9.542 7
+                  c-1.274 4.057-5.065 7-9.542 7s-8.268-2.943-9.542-7z" />
+              </svg>
+            </button>
+          </div>
+
+          <small class="password-info">
+            Debe tener entre 8 y 12 caracteres<br />
+            Incluir mayúsculas, minúsculas y al menos un número
+          </small>
+
+          <input type="password" id="password-repeat" name="password-repeat" required placeholder="Repite tu contraseña" />
+        </div>
+
+        <label for="pregunta_clave">Pregunta clave:</label>
+        <select name="pregunta_clave" required>
+          <option value="">Seleccione una pregunta</option>
+          <option value="mascota">¿Cuál es el nombre de tu primera mascota?</option>
+          <option value="ciudad">¿En qué ciudad naciste?</option>
+          <option value="comida">¿Cuál es tu comida favorita?</option>
+          <option value="maestro">¿Cuál es el nombre de tu maestro o maestra favorita?</option>
+          <option value="trabajo">¿Cuál fue tu primer trabajo?</option>
+        </select>
+
+        <input type="text" name="respuesta_clave" required placeholder="Respuesta" />
+
+        <button type="submit" class="continuar">Registrar cliente</button>
+      </form>
     </div>
-
-    <div class="form-column">
-      <input type="email" id="email" name="email" required placeholder="correo@ejemplo.com" />
-
-      <div class="password-wrapper">
-        <input
-          type="password"
-          id="password"
-          name="password"
-          required
-          placeholder="Contraseña"
-          pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,12}$"
-          title="8-12 caracteres, mayúsculas, minúsculas y número"
-        />
-        <button type="button" class="toggle-password" aria-label="Mostrar contraseña">
-          <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" fill="none"
-            viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M2.458 12C3.732 7.943 7.523 5 12 5s8.268 2.943 9.542 7
-              c-1.274 4.057-5.065 7-9.542 7s-8.268-2.943-9.542-7z" />
-          </svg>
-        </button>
-      </div>
-
-      <small class="password-info">
-        Debe tener entre 8 y 12 caracteres<br />
-        Debe incluir mayúsculas y minúsculas<br />
-        Debe incluir al menos un número
-      </small>
-
-      <input
-        type="password"
-        id="password-repeat"
-        name="password-repeat"
-        required
-        placeholder="Repite tu contraseña"
-      />
-
-      <label>Rol</label>
-        <select required>
-                    <option value="">Seleccione un rol</option>
-                    <option value="Cajero">Cajero</option>
-                    <option value="Mesero">Mesero</option>
-                    <option value="Repartidor">Repartidor</option>
-                    <option value="Administrador">Administrador</option>
-
-      </select>
-    </div>
-      <label for="pregunta_clave">Pregunta clave:</label>
-    <select name="pregunta_clave" required>
-      <option value="">Seleccione una pregunta</option>
-      <option value="mascota">¿Cuál es el nombre de tu primera mascota?</option>
-      <option value="ciudad">¿En qué ciudad naciste?</option>
-      <option value="comida">¿Cuál es tu comida favorita?</option>
-      <option value="maestro">¿Cuál es el nombre de tu maestro o maestra favorita?</option>
-      <option value="trabajo">¿Cuál fue tu primer trabajo?</option>
-    </select>
-
-    <input type="text"  name="respuesta_clave" required placeholder="Respuesta" />
-
-
-
-    <button type="submit" class="continuar" onclick="mostrarMensaje()">Registrar</button>
-  </form>
-</div>
-            </div>
-          </dialog>
+  </div>
+</dialog>
 
 
 <!-- MODAL MODIFICAR -->
@@ -329,6 +311,34 @@ document.getElementById('confirmar-eliminar').addEventListener('click', () => {
 });
 
     </script>
+    <script>
+    document.querySelectorAll('.toggle-password').forEach(button => {
+      button.addEventListener('click', () => {
+        const input = button.previousElementSibling;
+        const icon = button.querySelector('svg');
+
+        if (input.type === 'password') {
+          input.type = 'text';
+          button.setAttribute('aria-label', 'Ocultar contraseña');
+          icon.innerHTML = `
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7
+              a9.97 9.97 0 012.098-3.368M9.88 9.88a3 3 0 014.24 4.24M6.1 6.1l11.8 11.8" />
+          `;
+        } else {
+          input.type = 'password';
+          button.setAttribute('aria-label', 'Mostrar contraseña');
+          icon.innerHTML = `
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M2.458 12C3.732 7.943 7.523 5 12 5s8.268 2.943 9.542 7
+              c-1.274 4.057-5.065 7-9.542 7s-8.268-2.943-9.542-7z" />
+          `;
+        }
+      });
+    });
+  </script>
 
   </body>
 </html>

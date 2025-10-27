@@ -150,7 +150,48 @@ def usuarios_view(request):
     return render(request, 'adm/Usuarios.html', {'usuario': usuario, 'usuarios': usuarios, 'rol_seleccionado': rol_seleccionado})
 
 
+# Vista para registrar un trabajador
+def registrar_usuario_view(request):
+    if request.method == 'POST':
+        # Obtener datos del formulario
+        cedula = request.POST.get('cedula')
+        nombre = request.POST.get('nombre')
+        apellido = request.POST.get('apellido')
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        rol = request.POST.get('rol').lower()  # Convertimos a minúsculas
+        pregunta_clave = request.POST.get('pregunta_clave')
+        respuesta_clave = request.POST.get('respuesta_clave')
 
+        # Validar que el rol sea uno de los válidos para trabajadores
+        roles_validos = ['cajero', 'mesero', 'repartidor', 'administrador']
+        if rol not in roles_validos:
+            messages.error(request, 'Rol no válido para trabajadores.')
+            return redirect('usuarios')  # Redirige de nuevo a la lista de usuarios
+
+        # Validar que la cédula no exista (ya que es unique)
+        if Usuario.objects.filter(cedula=cedula).exists():
+            messages.error(request, 'Ya existe un usuario con esa cédula.')
+            return redirect('usuarios')
+
+        # Crear nuevo usuario
+        usuario = Usuario(
+            cedula=cedula,
+            nombre=nombre,
+            apellido=apellido,
+            email=email,
+            contraseña=make_password(password),  # Encriptar contraseña
+            rol=rol,
+            pregunta_clave=pregunta_clave,
+            respuesta_clave=respuesta_clave
+        )
+        usuario.save()
+
+        messages.success(request, f'Trabajador {nombre} {apellido} registrado correctamente.')
+        return redirect('usuarios')  # Redirige de nuevo a la lista de usuarios
+
+    # Si no es POST, redirigir a la lista de usuarios
+    return redirect('usuarios')
 
 
 
@@ -172,7 +213,38 @@ def clientes_view(request):
     # Pasar a la plantilla
     return render(request, 'adm/clientes.html', {'usuario': usuario, 'clientes': clientes})
 
+# Vista para registrar nuevos clientes
+def registrar_cliente_view(request):
+    if request.method == 'POST':
+        # Obtener los datos del formulario
+        cedula = request.POST.get('cedula')
+        nombre = request.POST.get('nombre')
+        apellido = request.POST.get('apellido')
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        pregunta_clave = request.POST.get('pregunta_clave')
+        respuesta_clave = request.POST.get('respuesta_clave')
 
+        # Crear un nuevo cliente (rol fijo: cliente)
+        cliente = Usuario(
+            cedula=cedula,
+            nombre=nombre,
+            apellido=apellido,
+            email=email,
+            contraseña=make_password(password),
+            rol='cliente',
+            pregunta_clave=pregunta_clave,
+            respuesta_clave=respuesta_clave
+        )
+
+        cliente.save()
+        messages.success(request, '¡Cliente registrado exitosamente!')
+
+        # Redirigir de vuelta a la lista de clientes
+        return redirect('clientes')
+
+    # Si es GET, simplemente recargar la página de clientes
+    return redirect('clientes')
 
 def lista_clientes(request):
     # Filtramos solo los usuarios con rol 'cliente'

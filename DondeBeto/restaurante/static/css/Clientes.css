@@ -660,27 +660,31 @@ input:-webkit-autofill {
   letter-spacing: 0.6px;
 }
 
-.continuar{
+.continuar {
   display: flex;
-justify-content: center;
-align-items: center;
-width: 365px;
-height: 46px;
-flex-shrink: 0;
+  cursor: pointer;
+  justify-content: center;
+  align-items: center;
+  width: 365px;
+  height: 46px;
+  flex-shrink: 0;
+  border: none;
+  outline: none;
   border-radius: 10px;
-background: #000B3F;
-box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.23);
-color: #FFF;
-font-family: Inter;
-font-size: 15px;
-font-style: normal;
-font-weight: 600;
-line-height: normal;
-letter-spacing: 0.75px;
+  background: #000B3F;
+  color: #FFF;
+  font-family: Inter, sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.75px;
   text-decoration: none;
-
 }
 
+.continuar:hover {
+  background-color: #223385;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  cursor: pointer;
+}
 .eye-icon {
   width: 24px;
   height: 24px;

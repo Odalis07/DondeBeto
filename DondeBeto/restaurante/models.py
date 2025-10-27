@@ -3,7 +3,7 @@ from django.contrib.auth.hashers import make_password, check_password
 
 # Modelo de Usuario con pregunta y respuesta clave directamente en la misma tabla
 class Usuario(models.Model):
-    cedula = models.CharField(max_length=10, unique=True, null=False, blank=False)
+    cedula = models.CharField(max_length=10, null=False, blank=False)
     nombre = models.CharField(max_length=100, null=False, blank=False)
     apellido = models.CharField(max_length=100, null=False, blank=False)
     email = models.EmailField(unique=True, null=False, blank=False)
