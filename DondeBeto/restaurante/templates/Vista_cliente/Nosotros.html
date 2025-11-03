@@ -5,7 +5,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>BETO - Sobre Nosotros</title>
-  <link rel="stylesheet" href="{% static 'css/Nosotros.css' %}">
+  <link rel="stylesheet" href="{% static 'css/Vista_cliente/Nosotros.css' %}">
+   <link rel="icon" href="{% static 'img/logoOficial.svg' %}" type="image/x-icon" />
 </head>
 <body>
 
@@ -17,9 +18,8 @@
       <p>{{ usuario.email }}</p>
     </div>
     <div class="sidebar-links">
-      <a href="{% url 'home_cliente' %}">Mi perfil</a>
+      <a href="{% url 'mi_perfil' %}">Mi perfil</a>
       <a href="{% url 'home_cliente' %}">Mis pedidos</a>
-      <a href="{% url 'home_cliente' %}">Configuración</a>
       <a href="{% url 'login' %}" class="logout">Cerrar sesión</a>
     </div>
   </aside>

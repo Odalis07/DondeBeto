@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
 
-  <link rel="stylesheet" href="{% static 'css/clave_cambiada.css' %}" />
+  <link rel="stylesheet" href="{% static 'css//Login/clave_olvidada.css' %}" />
   <link rel="icon" href="{% static 'img/logoOficial.svg' %}" type="image/x-icon" />
 </head>
 <body>
@@ -30,58 +30,24 @@
       <div class="login-right">
         <h1>Recuperación de clave</h1>
 
-        <form class="login-form" action="#" method="POST">
+        <form class="login-form"  method="POST">
           {% csrf_token %}
 
-          <!-- Nueva contraseña -->
-          <label for="new-password">Nueva contraseña:</label>
-          <input type="password" id="new-password" name="new-password" required placeholder="Introduce una nueva contraseña" />
+          <!-- Campo para ingresar el correo -->
+          <label for="email">Tu correo electrónico:</label>
+          <input type="email" id="email" name="email" value="{{ email }}" required placeholder="correo@ejemplo.com" />
 
-          <!-- Repetir contraseña -->
-          <label for="password-repeat">Repite tu contraseña:</label>
-          <input type="password" id="password-repeat" name="password-repeat" required placeholder="Repite tu contraseña" />
+          {% if pregunta_clave %}
+            <!-- Mostrar la pregunta de seguridad solo si existe -->
+            <label>Tu pregunta de seguridad:</label>
+            <p class="pregunta-texto">{{ pregunta_clave }}</p>
+            <input type="text" id="respuesta" name="respuesta" required placeholder="Escribe tu respuesta" />
+          {% endif %}
 
-          <!-- Información de la contraseña sin el carácter especial -->
-          <small class="password-info">
-            Debe tener entre 8 y 12 caracteres<br />
-            Debe incluir mayúsculas y minúsculas<br />
-            Debe incluir al menos un número
-          </small>
-
-          <a href="{% url 'login' %}" class="btn-continue">Continuar</a>
+          <button type="submit" class="btn-continue">Verificar</button>
         </form>
       </div>
-
     </div>
   </div>
-
-  <script>
-    document.querySelectorAll('.toggle-password').forEach(button => {
-      button.addEventListener('click', () => {
-        const input = button.previousElementSibling;
-        const icon = button.querySelector('svg');
-
-        if (input.type === 'password') {
-          input.type = 'text';
-          button.setAttribute('aria-label', 'Ocultar contraseña');
-          icon.innerHTML = `
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7
-              a9.97 9.97 0 012.098-3.368M9.88 9.88a3 3 0 014.24 4.24M6.1 6.1l11.8 11.8" />
-          `;
-        } else {
-          input.type = 'password';
-          button.setAttribute('aria-label', 'Mostrar contraseña');
-          icon.innerHTML = `
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M2.458 12C3.732 7.943 7.523 5 12 5s8.268 2.943 9.542 7
-              c-1.274 4.057-5.065 7-9.542 7s-8.268-2.943-9.542-7z" />
-          `;
-        }
-      });
-    });
-  </script>
 </body>
 </html>

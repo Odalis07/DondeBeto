@@ -34,7 +34,7 @@ def login_view(request):
         except Usuario.DoesNotExist:
             messages.error(request, "El correo no está registrado.")
 
-    return render(request, 'usuario/login.html')
+    return render(request, 'Login/login.html')
 
 # Vista para manejar el registro de usuario
 def registro_view(request):
@@ -73,7 +73,7 @@ def registro_view(request):
         # Redirigir a la página de login
         return redirect('login')  # Redirigir a login después del registro
 
-    return render(request, 'usuario/registro.html')  # Formulario de registro básico
+    return render(request, 'Login/registro.html')  # Formulario de registro básico
 
 
 def clave_olvidada(request):
@@ -85,7 +85,7 @@ def clave_olvidada(request):
             usuario = Usuario.objects.get(email=email)
         except Usuario.DoesNotExist:
             messages.error(request, 'No se encuentra un usuario con ese correo electrónico.')
-            return render(request, 'usuario/clave_olvidada.html')
+            return render(request, 'Login/clave_olvidada.html')
 
         # Si el usuario ya está respondiendo la pregunta
         if respuesta:
@@ -96,23 +96,23 @@ def clave_olvidada(request):
             else:
                 messages.error(request, 'La respuesta a la pregunta de seguridad es incorrecta.')
                 # Volver a mostrar la pregunta
-                return render(request, 'usuario/clave_olvidada.html', {
+                return render(request, 'Login/clave_olvidada.html', {
                     'email': email,
                     'pregunta_clave': usuario.pregunta_clave,
                 })
 
         # Si solo se envió el email, mostrar la pregunta
         else:
-            return render(request, 'usuario/clave_olvidada.html', {
+            return render(request, 'Login/clave_olvidada.html', {
                 'email': email,
                 'pregunta_clave': usuario.pregunta_clave,
             })
 
     # Si es GET
-    return render(request, 'usuario/clave_olvidada.html')
+    return render(request, 'Login/clave_olvidada.html')
 
 def clave_cambiada(request):
-    return render(request, 'usuario/clave_cambiada.html')
+    return render(request, 'Login/clave_cambiada.html')
 def vista_adm(request):
 
     usuario_id = request.session.get('usuario_id')
@@ -125,7 +125,7 @@ def vista_adm(request):
     except Usuario.DoesNotExist:
         return redirect('login')
 
-    return render(request, 'adm/Vista_Adm.html',{'usuario': usuario, 'rol': usuario.rol if usuario else None})
+    return render(request, 'Vista_Adm/Vista_Adm.html',{'usuario': usuario, 'rol': usuario.rol if usuario else None})
 
 
 def usuarios_view(request):
@@ -144,16 +144,16 @@ def usuarios_view(request):
 
     # Obtener el usuario actual (opcional)
     usuario_id = request.session.get('usuario_id')
-    if usuario_id:
-        try:
-            usuario = Usuario.objects.get(id=usuario_id)
-        except Usuario.DoesNotExist:
-            usuario = None
-    else:
-        usuario = None
 
+    if not usuario_id:
+        return redirect('login')
+
+    try:
+        usuario = Usuario.objects.get(id=usuario_id)
+    except Usuario.DoesNotExist:
+        return redirect('login')
     # Pasamos los usuarios y el rol seleccionado a la plantilla
-    return render(request, 'adm/Usuarios.html', {'usuario': usuario, 'usuarios': usuarios, 'rol_seleccionado': rol_seleccionado})
+    return render(request, 'Vista_Adm/Usuarios.html', {'usuario': usuario, 'usuarios': usuarios, 'rol': usuario.rol if usuario else None})
 
 
 # Vista para registrar un trabajador
@@ -205,19 +205,21 @@ def clientes_view(request):
     usuario_id = request.session.get('usuario_id')
 
     # Verificamos si hay un usuario en la sesión
-    if usuario_id:
-        try:
-            usuario = Usuario.objects.get(id=usuario_id)  # El usuario logueado
-        except Usuario.DoesNotExist:
-            usuario = None
-    else:
-        usuario = None
+    usuario_id = request.session.get('usuario_id')
+
+    if not usuario_id:
+        return redirect('login')
+
+    try:
+        usuario = Usuario.objects.get(id=usuario_id)
+    except Usuario.DoesNotExist:
+        return redirect('login')
 
     # Filtrar los usuarios con el rol 'cliente'
     clientes = Usuario.objects.filter(rol='cliente')
 
     # Pasar a la plantilla
-    return render(request, 'adm/clientes.html', {'usuario': usuario, 'clientes': clientes})
+    return render(request, 'Vista_Adm/Clientes.html', {'usuario': usuario, 'clientes': clientes,'rol': usuario.rol if usuario else None})
 
 # Vista para registrar nuevos clientes
 def registrar_cliente_view(request):
@@ -267,12 +269,40 @@ def home_cliente(request):
     usuario = Usuario.objects.get(id=usuario_id)
     contexto = {'usuario': usuario}
 
-    return render(request, 'cliente/homeCliente.html', contexto)
+    return render(request, 'Vista_cliente/homeCliente.html', contexto)
 
 def ubicacion(request):
+    # Verificamos si hay sesión activa
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id:
+        return redirect('login')
 
-    return render(request, 'cliente/ubicacion.html')
+    # Opcional: obtener datos del usuario
+    usuario = Usuario.objects.get(id=usuario_id)
+    contexto = {'usuario': usuario}
+    return render(request, 'Vista_cliente/ubicacion.html', contexto)
 
 def sobre_nosotros(request):
+    # Verificamos si hay sesión activa
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id:
+        return redirect('login')
 
-    return render(request, 'cliente/Nosotros.html')
+    # Opcional: obtener datos del usuario
+    usuario = Usuario.objects.get(id=usuario_id)
+    contexto = {'usuario': usuario}
+    return render(request, 'Vista_cliente/Nosotros.html', contexto)
+
+
+def mi_perfil(request):
+    # Suponiendo que guardas el usuario en sesión
+    user_id = request.session.get('usuario_id')  # adapta según tu login
+    if not user_id:
+        return redirect('login')
+
+    usuario = Usuario.objects.get(id=user_id)
+
+    context = {
+        'usuario': usuario
+    }
+    return render(request, 'Vista_cliente/perfil.html', context)

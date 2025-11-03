@@ -5,7 +5,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>BETO - Cliente</title>
-  <link rel="stylesheet" href="{% static 'css/homeCliente.css' %}">
+  <link rel="stylesheet" href="{% static 'css/Vista_cliente/homeCliente.css' %}">
+     <link rel="icon" href="{% static 'img/logoOficial.svg' %}" type="image/x-icon" />
 </head>
 <body>
 
@@ -17,9 +18,8 @@
   <p>{{ usuario.email }}</p>
 </div>
     <div class="sidebar-links">
-      <a href="#">Mi perfil</a>
+      <a href="{% url 'mi_perfil' %}">Mi perfil</a>
       <a href="#">Mis pedidos</a>
-      <a href="#">Configuración</a>
       <a href="{% url 'login' %}" class="logout">Cerrar sesión</a>
     </div>
   </aside>
@@ -41,11 +41,30 @@
   <!-- Contenido principal -->
   <main class="main-content">
     <section class="categories">
-      <div class="card"><p>Almuerzos</p></div>
-      <div class="card"><p>Comida rápida</p></div>
-      <div class="card"><p>Bebidas</p></div>
-      <div class="card"><p>Desayunos</p></div>
-      <div class="card"><p>Especiales</p></div>
+      <div class="card">
+    <img src="{% static '/img/recursos_png/seco_de_gallina.png' %}" alt="Almuerzos">
+    <p>Almuerzos</p>
+</div>
+
+<div class="card">
+    <img src="{% static 'img/recursos_png/hamburguesa.png' %}" alt="Comida rápida">
+    <p>Comida rápida</p>
+</div>
+
+<div class="card">
+    <img src="{% static 'img/recursos_png/bebidas.png' %}" alt="Bebidas">
+    <p>Bebidas</p>
+</div>
+
+<div class="card">
+    <img src="{% static 'img/recursos_png/desayuno.png' %}" alt="Desayunos">
+    <p>Desayunos</p>
+</div>
+
+<div class="card">
+    <img src="{% static 'img/recursos_png/especial.png' %}" alt="Especiales">
+    <p>Especiales</p>
+</div>
     </section>
   </main>
 

@@ -4,7 +4,7 @@
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta charset="utf-8" />
-    <link rel="stylesheet" href="{% static 'css/Usuarios.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/Vista_adm/Usuarios.css' %}" />
       <link rel="icon" href="{% static 'img/logoOficial.svg' %}" type="image/x-icon" />
     <title>Vista Administrador</title>
   </head>
@@ -18,33 +18,32 @@
           <span class="logo-text">Beto</span>
         </div>
 
-        <nav class="menu">
-          <a href="#" class="menu-item">
-            <img src="{% static 'img/icon-pedidos.svg' %}" alt=""> Pedidos
-          </a>
-          <a href="#" class="menu-item">
-            <img src="{% static 'img/icon-mesas.svg' %}" alt=""> Mesas
-          </a>
-          <a href="#" class="menu-item">
-            <img src="{% static 'img/icon-productos.svg' %}" alt=""> Productos
-          </a>
-          <a href="{% url 'clientes' %}" class="menu-item">
-            <img src="{% static 'img/icon-clientes.svg' %}" alt=""> Clientes
-          </a>
-          <a href="#" class="menu-item">
-            <img src="{% static 'img/icon-facturas.svg' %}" alt=""> Facturas
-          </a>
-          <a href="#" class="menu-item">
-            <img src="{% static 'img/icon-archivo.svg' %}" alt=""> Archivo
-          </a>
-          <a href="{% url 'usuarios' %}" class="menu-item">
-            <img src="{% static 'img/icon-clientes.svg' %}" alt=""> Usuarios
-          </a>
+             <nav class="menu">
+                  <a href="#" class="menu-item">
+                    <img src="{% static 'img/icon-productos.svg' %}" alt=""> Productos
+                </a>
+                <a href="#" class="menu-item">
+                    <img src="{% static 'img/icon-mesas.svg' %}" alt=""> Mesas
+                </a>
+                <a href="#" class="menu-item">
+                    <img src="{% static 'img/icon-pedidos.svg' %}" alt=""> Pedidos
+                </a>
+                 <a href="#" class="menu-item">
+                    <img src="{% static 'img/icon-facturas.svg' %}" alt=""> Facturas
+                </a>
 
-          <a href="{% url 'login' %}" class="menu-item logout">
-            <img src="{% static 'img/icon-cerrar.svg' %}" alt=""> Cerrar
-          </a>
-        </nav>
+                <a href="{% url 'clientes' %}" class="menu-item">
+                    <img src="{% static 'img/icon-clientes.svg' %}" alt=""> Clientes
+                </a>
+
+                <a href="{% url 'usuarios' %}" class="menu-item">
+                    <img src="{% static 'img/icon-clientes.svg' %}" alt=""> Trabajadores
+                </a>
+
+                <a href="{% url 'login' %}" class="menu-item logout">
+                    <img src="{% static 'img/icon-cerrar.svg' %}" alt=""> Cerrar
+                </a>
+            </nav>
       </aside>
 
       <main class="main-content">
@@ -303,13 +302,13 @@ btnNuevo.addEventListener('click', () => {
 // Mostrar el modal de "Modificar Usuario"
 btnModificar.addEventListener('click', () => {
   modalModificar.showModal();
-  // Aquí puedes cargar los datos del usuario a modificar
+  // Aquí puedes cargar los datos del Login a modificar
 });
 
 // Mostrar el modal de "Eliminar Usuario"
 btnEliminar.addEventListener('click', () => {
   modalEliminar.showModal();
-  // Aquí puedes mostrar el usuario que se eliminará
+  // Aquí puedes mostrar el Login que se eliminará
 });
 
 // Cerrar modales
