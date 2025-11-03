@@ -13,15 +13,22 @@ def login_view(request):
         email = request.POST.get("email")
         contraseña = request.POST.get("contraseña")
 
-        # Intentamos obtener al usuario con el email proporcionado
         try:
+            # Buscamos usuario por correo
             usuario = Usuario.objects.get(email=email)
 
-            # Verificamos si la contraseña es correcta
-            if usuario.checkpassword(contraseña):  # Usamos checkpassword de tu modelo personalizado
-                # Si la contraseña es correcta, establecemos manualmente la sesión
-                request.session['usuario_id'] = usuario.id  # Guardamos el id de usuario en la sesión
-                return redirect('vista_adm')  # Redirigir a la vista de administración
+            # Verificamos la contraseña
+            if usuario.checkpassword(contraseña):
+                # Guardamos el ID en sesión
+                request.session['usuario_id'] = usuario.id
+
+                # Verificamos el rol
+                if usuario.rol.lower() == "administrador":
+                    return redirect('vista_adm')
+                elif usuario.rol.lower() == "cliente":
+                    return redirect('home_cliente')
+                else:
+                    messages.error(request, "Rol de usuario no reconocido.")
             else:
                 messages.error(request, "Contraseña incorrecta.")
         except Usuario.DoesNotExist:
@@ -110,14 +117,13 @@ def vista_adm(request):
 
     usuario_id = request.session.get('usuario_id')
 
-    if usuario_id:
-        try:
+    if not usuario_id:
+        return redirect('login')
 
-            usuario = Usuario.objects.get(id=usuario_id)
-        except Usuario.DoesNotExist:
-            usuario = None
-    else:
-        usuario = None
+    try:
+        usuario = Usuario.objects.get(id=usuario_id)
+    except Usuario.DoesNotExist:
+        return redirect('login')
 
     return render(request, 'adm/Vista_Adm.html',{'usuario': usuario, 'rol': usuario.rol if usuario else None})
 
@@ -250,3 +256,23 @@ def lista_clientes(request):
     # Filtramos solo los usuarios con rol 'cliente'
     clientes = Usuario.objects.filter(rol='cliente')  # Asegúrate que los clientes tienen rol 'cliente'
     return render(request, 'Clientes.html', {'clientes': clientes})
+
+def home_cliente(request):
+    # Verificamos si hay sesión activa
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id:
+        return redirect('login')
+
+    # Opcional: obtener datos del usuario
+    usuario = Usuario.objects.get(id=usuario_id)
+    contexto = {'usuario': usuario}
+
+    return render(request, 'cliente/homeCliente.html', contexto)
+
+def ubicacion(request):
+
+    return render(request, 'cliente/ubicacion.html')
+
+def sobre_nosotros(request):
+
+    return render(request, 'cliente/Nosotros.html')

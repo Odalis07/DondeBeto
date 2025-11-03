@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+{% load static %}
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BETO - Sobre Nosotros</title>
+  <link rel="stylesheet" href="{% static 'css/Nosotros.css' %}">
+</head>
+<body>
+
+  <!-- Panel lateral oculto -->
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-header">
+      <img src="{% static 'img/usuario.png' %}" alt="Foto usuario" class="perfil-img">
+      <h2>{{ usuario.nombre }} {{ usuario.apellido }}</h2>
+      <p>{{ usuario.email }}</p>
+    </div>
+    <div class="sidebar-links">
+      <a href="{% url 'home_cliente' %}">Mi perfil</a>
+      <a href="{% url 'home_cliente' %}">Mis pedidos</a>
+      <a href="{% url 'home_cliente' %}">Configuración</a>
+      <a href="{% url 'login' %}" class="logout">Cerrar sesión</a>
+    </div>
+  </aside>
+
+  <!-- Encabezado -->
+  <header class="navbar">
+    <div class="menu-icon" onclick="toggleSidebar()">☰</div>
+    <div class="logo">
+      <img src="{% static 'img/logoOficial.svg' %}" alt="Logo Beto" class="logo-icon"> BETO
+    </div>
+    <a href="{% url 'login' %}" class="btn-login">Salir</a>
+  </header>
+
+  <!-- Menú de navegación -->
+  <nav class="nav-links">
+    <a href="{% url 'home_cliente' %}">Productos</a>
+    <a href="{% url 'ubicacion' %}">Ubicación</a>
+    <a href="{% url 'sobre_nosotros' %}" class="active">Sobre nosotros</a>
+  </nav>
+
+  <!-- Contenido principal -->
+  <main class="main-content">
+   <section class="about-us">
+  <h2>Sobre Nosotros</h2>
+  <p class="lead">
+    En <strong>BETO Restaurante</strong>, nuestra pasión es la gastronomía.
+    Cada plato refleja nuestro compromiso con la frescura, la calidad y la experiencia única de nuestros clientes.
+  </p>
+
+  <div class="info-sections">
+    <div class="info-card">
+      <h3>Misión</h3>
+      <p>Ofrecer comida deliciosa y saludable, utilizando ingredientes locales, con un servicio excepcional que haga sentir a nuestros clientes como en casa.</p>
+    </div>
+    <div class="info-card">
+      <h3>Visión</h3>
+      <p>Ser el restaurante favorito de nuestra comunidad, reconocido por innovación culinaria, atención al cliente y experiencias inolvidables.</p>
+    </div>
+    <div class="info-card">
+      <h3>Valores</h3>
+      <p>Calidad, frescura, honestidad, cercanía con el cliente y compromiso con la sostenibilidad y el bienestar de nuestro equipo.</p>
+    </div>
+  </div>
+
+  <p>
+    Desde desayunos hasta cenas, cuidamos cada detalle para que cada plato sea memorable.
+    <strong>¡Ven y descubre por qué todos eligen BETO!</strong>
+  </p>
+
+  <!-- NUEVA GALERÍA -->
+  <div class="gallery">
+    <div class="gallery-item">
+      <img src="{% static 'img/restaurante.webp' %}" alt="Restaurante BETO">
+    </div>
+    <div class="gallery-item">
+      <img src="{% static 'img/personas.jpg' %}" alt="Clientes disfrutando">
+    </div>
+    <div class="gallery-item large">
+      <img src="{% static 'img/personas2.jpg' %}" alt="Ambiente acogedor">
+    </div>
+    <div class="gallery-item">
+      <img src="{% static 'img/comida1.jpg' %}" alt="Plato especial BETO">
+    </div>
+  </div>
+</section>
+
+  </main>
+
+  <script>
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('active');
+    }
+  </script>
+
+</body>
+</html>

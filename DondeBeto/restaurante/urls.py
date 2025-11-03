@@ -13,4 +13,7 @@ path('admin/', views.vista_adm, name='vista_adm'),
     path('clientes/', views.lista_clientes, name='clientes'),
     path('clientes/registrar/', views.registrar_cliente_view, name='registrar_cliente'),
 path('usuarios/registrar/', views.registrar_usuario_view, name='registrar_usuario'),
+path('home-cliente/', views.home_cliente, name='home_cliente'),
+path('ubicacion/', views.ubicacion, name='ubicacion'),
+path('sobre-nosotros/', views.sobre_nosotros, name='sobre_nosotros'),
 ]
