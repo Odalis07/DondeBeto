@@ -363,3 +363,47 @@ def vista_repartidor(request):
         return redirect('login')
 
     return render(request, 'Vista_repartidor/Vista_Repartidor.html',{'usuario': usuario, 'rol': usuario.rol if usuario else None})
+
+# ---------------------------
+# VISTAS DE PERFIL POR ROL
+# ---------------------------
+def perfil_cajero(request):
+    usuario_id = request.session.get('usuario_id')
+
+    if not usuario_id:
+        return redirect('login')
+
+    try:
+        usuario = Usuario.objects.get(id=usuario_id)
+    except Usuario.DoesNotExist:
+        return redirect('login')
+
+    return render(request, 'Vista_cajero/perfil_cajero.html', {'usuario': usuario, 'rol': usuario.rol})
+
+
+def perfil_mesero(request):
+    usuario_id = request.session.get('usuario_id')
+
+    if not usuario_id:
+        return redirect('login')
+
+    try:
+        usuario = Usuario.objects.get(id=usuario_id)
+    except Usuario.DoesNotExist:
+        return redirect('login')
+
+    return render(request, 'Vista_mesero/perfil_mesero.html', {'usuario': usuario, 'rol': usuario.rol})
+
+
+def perfil_repartidor(request):
+    usuario_id = request.session.get('usuario_id')
+
+    if not usuario_id:
+        return redirect('login')
+
+    try:
+        usuario = Usuario.objects.get(id=usuario_id)
+    except Usuario.DoesNotExist:
+        return redirect('login')
+
+    return render(request, 'Vista_repartidor/perfil_repartidor.html', {'usuario': usuario, 'rol': usuario.rol})

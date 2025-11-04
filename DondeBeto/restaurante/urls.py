@@ -20,4 +20,7 @@ urlpatterns = [
     path('cajero/', views.vista_cajero, name='vista_cajero'),
     path('mesero/', views.vista_mesero, name='vista_mesero'),
     path('repartidor/', views.vista_repartidor, name='vista_repartidor'),
+    path('perfil/cajero/', views.perfil_cajero, name='perfil_cajero'),
+    path('perfil/mesero/', views.perfil_mesero, name='perfil_mesero'),
+    path('perfil/repartidor/', views.perfil_repartidor, name='perfil_repartidor'),
 ]
