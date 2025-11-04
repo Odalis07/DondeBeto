@@ -4,7 +4,7 @@
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta charset="utf-8" />
-    <link rel="stylesheet" href="{% static 'css/Vista_adm/Usuarios.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/Vista_adm/Clientes.css' %}" />
       <link rel="icon" href="{% static 'img/logoOficial.svg' %}" type="image/x-icon" />
     <title>Vista Administrador</title>
   </head>
@@ -80,6 +80,8 @@
   <div class="usuarios-grid">
     {% for user in usuarios %}
     <div class="card-user">
+       <!-- BOTONES DE ACCIÓN -->
+
       <img src="{% static 'img/usuario.png' %}" alt="Foto usuario">
       <div class="name">{{ user.nombre }} {{ user.apellido }}</div>
       <div class="detail">
@@ -92,6 +94,12 @@
         <strong>Pregunta clave:</strong> {{ user.pregunta_clave }} <br>
         <strong>Respuesta clave:</strong> {{ user.respuesta_clave }} <br>
       </div>
+        <div class="acciones">
+            <button id="btn-modificar" class="btn-modificar" data-id="{{ user.id }}">MODIFICAR</button>
+
+            <button id="btn-eliminar" class="btn-eliminar" data-id="{{ user.id }}">ELIMINAR</button>
+
+          </div>
     </div>
     {% empty %}
     <p>No hay usuarios registrados para este rol.</p>
@@ -103,8 +111,7 @@
           <!-- BOTONES DE ACCIÓN -->
           <div class="acciones">
             <button id="btn-nuevo" class="btn-nuevo">NUEVO</button>
-            <button id="btn-modificar" class="btn-modificar">MODIFICAR</button>
-            <button id="btn-eliminar" class="btn-eliminar">ELIMINAR</button>
+
           </div>
 
 <!-- MODAL NUEVO TRABAJADOR -->
@@ -164,7 +171,7 @@
           />
 
           <label for="rol">Rol</label>
-            <select name="rol">
+            <select id="rol" name="rol">
               <option value="">Seleccione un rol</option>
               <option value="cajero">cajero</option>
               <option value="mesero">mesero</option>
@@ -174,7 +181,7 @@
         </div>
 
         <label for="pregunta_clave">Pregunta clave:</label>
-        <select name="pregunta_clave" required>
+        <select id="pregunta_clave" name="pregunta_clave" required>
           <option value="">Seleccione una pregunta</option>
           <option value="mascota">¿Cuál es el nombre de tu primera mascota?</option>
           <option value="ciudad">¿En qué ciudad naciste?</option>
@@ -196,61 +203,71 @@
   <div id="modal-modificar-content" class="modal">
     <div class="modal-content">
       <span class="close">&times;</span>
-      <h2>Modificar Usuario</h2>
+
+      <h2>Datos del Trabajador</h2>
 
       <form id="form-modificar">
+        <!-- Cédula -->
+        <div class="campo-con-lapiz">
+          <label for="cedula1">Cédula:</label>
+          <input type="text" id="cedula1" name="cedula" readonly>
+          <button type="button" class="editar-campo" data-campo="cedula1"> <img src="{% static 'img/lapiz.svg' %}" alt="Editar" class="icono-editar"></button>
+        </div>
 
-        <!-- CÉDULA -->
-        <label for="cedula">Cédula:</label>
-        <input type="text"  name="cedula" placeholder="Ingrese la cédula" maxlength="10" required>
+        <!-- Nombre -->
+        <div class="campo-con-lapiz">
+          <label for="nombre1">Nombre:</label>
+          <input type="text" id="nombre1" name="nombre" readonly>
+          <button type="button" class="editar-campo" data-campo="nombre1"> <img src="{% static 'img/lapiz.svg' %}" alt="Editar" class="icono-editar"></button>
+        </div>
 
-        <!-- NOMBRE -->
-        <label for="nombre">Nombre:</label>
-        <input type="text"  name="nombre" placeholder="Nombre completo" required>
+        <!-- Apellido -->
+        <div class="campo-con-lapiz">
+          <label for="apellido1">Apellido:</label>
+          <input type="text" id="apellido1" name="apellido" readonly>
+          <button type="button" class="editar-campo" data-campo="apellido1"> <img src="{% static 'img/lapiz.svg' %}" alt="Editar" class="icono-editar"></button>
+        </div>
 
-        <!-- APELLIDO -->
-        <label for="apellido">Apellido:</label>
-        <input type="text"  name="apellido" placeholder="Apellido completo" required>
+        <!-- Email -->
+        <div class="campo-con-lapiz">
+          <label for="email1">Email:</label>
+          <input type="email" id="email1" name="email" readonly>
+          <button type="button" class="editar-campo" data-campo="email1"> <img src="{% static 'img/lapiz.svg' %}" alt="Editar" class="icono-editar">
+</button></button>
+        </div>
 
-        <!-- EMAIL -->
-        <label for="email">Email:</label>
-        <input type="email" name="email" placeholder="correo@ejemplo.com" required>
+        <!-- Contraseña -->
+        <div class="campo-con-lapiz">
+          <label for="contrasena1">Contraseña:</label>
+          <input type="password" id="contrasena1" name="contrasena" placeholder="Nueva contraseña (opcional)" readonly>
+          <button type="button" class="editar-campo" data-campo="contrasena1"> <img src="{% static 'img/lapiz.svg' %}" alt="Editar" class="icono-editar"></button>
+        </div>
 
-        <!-- CONTRASEÑA -->
-        <label for="contraseña">Contraseña:</label>
-        <input type="password" id="contraseña" name="contraseña" placeholder="Nueva contraseña" minlength="8" required>
+        <!-- Rol -->
+        <div class="campo-con-lapiz">
+          <label for="rol1">Rol:</label>
+          <input type="text" id="rol1" name="rol" readonly>
+          <button type="button" class="editar-campo" data-campo="rol1"><img src="{% static 'img/lapiz.svg' %}" alt="Editar" class="icono-editar"></button>
+        </div>
 
-        <!-- ROL -->
-        <label for="rol">Rol:</label>
-        <select id="rol" name="rol" required>
-          <option value="">Seleccione un rol</option>
-          <option value="Cajero">Cajero</option>
-          <option value="Mesero">Mesero</option>
-          <option value="Repartidor">Repartidor</option>
-          <option value="Administrador">Administrador</option>
-        </select>
+        <!-- Pregunta de seguridad -->
+        <div class="campo-con-lapiz">
+          <label for="pregunta_clave1">Pregunta de seguridad:</label>
+          <input type="text" id="pregunta_clave1" name="pregunta_clave" readonly>
+          <button type="button" class="editar-campo" data-campo="pregunta_clave1"><img src="{% static 'img/lapiz.svg' %}" alt="Editar" class="icono-editar"></button>
+        </div>
 
-        <!-- PREGUNTA DE SEGURIDAD -->
-        <label for="pregunta_clave">Pregunta de seguridad:</label>
-        <select id="pregunta_clave" name="pregunta_clave" required>
-          <option value="">Seleccione una pregunta</option>
-          <option value="¿Cuál es tu color favorito?">¿Cuál es tu color favorito?</option>
-          <option value="¿Cómo se llama tu primera mascota?">¿Cómo se llama tu primera mascota?</option>
-          <option value="¿En qué ciudad naciste?">¿En qué ciudad naciste?</option>
-          <option value="¿Cuál es el nombre de tu mejor amigo de la infancia?">¿Cuál es el nombre de tu mejor amigo de la infancia?</option>
-        </select>
+        <!-- Respuesta de seguridad -->
+        <div class="campo-con-lapiz">
+          <label for="respuesta_clave1">Respuesta de seguridad:</label>
+          <input type="text" id="respuesta_clave1" name="respuesta_clave" readonly>
+          <button type="button" class="editar-campo" data-campo="respuesta_clave1"><img src="{% static 'img/lapiz.svg' %}" alt="Editar" class="icono-editar"></button>
+        </div>
 
-        <!-- RESPUESTA DE SEGURIDAD -->
-        <label for="respuesta_clave">Respuesta de seguridad:</label>
-        <input type="text" id="respuesta_clave" name="respuesta_clave" placeholder="Ingrese su respuesta" required>
-
-        <!-- BOTONES -->
-       <div class="modal-buttons">
-  <button type="button" id="cancelar-modificar" onclick="document.getElementById('modal-modificar').close()">Cancelar</button>
-  <button type="submit" id="guardar-modificar" onclick="document.getElementById('modal-modificar').close()">Guardar Cambios</button>
-</div>
-
-
+        <div class="modal-buttons">
+          <button type="button" id="cancelar-modificar" onclick="document.getElementById('modal-modificar').close()">Cerrar</button>
+          <button type="submit" id="guardar-modificar" disabled>Guardar Cambios</button>
+        </div>
       </form>
     </div>
   </div>
@@ -281,57 +298,138 @@
       </main>
     </div>
 
-    <script>
-    const btnNuevo = document.getElementById('btn-nuevo');
-const btnModificar = document.getElementById('btn-modificar');
-const btnEliminar = document.getElementById('btn-eliminar');
+
+<script>
 const modalNuevo = document.getElementById('modal');
 const modalModificar = document.getElementById('modal-modificar');
 const modalEliminar = document.getElementById('modal-eliminar');
 
 const closeBtns = document.querySelectorAll('.close');
-const cancelarNuevo = document.getElementById('cancelar');
-const cancelarModificar = document.getElementById('cancelar-modificar');
-const cancelarEliminar = document.getElementById('cancelar-eliminar');
+const formModificar = document.getElementById('form-modificar');
+const btnGuardar = document.getElementById('guardar-modificar');
 
-// Mostrar el modal de "Nuevo Usuario"
-btnNuevo.addEventListener('click', () => {
-  modalNuevo.showModal();
-});
+let clienteSeleccionado = null;
 
-// Mostrar el modal de "Modificar Usuario"
-btnModificar.addEventListener('click', () => {
-  modalModificar.showModal();
-  // Aquí puedes cargar los datos del Login a modificar
-});
+// ---------- MODAL NUEVO ----------
+document.getElementById('btn-nuevo').addEventListener('click', () => modalNuevo.showModal());
 
-// Mostrar el modal de "Eliminar Usuario"
-btnEliminar.addEventListener('click', () => {
-  modalEliminar.showModal();
-  // Aquí puedes mostrar el Login que se eliminará
-});
+// ---------- MODAL MODIFICAR ----------
+document.querySelectorAll('.btn-modificar').forEach(boton => {
+  boton.addEventListener('click', () => {
+    clienteSeleccionado = boton.dataset.id;
+    const card = boton.closest('.card-user');
+    modalModificar.showModal();
 
-// Cerrar modales
-closeBtns.forEach((btn) => {
-  btn.addEventListener('click', () => {
-    modalNuevo.close();
-    modalModificar.close();
-    modalEliminar.close();
+    // Obtener datos del card
+    const detailText = card.querySelector('.detail').innerText.split('\n');
+    const datos = {};
+    detailText.forEach(linea => {
+      const partes = linea.split(':');
+      if (partes.length === 2) {
+        datos[partes[0].trim().toLowerCase()] = partes[1].trim();
+      }
+    });
+
+    // Rellenar inputs
+    document.getElementById('cedula1').value = datos["cédula"] || '';
+    document.getElementById('nombre1').value = datos["nombre"] || '';
+    document.getElementById('apellido1').value = datos["apellido"] || '';
+    document.getElementById('email1').value = datos["email"] || '';
+    document.getElementById('rol1').value = datos["rol"] || '';
+    document.getElementById('pregunta_clave1').value = datos["pregunta clave"] || '';
+    document.getElementById('respuesta_clave1').value = datos["respuesta clave"] || '';
+
+    // Bloquear todos los campos
+    bloquearCamposTodos();
   });
 });
 
-// Cerrar los modales con los botones de Cancelar
-cancelarNuevo.addEventListener('click', () => modalNuevo.close());
-cancelarModificar.addEventListener('click', () => modalModificar.close());
-cancelarEliminar.addEventListener('click', () => modalEliminar.close());
+// ---------- LÁPICES INDIVIDUALES ----------
+document.querySelectorAll('.editar-campo').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const campoId = btn.dataset.campo;
+    const input = document.getElementById(campoId);
 
-// Confirmar eliminación
-document.getElementById('confirmar-eliminar').addEventListener('click', () => {
-  alert("Usuario eliminado");
+    // Toggle readonly
+    if (input.readOnly) {
+      input.readOnly = false;
+      input.focus();
+      // Cambiar a candado
+      btn.innerHTML = `<img src="{% static 'img/candado.svg' %}" alt="Candado" />`;
+      btnGuardar.disabled = false; // habilitar guardar
+    } else {
+      input.readOnly = true;
+      // Volver a lápiz
+      btn.innerHTML = `<img src="{% static 'img/lapiz.svg' %}" alt="Editar" />`;
+    }
+  });
+});
+
+// Bloquear todos los campos y deshabilitar guardar
+function bloquearCamposTodos() {
+  formModificar.querySelectorAll('input').forEach(input => input.readOnly = true);
+  btnGuardar.disabled = true;
+}
+
+// ---------- GUARDAR MODIFICACIONES ----------
+formModificar.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData(formModificar).entries());
+
+  const response = await fetch(`/clientes/actualizar/${clienteSeleccionado}/`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': getCSRFToken()
+    },
+    body: JSON.stringify(data)
+  });
+
+  const result = await response.json();
+  if (result.success) {
+    alert('Cliente actualizado correctamente');
+    location.reload();
+  } else {
+    alert('Error: ' + result.error);
+  }
+});
+
+// ---------- MODAL ELIMINAR ----------
+document.querySelectorAll('.btn-eliminar').forEach(boton => {
+  boton.addEventListener('click', () => {
+    clienteSeleccionado = boton.dataset.id;
+    modalEliminar.showModal();
+  });
+});
+
+document.getElementById('confirmar-eliminar').addEventListener('click', async () => {
+  const response = await fetch(`/clientes/eliminar/${clienteSeleccionado}/`, {
+    method: 'POST',
+    headers: { 'X-CSRFToken': getCSRFToken() }
+  });
+  const result = await response.json();
+
+  if (result.success) {
+    alert('Cliente eliminado correctamente');
+    location.reload();
+  } else {
+    alert('Error: ' + result.error);
+  }
   modalEliminar.close();
 });
 
-    </script>
+// ---------- CERRAR MODALES ----------
+closeBtns.forEach(btn => btn.addEventListener('click', () => {
+  modalNuevo.close();
+  modalModificar.close();
+  modalEliminar.close();
+}));
+
+// ---------- CSRF ----------
+function getCSRFToken() {
+  return document.querySelector('[name=csrfmiddlewaretoken]').value;
+}
+</script>
 
   </body>
 </html>

@@ -23,4 +23,6 @@ urlpatterns = [
     path('perfil/cajero/', views.perfil_cajero, name='perfil_cajero'),
     path('perfil/mesero/', views.perfil_mesero, name='perfil_mesero'),
     path('perfil/repartidor/', views.perfil_repartidor, name='perfil_repartidor'),
+    path('clientes/actualizar/<int:id>/', views.actualizar_cliente, name='actualizar_cliente'),
+    path('clientes/eliminar/<int:id>/', views.eliminar_cliente, name='eliminar_cliente'),
 ]

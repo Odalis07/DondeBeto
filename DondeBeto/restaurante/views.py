@@ -1,9 +1,11 @@
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
-from django.shortcuts import render, redirect
+from django.http import JsonResponse
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-
+from django.views.decorators.csrf import csrf_exempt
+import json
 from .models import Usuario
 
 
@@ -407,3 +409,44 @@ def perfil_repartidor(request):
         return redirect('login')
 
     return render(request, 'Vista_repartidor/perfil_repartidor.html', {'usuario': usuario, 'rol': usuario.rol})
+
+@csrf_exempt
+def actualizar_cliente(request, id):
+    """Recibe datos JSON y actualiza el cliente"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            cliente = get_object_or_404(Usuario, id=id)
+
+            cliente.cedula = data.get('cedula', cliente.cedula)
+            cliente.nombre = data.get('nombre', cliente.nombre)
+            cliente.apellido = data.get('apellido', cliente.apellido)
+            cliente.email = data.get('email', cliente.email)
+            cliente.rol = data.get('rol', cliente.rol)
+            cliente.pregunta_clave = data.get('pregunta_clave', cliente.pregunta_clave)
+            cliente.respuesta_clave = data.get('respuesta_clave', cliente.respuesta_clave)
+
+            if 'contraseña' in data and data['contraseña']:
+                cliente.setpassword(data['contraseña'])
+
+            cliente.save()
+
+            return JsonResponse({'success': True, 'message': 'Cliente actualizado correctamente'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+
+    return JsonResponse({'success': False, 'error': 'Método no permitido'})
+
+
+@csrf_exempt
+def eliminar_cliente(request, id):
+    """Elimina un cliente por ID"""
+    if request.method == 'POST':
+        try:
+            cliente = get_object_or_404(Usuario, id=id)
+            cliente.delete()
+            return JsonResponse({'success': True, 'message': 'Cliente eliminado correctamente'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+
+    return JsonResponse({'success': False, 'error': 'Método no permitido'})
