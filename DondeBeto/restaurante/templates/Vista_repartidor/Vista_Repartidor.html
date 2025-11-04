@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Repartidor - Donde Beto</title>
+    <link rel="stylesheet" href="{% static 'css/Vista_adm/admi.css' %}">
+    <link rel="icon" href="{% static 'img/logoOficial.svg' %}" type="image/x-icon">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Menú lateral -->
+        <aside class="sidebar">
+           <div class="logo">
+                <img src="{% static 'img/logoOficial.svg' %}" alt="Logo Beto" class="logo-icon">
+                <span class="logo-text">Beto</span>
+           </div>
+
+            <nav class="menu">
+                <a href="#" class="menu-item">
+                    <img src="{% static 'img/icon-pedidos.svg' %}" alt=""> Pedidos
+                </a>
+                 <a href="#" class="menu-item">
+                    <img src="{% static 'img/icon-facturas.svg' %}" alt=""> Facturas
+                </a>
+
+                <a href="{% url 'usuarios' %}" class="menu-item">
+                    <img src="{% static 'img/icon-clientes.svg' %}" alt=""> Perfil
+                </a>
+
+                <a href="{% url 'login' %}" class="menu-item logout">
+                    <img src="{% static 'img/icon-cerrar.svg' %}" alt=""> Cerrar
+                </a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="topbar">
+                <div class="caja">
+    {% if rol %}
+        Rol: {{ rol }}
+    {% else %}
+        No disponible.
+    {% endif %}
+</div>
+                <div class="titulo">DONDE BETO RESTO BAR</div>
+                <div class="usuario">
+    {% if usuario %}
+        ¡Hola, {{ usuario.nombre }} {{ usuario.apellido }}!
+    {% else %}
+        No has iniciado sesión.
+    {% endif %}
+</div>
+
+            </header>
+
+            <section class="content">
+                {% block content %}
+                <h2>Bienvenido al panel de repartidores</h2>
+                <p>Selecciona una opción del menú lateral para comenzar.</p>
+                {% endblock %}
+            </section>
+        </main>
+    </div>
+</body>
+</html>

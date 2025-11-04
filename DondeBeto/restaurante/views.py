@@ -7,26 +7,36 @@ from django.contrib import messages
 from .models import Usuario
 
 
+# ---------------------------
+# LOGIN VIEW
+# ---------------------------
 def login_view(request):
     if request.method == "POST":
-        # Recibimos los datos del formulario
         email = request.POST.get("email")
         contraseña = request.POST.get("contraseña")
 
         try:
-            # Buscamos usuario por correo
+            # Buscar usuario por correo
             usuario = Usuario.objects.get(email=email)
 
-            # Verificamos la contraseña
+            # Verificar contraseña
             if usuario.checkpassword(contraseña):
-                # Guardamos el ID en sesión
+                # Guardar el ID en sesión
                 request.session['usuario_id'] = usuario.id
 
-                # Verificamos el rol
-                if usuario.rol.lower() == "administrador":
+                # Redirección según el rol
+                rol = usuario.rol.strip().lower()
+
+                if rol == "administrador":
                     return redirect('vista_adm')
-                elif usuario.rol.lower() == "cliente":
+                elif rol == "cliente":
                     return redirect('home_cliente')
+                elif rol == "cajero":
+                    return redirect('vista_cajero')
+                elif rol == "mesero":
+                    return redirect('vista_mesero')
+                elif rol == "repartidor":
+                    return redirect('vista_repartidor')
                 else:
                     messages.error(request, "Rol de usuario no reconocido.")
             else:
@@ -34,6 +44,7 @@ def login_view(request):
         except Usuario.DoesNotExist:
             messages.error(request, "El correo no está registrado.")
 
+    # Si no es POST o hay error, mostrar login
     return render(request, 'Login/login.html')
 
 # Vista para manejar el registro de usuario
@@ -113,6 +124,11 @@ def clave_olvidada(request):
 
 def clave_cambiada(request):
     return render(request, 'Login/clave_cambiada.html')
+
+# ---------------------------
+# ADMINISTRADOR VIEW
+# ---------------------------
+
 def vista_adm(request):
 
     usuario_id = request.session.get('usuario_id')
@@ -144,16 +160,16 @@ def usuarios_view(request):
 
     # Obtener el usuario actual (opcional)
     usuario_id = request.session.get('usuario_id')
+    if usuario_id:
+        try:
+            usuario = Usuario.objects.get(id=usuario_id)
+        except Usuario.DoesNotExist:
+            usuario = None
+    else:
+        usuario = None
 
-    if not usuario_id:
-        return redirect('login')
-
-    try:
-        usuario = Usuario.objects.get(id=usuario_id)
-    except Usuario.DoesNotExist:
-        return redirect('login')
     # Pasamos los usuarios y el rol seleccionado a la plantilla
-    return render(request, 'Vista_Adm/Usuarios.html', {'usuario': usuario, 'usuarios': usuarios, 'rol': usuario.rol if usuario else None})
+    return render(request, 'Vista_Adm/Usuarios.html', {'usuario': usuario, 'usuarios': usuarios, 'rol_seleccionado': rol_seleccionado,'rol': usuario.rol if usuario else None})
 
 
 # Vista para registrar un trabajador
@@ -205,15 +221,13 @@ def clientes_view(request):
     usuario_id = request.session.get('usuario_id')
 
     # Verificamos si hay un usuario en la sesión
-    usuario_id = request.session.get('usuario_id')
-
-    if not usuario_id:
-        return redirect('login')
-
-    try:
-        usuario = Usuario.objects.get(id=usuario_id)
-    except Usuario.DoesNotExist:
-        return redirect('login')
+    if usuario_id:
+        try:
+            usuario = Usuario.objects.get(id=usuario_id)  # El usuario logueado
+        except Usuario.DoesNotExist:
+            usuario = None
+    else:
+        usuario = None
 
     # Filtrar los usuarios con el rol 'cliente'
     clientes = Usuario.objects.filter(rol='cliente')
@@ -306,3 +320,46 @@ def mi_perfil(request):
         'usuario': usuario
     }
     return render(request, 'Vista_cliente/perfil.html', context)
+#VISTAS ACTORES
+def vista_cajero(request):
+    usuario_id = request.session.get('usuario_id')
+
+    if not usuario_id:
+        return redirect('login')
+
+    try:
+        usuario = Usuario.objects.get(id=usuario_id)
+    except Usuario.DoesNotExist:
+        return redirect('login')
+
+    return render(request, 'Vista_cajero/Vista_Cajero.html',{'usuario': usuario, 'rol': usuario.rol if usuario else None})
+
+
+
+
+
+def vista_mesero(request):
+    usuario_id = request.session.get('usuario_id')
+
+    if not usuario_id:
+        return redirect('login')
+
+    try:
+        usuario = Usuario.objects.get(id=usuario_id)
+    except Usuario.DoesNotExist:
+        return redirect('login')
+
+    return render(request, 'Vista_mesero/Vista_Mesero.html',{'usuario': usuario, 'rol': usuario.rol if usuario else None})
+
+def vista_repartidor(request):
+    usuario_id = request.session.get('usuario_id')
+
+    if not usuario_id:
+        return redirect('login')
+
+    try:
+        usuario = Usuario.objects.get(id=usuario_id)
+    except Usuario.DoesNotExist:
+        return redirect('login')
+
+    return render(request, 'Vista_repartidor/Vista_Repartidor.html',{'usuario': usuario, 'rol': usuario.rol if usuario else None})
