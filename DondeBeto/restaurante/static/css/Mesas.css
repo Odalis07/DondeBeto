@@ -1,0 +1,326 @@
+/* ==============================
+   ESTILO PRINCIPAL DE ADMIN
+   ============================== */
+
+body {
+  margin: 0;
+  font-family: "Poppins", sans-serif;
+  background-color: #f8f9fa;
+  color: #333;
+}
+
+/* CONTENEDOR GENERAL */
+.admin-container {
+  display: flex;
+  height: 100vh;
+}
+
+/* ==============================
+   BARRA LATERAL
+   ============================== */
+.sidebar {
+  width: 220px;
+  background-color: #222831;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 1rem;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 2rem;
+}
+
+.logo-icon {
+  width: 40px;
+  height: 40px;
+}
+
+.logo-text {
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+.menu {
+  width: 100%;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #ccc;
+  padding: 10px 20px;
+  text-decoration: none;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+}
+
+.menu-item:hover {
+  background-color: #393e46;
+  color: #fff;
+}
+
+.menu-item img {
+  width: 22px;
+  height: 22px;
+}
+
+.logout {
+  margin-top: auto;
+  background-color: #ff4d4d;
+  color: #fff;
+}
+
+.logout:hover {
+  background-color: #ff3333;
+}
+
+/* ==============================
+   CONTENIDO PRINCIPAL
+   ============================== */
+.main-content {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* TOPBAR */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #eeeeee;
+  padding: 15px 30px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.caja {
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.titulo {
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.usuario {
+  font-weight: 500;
+}
+
+/* ==============================
+   SECCIÓN DE MESAS
+   ============================== */
+.content {
+  flex-grow: 1;
+  padding: 20px 40px;
+}
+
+/* TABS */
+.tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.tab {
+  background-color: #ddd;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.tab.active,
+.tab:hover {
+  background-color: #00adb5;
+  color: white;
+}
+
+/* GRID DE MESAS */
+.mesas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+/* CARD DE MESA */
+.card-mesa {
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+}
+
+.card-mesa:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.card-mesa img {
+  width: 50px;
+  margin-bottom: 10px;
+}
+
+.card-mesa .name {
+  font-weight: bold;
+  color: #222;
+  margin-bottom: 8px;
+}
+
+/* Estado visual */
+.card-mesa.libre {
+  border-left: 6px solid #00b894;
+}
+
+.card-mesa.ocupada {
+  border-left: 6px solid #ff7675;
+  background-color: #ffeaea;
+}
+
+/* ==============================
+   BOTONES DE ACCIÓN
+   ============================== */
+.acciones {
+  display: flex;
+  justify-content: center;
+  margin-top: 30px;
+  gap: 20px;
+}
+
+.btn-nuevo,
+.btn-modificar,
+.btn-eliminar {
+  padding: 10px 25px;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  color: #fff;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.btn-nuevo {
+  background-color: #00adb5;
+}
+
+.btn-modificar {
+  background-color: #f9a825;
+}
+
+.btn-eliminar {
+  background-color: #e53935;
+}
+
+.btn-nuevo:hover {
+  background-color: #00979d;
+}
+
+.btn-modificar:hover {
+  background-color: #f57f17;
+}
+
+.btn-eliminar:hover {
+  background-color: #c62828;
+}
+
+/* ==============================
+   MODALES
+   ============================== */
+dialog {
+  border: none;
+  border-radius: 10px;
+  padding: 0;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  width: 400px;
+  max-width: 90%;
+}
+
+.modal {
+  padding: 25px;
+}
+
+.modal h2 {
+  margin-bottom: 10px;
+  font-size: 1.3rem;
+}
+
+.modal .subtitle {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+/* Formulario dentro del modal */
+.form-column input,
+.form-column select {
+  width: 100%;
+  padding: 8px 10px;
+  margin-bottom: 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+
+/* Botones del modal */
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+button.continuar {
+  background-color: #00adb5;
+  color: #fff;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+button.continuar:hover {
+  background-color: #00979d;
+}
+
+#cancelar-nuevo,
+#cancelar-modificar,
+#cancelar-eliminar {
+  background-color: #ccc;
+  color: #222;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+#cancelar-nuevo:hover,
+#cancelar-modificar:hover,
+#cancelar-eliminar:hover {
+  background-color: #bbb;
+}
+
+/* Icono de cierre (X) */
+.close {
+  float: right;
+  font-size: 1.5rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.close:hover {
+  color: red;
+}
+

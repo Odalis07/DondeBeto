@@ -4,7 +4,8 @@ from django.contrib.auth.hashers import make_password
 from django.shortcuts import render, redirect
 from django.contrib import messages
 
-from .models import Usuario
+from .models import Usuario, Mesa
+
 
 
 def login_view(request):
@@ -250,3 +251,44 @@ def lista_clientes(request):
     # Filtramos solo los usuarios con rol 'cliente'
     clientes = Usuario.objects.filter(rol='cliente')  # Asegúrate que los clientes tienen rol 'cliente'
     return render(request, 'Clientes.html', {'clientes': clientes})
+
+def mesas_view(request):
+    usuario_id = request.session.get('usuario_id')
+
+    # Verificamos si hay un usuario en la sesión
+    if usuario_id:
+        try:
+            usuario = Usuario.objects.get(id=usuario_id)
+        except Usuario.DoesNotExist:
+            usuario = None
+    else:
+        usuario = None
+
+    # Obtener todas las mesas registradas
+    mesas = Mesa.objects.all()
+
+
+    return render(request, 'adm/Mesas.html', {'usuario': usuario, 'mesas': mesas})
+
+
+# Vista para registrar nuevas mesas
+def registrar_mesa_view(request):
+    if request.method == 'POST':
+        # Obtener los datos del formulario
+        numero = request.POST.get('numero')
+        capacidad = request.POST.get('capacidad')
+        estado = request.POST.get('estado')
+
+        # Crear una nueva mesa
+        mesa = Mesa(
+            numero=numero,
+            capacidad=capacidad,
+            estado=estado
+        )
+        mesa.save()
+
+        messages.success(request, '¡Mesa registrada exitosamente!')
+        return redirect('mesas')
+
+
+    return redirect('mesas')
