@@ -6,7 +6,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
 import json
-from .models import Usuario
+from .models import Usuario, Producto, Categoria, Mesa
+
 
 
 # ---------------------------
@@ -446,6 +447,176 @@ def eliminar_cliente(request, id):
             cliente = get_object_or_404(Usuario, id=id)
             cliente.delete()
             return JsonResponse({'success': True, 'message': 'Cliente eliminado correctamente'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+
+    return JsonResponse({'success': False, 'error': 'Método no permitido'})
+
+def productos(request):
+    usuario_id = request.session.get('usuario_id')
+
+    if not usuario_id:
+        return redirect('login')
+
+    try:
+        usuario = Usuario.objects.get(id=usuario_id)
+    except Usuario.DoesNotExist:
+        return redirect('login')
+
+    # 🔹 Obtener categoría desde la URL (GET)
+    categoria_seleccionada = request.GET.get('categoria', 'Todos')
+
+    categorias = Categoria.objects.all()
+
+    # 🔹 Filtrar productos según categoría
+    if categoria_seleccionada == 'Todos':
+        productos = Producto.objects.all()
+    else:
+        productos = Producto.objects.filter(categoria__nombre=categoria_seleccionada)
+
+    return render(request, 'Vista_adm/Productos.html', {
+        'usuario': usuario,
+        'rol': usuario.rol,
+        'productos': productos,
+        'categorias': categorias,
+        'categoria_seleccionada': categoria_seleccionada  # 👈 para el template
+    })
+
+
+def registrar_producto(request):
+    if request.method == 'POST':
+        nombre = request.POST['nombre']
+        descripcion = request.POST['descripcion']
+        precio = request.POST['precio']
+        categoria = Categoria.objects.get(id=request.POST['categoria'])
+        imagen = request.FILES.get('imagen')
+
+        Producto.objects.create(
+            nombre=nombre,
+            descripcion=descripcion,
+            precio=precio,
+            categoria=categoria,
+            imagen=imagen
+        )
+        return redirect('productos')
+
+@csrf_exempt
+def actualizar_producto(request, id):
+    """Recibe datos JSON y actualiza un producto"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            producto = get_object_or_404(Producto, id=id)
+
+            producto.nombre = data.get('nombre', producto.nombre)
+            producto.descripcion = data.get('descripcion', producto.descripcion)
+            producto.precio = data.get('precio', producto.precio)
+            producto.categoria_id = data.get('categoria_id', producto.categoria_id)
+
+            # Si manejas imagenes via MEDIA
+            if 'imagen' in data and data['imagen']:
+                producto.imagen = data['imagen']  # Asegúrate de que sea la ruta correcta
+
+            producto.save()
+            return JsonResponse({'success': True, 'message': 'Producto actualizado correctamente'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+
+    return JsonResponse({'success': False, 'error': 'Método no permitido'})
+
+
+@csrf_exempt
+def eliminar_producto(request, id):
+    """Elimina un producto por ID"""
+    if request.method == 'POST':
+        try:
+            producto = get_object_or_404(Producto, id=id)
+            producto.delete()
+            return JsonResponse({'success': True, 'message': 'Producto eliminado correctamente'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+
+    return JsonResponse({'success': False, 'error': 'Método no permitido'})
+
+def mesas_view(request):
+    usuario_id = request.session.get('usuario_id')
+
+    # Verificamos si hay un usuario en la sesión
+    usuario = None
+    if usuario_id:
+        try:
+            usuario = Usuario.objects.get(id=usuario_id)
+        except Usuario.DoesNotExist:
+            usuario = None
+
+    # Obtener parámetro de filtro de estado desde la URL (?estado=ocupada)
+    estado = request.GET.get('estado')  # 'disponible', 'ocupada', 'reservada', o None
+
+    # Filtrar mesas según estado si aplica
+    if estado in ['disponible', 'ocupada', 'reservada']:
+        mesas = Mesa.objects.filter(estado=estado)
+    else:
+        mesas = Mesa.objects.all()
+
+    context = {
+        'usuario': usuario,
+        'rol': usuario.rol if usuario else None,
+        'mesas': mesas,
+        'estado_filtro': estado  # para marcar tab activo
+    }
+
+    return render(request, 'Vista_adm/Mesas.html', context)
+
+
+# Vista para registrar nuevas mesas
+def registrar_mesa_view(request):
+    if request.method == 'POST':
+        # Obtener los datos del formulario
+        numero = request.POST.get('numero')
+        capacidad = request.POST.get('capacidad')
+        estado = request.POST.get('estado')
+
+        # Crear una nueva mesa
+        mesa = Mesa(
+            numero=numero,
+            capacidad=capacidad,
+            estado=estado
+        )
+        mesa.save()
+
+        messages.success(request, '¡Mesa registrada exitosamente!')
+        return redirect('mesas')
+
+    return redirect('mesas')
+
+@csrf_exempt
+def actualizar_mesa(request, id):
+    """Recibe datos JSON y actualiza una mesa"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            mesa = get_object_or_404(Mesa, id=id)
+
+            mesa.numero = data.get('numero', mesa.numero)
+            mesa.capacidad = data.get('capacidad', mesa.capacidad)
+            mesa.estado = data.get('estado', mesa.estado)
+
+            mesa.save()
+            return JsonResponse({'success': True, 'message': 'Mesa actualizada correctamente'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+
+    return JsonResponse({'success': False, 'error': 'Método no permitido'})
+
+
+@csrf_exempt
+def eliminar_mesa(request, id):
+    """Elimina una mesa por ID"""
+    if request.method == 'POST':
+        try:
+            mesa = get_object_or_404(Mesa, id=id)
+            mesa.delete()
+            return JsonResponse({'success': True, 'message': 'Mesa eliminada correctamente'})
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)})
 

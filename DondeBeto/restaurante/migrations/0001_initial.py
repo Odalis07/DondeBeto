@@ -24,7 +24,7 @@ class Migration(migrations.Migration):
             options={
                 'verbose_name': 'Usuario',
                 'verbose_name_plural': 'Usuarios',
-                'db_table': 'Login',
+                'db_table': 'usuario',
             },
         ),
     ]

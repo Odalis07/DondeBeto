@@ -25,12 +25,12 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.AddField(
-            model_name='Login',
+            model_name='usuario',
             name='rol',
-            field=models.CharField(default='Login', max_length=20),
+            field=models.CharField(default='usuario', max_length=20),
         ),
         migrations.AddField(
-            model_name='Login',
+            model_name='usuario',
             name='pregunta_clave',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='restaurante.preguntaclave'),
         ),

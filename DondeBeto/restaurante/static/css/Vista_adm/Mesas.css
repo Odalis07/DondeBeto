@@ -1,0 +1,509 @@
+/* ---------------------------------------------------
+1. RESET Y VARIABLES (Basado en tu CSS de Clientes)
+--------------------------------------------------- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  font-family: 'Inter', sans-serif;
+  background-color: #f7f8fa;
+  color: #333;
+}
+
+:root {
+  --color-primary: #007aff;
+  --color-bg: #f7f8fa;
+  --color-white: #fff;
+  --color-text: #222;
+  --card-radius: 12px;
+  --shadow-color: rgba(0, 0, 0, 0.1);
+}
+
+/* ---------------------------------------------------
+2. LAYOUT GENERAL (Sidebar, Topbar, Content)
+--------------------------------------------------- */
+.admin-container {
+  display: flex;
+  height: 100vh;
+}
+
+.sidebar {
+  width: 220px;
+  background-color: #ffffff;
+  color: #000000;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 0;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  height: 100vh;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 30px;
+  gap: 10px;
+}
+
+.logo-icon {
+  width: 40px;
+  height: auto;
+}
+
+.logo-text {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #000000;
+}
+
+.menu {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  flex-grow: 1;
+  margin-bottom: 20px;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  padding: 20px 20px;
+  background-color: transparent;
+  color: #333;
+  font-size: 16px;
+  font-weight: 500;
+  text-align: left;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  text-decoration: none;
+}
+
+.menu-item img {
+  width: 23px;
+  height: auto;
+  margin-right: 10px;
+}
+
+.menu-item:hover {
+  background-color: #4a93e3;
+  color: white;
+}
+
+.logout {
+  background-color: transparent;
+  color: #28394c;
+  font-weight: 600;
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  margin-top: auto; /* Empuja el logout al fondo */
+}
+
+.logout img {
+  width: 20px;
+  height: 20px;
+  margin-right: 10px;
+}
+
+.logout:hover {
+  background-color: #28394c;
+  color: white;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: #ffffff;
+  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 30px;
+  background-color: #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  font-weight: 600;
+  border-bottom: 2px solid #f1f1f1;
+}
+
+.caja, .titulo, .usuario {
+  font-size: 16px;
+  color: #333;
+}
+
+.content {
+  flex: 1;
+  padding: 40px;
+  background-color: #f7f8fa;
+  overflow-y: auto;
+}
+
+/* ---------------------------------------------------
+3. TABS
+--------------------------------------------------- */
+.tabs {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 30px;
+}
+
+.tab {
+  padding: 10px 28px;
+  background: #e8e8e8;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+  border: none;
+  text-decoration: none;
+  color: black;
+}
+
+.tab:hover {
+  background: #dcdcdc;
+}
+
+.tab.active {
+  background: var(--color-primary);
+  color: #fff;
+  font-weight: 700;
+}
+
+/* ---------------------------------------------------
+4. GRID Y CARD DE MESAS
+--------------------------------------------------- */
+.mesas-grid {
+    display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* antes 220px */
+  gap: 24px;
+  padding: 25px 30px;
+}
+
+.card-mesa {
+  background: var(--color-white);
+  border-radius: var(--card-radius);
+  padding: 25px 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  transition: 0.25s ease;
+  border-left: 6px solid #ccc;
+}
+
+.card-mesa:hover {
+  transform: translateY(-5px);
+  box-shadow: 0px 8px 22px var(--shadow-color);
+}
+
+.card-mesa img {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+}
+
+.card-mesa .name {
+  font-weight: 700;
+  font-size: 1.2rem;
+  text-align: center;
+  color: var(--color-text);
+}
+
+.card-mesa .detail {
+  font-size: 14px;
+  text-align: left;
+  width: 100%;
+  color: #555;
+  line-height: 1.8;
+}
+
+.card-mesa.libre {
+  border-left: 6px solid #00b894;
+}
+
+.card-mesa.ocupada {
+  border-left: 6px solid #ff7675;
+  background-color: #fff8f8;
+}
+.card-mesa .acciones {
+  display: flex;          /* flex horizontal */
+  flex-direction: row;    /* asegura que estén en fila */
+  justify-content: center; /* centra los botones en la tarjeta */
+  gap: 15px;              /* espacio entre los botones */
+  width: 100%;            /* ocupa todo el ancho de la tarjeta */
+  flex-wrap: nowrap;      /* evita que se vayan a la siguiente línea */
+  margin-top: 20px;       /* separa de los detalles */
+}
+.card-mesa.reservada {
+  border-left: 6px solid #ffa500; /* color naranja por ejemplo */
+  background-color: #fffaf0;      /* un fondo suave */
+}
+
+/* ---------------------------------------------------
+5. BOTONES DE ACCIÓN
+--------------------------------------------------- */
+.acciones {
+  display: flex;             /* pone los botones en fila */
+  flex-direction: row;       /* asegura horizontalidad */
+  justify-content: center;   /* centra los botones dentro de la tarjeta */
+  gap: 15px;                 /* espacio entre botones */
+  margin-top: 20px;          /* separación de los detalles de la tarjeta */
+  flex-wrap: nowrap;          /* evita que se vayan a la siguiente línea */
+}
+
+.btn-nuevo,
+.btn-modificar,
+.btn-eliminar {
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: 0.25s;
+  flex: 0 0 auto;           /* tamaño según contenido */
+  min-width: 100px;         /* opcional: evita botones demasiado pequeños */
+  text-align: center;
+}
+
+/* Botón de "nuevo" */
+.btn-nuevo {
+  position: fixed;
+  right: 40px;
+  bottom: 40px;
+  background: var(--color-primary);
+  color: #fff;
+}
+.btn-nuevo:hover { opacity: 0.9; }
+
+/* Botón de "modificar" */
+.btn-modificar {
+  background: #ffc107;
+  color: #212529;
+}
+.btn-modificar:hover { opacity: 0.9; }
+
+/* Botón de "eliminar" */
+.btn-eliminar {
+  background: #dc3545;
+  color: #fff;
+}
+.btn-eliminar:hover { opacity: 0.9; }
+
+/* ---------------------------------------------------
+6. MODALES
+--------------------------------------------------- */
+
+/* ----- MODAL GENERAL (Nuevo, Modificar, Eliminar) ----- */
+dialog {
+  width: 420px;
+  max-width: 90%;
+  border: none;
+  border-radius: 12px;
+  padding: 0;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: 'Inter', sans-serif;
+}
+
+dialog::backdrop {
+  background: rgba(0, 0, 0, 0.45);
+}
+
+/* ----- CONTENIDO INTERNO ----- */
+/* Separar inputs dentro del modal nuevo */
+.login-form .form-column {
+  display: flex;
+  flex-direction: column;
+  gap: 15px; /* espacio entre cada input */
+}
+
+.login-form .form-column input,
+.login-form .form-column select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.login-form .form-column input:focus,
+.login-form .form-column select:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 6px rgba(0, 123, 255, 0.4);
+}
+.login-right, .modal-content {
+  width: 100%;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 30px 35px;
+  box-sizing: border-box;
+  gap: 15px;
+  text-align: left;
+  position: relative;
+}
+
+.login-right h2, .modal-content h2 {
+  color: #383838;
+  font-size: 24px;
+  font-weight: 800;
+  margin: 0 0 15px 0;
+  text-align: center;
+}
+
+.login-right .subtitle {
+  color: #555;
+  font-size: 16px;
+  font-weight: 500;
+  margin-top: -10px;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+#form-modificar {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 100%;
+}
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 100%;
+}
+#form-modificar {
+  display: flex;
+  flex-direction: column;
+  gap: 15px; /* separación entre cada label+input */
+}
+.login-form label, #form-modificar label {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 6px;
+}
+
+.login-form input, #form-modificar input,
+.login-form select, #form-modificar select {
+  width: 100%;
+  height: 42px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 15px;
+  outline: none;
+  background-color: white;
+  font-family: 'Inter', sans-serif;
+  color: #333;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  box-sizing: border-box;
+}
+
+.login-form input:focus,
+.login-form select:focus,
+#form-modificar input:focus,
+#form-modificar select:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 6px rgba(0,123,255,0.5);
+}
+
+/* Cerrar modal */
+.login-right .close,
+.modal-content .close {
+  position: absolute;
+  top: 12px;
+  right: 18px;
+  font-size: 24px;
+  cursor: pointer;
+  color: #555;
+  transition: color 0.2s ease;
+}
+
+.login-right .close:hover,
+.modal-content .close:hover { color: #ff3b30; }
+
+/* Botones de modales */
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.modal-buttons button,
+button.continuar {
+  border: none;
+  border-radius: 8px;
+  padding: 10px 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+#guardar-modificar,
+button.continuar {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+#guardar-modificar:hover,
+button.continuar:hover { opacity: 0.9; }
+
+#cancelar-nuevo,
+#cancelar-modificar,
+#cancelar-eliminar {
+  background: #ccc;
+  color: #222;
+}
+
+#cancelar-nuevo:hover,
+#cancelar-modificar:hover,
+#cancelar-eliminar:hover { background: #b3b3b3; }
+
+#confirmar-eliminar {
+  background: #dc3545;
+  color: #fff;
+}
+
+#confirmar-eliminar:hover { opacity: 0.9; }
+
+#modal-eliminar p {
+  color: #444;
+  font-size: 16px;
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+#cancelar-nuevo {
+  background: #ccc;
+  color: #222;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+#cancelar-nuevo:hover {
+  background: #b3b3b3;
+}

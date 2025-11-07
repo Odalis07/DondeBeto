@@ -94,7 +94,6 @@ html, body {
   border: none;
   text-decoration: none; /* Asegura que no haya subrayado */
   color: black; /* Color de texto negro por defecto */
-  font-size: 16px; /* Tamaño de letra consistente */
 }
 
 /* Estilo cuando el tab está en hover */
@@ -106,14 +105,15 @@ html, body {
 .tab.active {
   background: var(--color-primary);
   color: #fff; /* Letras blancas para el estado activo */
-  font-weight: 600; /* Mantener el mismo peso de fuente */
+  font-weight: 700; /* Puede ser más grueso si lo prefieres */
   text-decoration: none; /* Asegura que el texto no esté subrayado */
+  border-bottom: 2px solid #fff; /* Opcional: subrayado en blanco si quieres destacar el tab activo */
 }
 
 /* ---------------------------------------------------
 7. GRID DE USUARIOS
 --------------------------------------------------- */
-.usuarios-grid {
+.productos-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 24px;
@@ -122,7 +122,7 @@ html, body {
 /* ---------------------------------------------------
 8. CARD
 --------------------------------------------------- */
-.card-user {
+.card-producto {
   background: var(--color-white);
   border-radius: var(--card-radius);
   padding: 18px;
@@ -134,24 +134,24 @@ html, body {
   transition: 0.25s ease;
 }
 
-.card-user:hover {
+.card-producto:hover {
   transform: translateY(-5px);
   box-shadow: 0px 8px 22px var(--shadow-color);
 }
 
-.card-user img {
-  width: 80px;
-  height: 80px;
+.card-producto img {
+  width: 150px;
+  height: 150px;
   object-fit: cover;
-  border-radius: 50%;
+  border-radius: 5%;
 }
 
-.card-user .name {
+.card-producto .name {
   font-weight: 700;
   text-align: center;
 }
 
-.card-user .detail {
+.card-producto .detail {
   font-size: 14px;
   text-align: justify;
   color: #555;
@@ -368,109 +368,6 @@ body {
 }
 
 /* ---------------------------------------------------
-MODAL
---------------------------------------------------- */
-#modal {
-  width: 400px;
-  max-width: 90%;
-  border: none;
-  border-radius: 8px;
-  padding: 0;
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-}
-
-#modal-modificar{
-  width: 400px;
-  max-width: 90%;
-  border: none;
-  border-radius: 8px;
-  padding: 0;
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-}
-#modal-eliminar{
-  width: 400px;
-  max-width: 90%;
-  border: none;
-  border-radius: 8px;
-  padding: 0;
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-}
-
-/* Fondo oscuro cuando se abre */
-#modal::backdrop {
-  background: rgba(0, 0, 0, 0.5);
-}
-
-
-.close {
-  position: absolute;
-  top: 10px;
-  right: 15px;
-  font-size: 22px;
-  cursor: pointer;
-  color: #555;
-}
-
-.close:hover {
-  color: red;
-}
-
-/* Estilos del formulario */
-#form-nuevo label {
-  display: block;
-  margin-top: 10px;
-  font-weight: bold;
-}
-
-#form-nuevo input,
-#form-nuevo select {
-  width: 100%;
-  padding: 8px;
-  margin-top: 5px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-/* Botones dentro del modal */
-.modal-buttons {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 20px;
-  gap: 10px;
-}
-
-.modal-buttons button {
-  padding: 8px 14px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-#cancelar {
-  background: #ccc;
-}
-
-#guardar {
-  background: #28a745;
-  color: white;
-}
-
-#guardar:hover {
-  background: #218838;
-}
-/* ---------------------------------------------------
 1. BOTONES DE ACCIÓN
 --------------------------------------------------- */
 .acciones {
@@ -515,188 +412,10 @@ MODAL
   opacity: 0.9;
 }
 
-.login-right {
-  width: 100%;
-  background: #fff;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 40px;
-  box-sizing: border-box;
-  gap: 20px;
-  text-align: center;
-  overflow-y: auto;
-  max-height: 100%;
-}
-
-.login-right h2 {
-  color: #383838;
-  font-family: "Roboto Flex", sans-serif;
-  font-size: 40px;
-  font-weight: 800;
-  max-width: 495px;
-}
-
-.login-right .subtitle {
-  color: #383838;
-  font-family: "Roboto Flex", sans-serif;
-  font-size: 24px;
-  font-weight: 600;
-  max-width: 495px;
-}
-
-.login-form {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 18px;
-  width: 100%;
-  max-width: 400px;
-  color: #979797;
-  font-family: Inter, sans-serif;
-  font-size: 16px;
-  font-weight: 600;
-  letter-spacing: 0.8px;
-}
-
-.login-form label {
-  align-self: flex-start;
-  color: #979797;
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.login-form input[type="text"],
-.login-form input[type="email"],
-.login-form input[type="password"],
-.login-form select {
-  width: 100%;
-  margin-top: 10px;
-  margin-bottom: 5px;
-  height: 40px;
-  padding: 0 15px;
-  border-radius: 10px;
-  border: 1px solid rgba(0, 0, 0, 0.23);
-  font-size: 14px;
-  outline: none;
-  background-color: white;
-  font-family: 'Inter', sans-serif;
-  color: #333;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
-  box-sizing: border-box;
-  appearance: none;
-}
-
-.login-form select {
-  background-image: url("data:image/svg+xml;charset=US-ASCII,%3csvg xmlns='http://www.w3.org/2000/svg' width='14' height='8'%3e%3cpath fill='none' stroke='%23666' stroke-width='2' d='M1 1l6 6 6-6'/%3e%3c/svg%3e");
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  background-size: 14px 8px;
-  cursor: pointer;
-}
-
-.login-form input[type="text"]:focus,
-.login-form input[type="email"]:focus,
-.login-form input[type="password"]:focus,
-.login-form select:focus {
-  border-color: #007BFF;
-  box-shadow: 0 0 6px rgba(0,123,255,0.5);
-  outline: none;
-}
-
-
-input:-webkit-autofill {
-  background-color: white !important;
-  color: black !important;
-  box-shadow: 0 0 0 1000px white inset !important;
-  -webkit-text-fill-color: black !important;
-}
-
-.password-wrapper {
-  width: 100%;
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.password-wrapper input {
-  width: 100%;
-}
-
-.toggle-password {
-  position: absolute;
-  right: 10px;
-  background: none;
-  border: none;
-  font-size: 18px;
-  cursor: pointer;
-  color: #000B3F;
-}
-
-.password-info {
-  color: #383838;
-  font-family: Inter, sans-serif;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.55px;
-  text-align: left;
-}
-
-.checkbox-group {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  width: 100%;
-  align-items: flex-start;
-}
-
-.checkbox-group label {
-  color: #000B3F;
-  font-family: Inter, sans-serif;
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.6px;
-}
-
-.continuar {
-  display: flex;
-  cursor: pointer;
-  justify-content: center;
-  align-items: center;
-  width: 365px;
-  height: 46px;
-  flex-shrink: 0;
-  border: none;
-  outline: none;
-  border-radius: 10px;
-  background: #000B3F;
-  color: #FFF;
-  font-family: Inter, sans-serif;
-  font-size: 15px;
-  font-weight: 600;
-  letter-spacing: 0.75px;
-  text-decoration: none;
-}
-
-.continuar:hover {
-  background-color: #223385;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-  cursor: pointer;
-}
-.eye-icon {
-  width: 24px;
-  height: 24px;
-  color: #000B3F;
-  cursor: pointer;
-  display: block;
-  margin-top: 7px;
-}
 /* ===================================================
-   MODALES (MODIFICAR Y ELIMINAR)
+   MODALES GENERALES
    =================================================== */
-dialog#modal-modificar,
-dialog#modal-eliminar {
+dialog {
   width: 420px;
   max-width: 90%;
   border: none;
@@ -712,18 +431,19 @@ dialog#modal-eliminar {
   transform: translate(-50%, -50%);
 }
 
-/* Fondo oscuro al abrir */
 dialog::backdrop {
   background: rgba(0, 0, 0, 0.45);
 }
 
-/* Contenedor general del modal */
+/* Contenedor general dentro del modal */
 .modal-content {
   padding: 28px 30px;
+  max-height: 80vh;       /* Limita altura del modal */
+  overflow-y: auto;       /* Scroll si hay muchos campos */
   position: relative;
 }
 
-/* Título */
+/* Cabecera del modal */
 .modal-content h2 {
   font-size: 22px;
   font-weight: 700;
@@ -746,8 +466,8 @@ dialog::backdrop {
   color: #ff3b30;
 }
 
-/* Inputs y selects dentro del modal */
-#form-modificar label {
+/* Inputs y selects */
+.modal-content label {
   display: block;
   font-weight: 600;
   color: #333;
@@ -755,8 +475,9 @@ dialog::backdrop {
   margin-bottom: 6px;
 }
 
-#form-modificar input,
-#form-modificar select {
+.modal-content input,
+.modal-content select,
+.modal-content textarea {
   width: 100%;
   padding: 10px 12px;
   border: 1px solid #ccc;
@@ -766,10 +487,104 @@ dialog::backdrop {
   transition: border-color 0.3s, box-shadow 0.3s;
 }
 
-#form-modificar input:focus,
-#form-modificar select:focus {
+.modal-content input:focus,
+.modal-content select:focus,
+.modal-content textarea:focus {
   border-color: var(--color-primary);
   box-shadow: 0 0 6px rgba(0, 122, 255, 0.4);
+}
+
+/* Campos con lápiz para edición */
+.campo-con-lapiz {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.campo-con-lapiz-imagen {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Imagen y lápiz centrados */
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.campo-con-lapiz-imagen label {
+  align-self: flex-start; /* Esto hace que el label quede a la izquierda */
+}
+
+.imagen-wrapper {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.imagen-wrapper img {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+  display: block;
+  transition: 0.3s transform;
+}
+
+.imagen-wrapper:hover img {
+  transform: scale(1.05);
+}
+
+.imagen-wrapper .editar-campo {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 50%;
+  padding: 6px;
+  border: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.imagen-wrapper:hover .editar-campo {
+  opacity: 1;
+}
+
+.imagen-wrapper .editar-campo img {
+  width: 18px;
+  height: 18px;
+}
+
+.campo-con-lapiz-imagen input[type="file"] {
+  display: block;
+  margin-top: 5px;
+}
+
+
+
+
+.campo-con-lapiz input[readonly],
+.campo-con-lapiz textarea[readonly],
+.campo-con-lapiz select:disabled {
+  background-color: #f5f5f5;
+  border: 1px solid transparent;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08);
+  color: #555;
+  cursor: not-allowed;
+  transition: box-shadow 0.3s ease, background-color 0.3s ease;
+}
+
+.editar-campo {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.editar-campo img.icono-editar {
+  width: 20px;
+  height: 20px;
 }
 
 /* Botones dentro de los modales */
@@ -781,8 +596,7 @@ dialog::backdrop {
 }
 
 /* Botón cancelar */
-#cancelar-modificar,
-#cancelar-eliminar {
+.modal-buttons button[id^="cancelar"] {
   background: #ccc;
   color: #222;
   border: none;
@@ -793,13 +607,12 @@ dialog::backdrop {
   transition: background 0.3s ease;
 }
 
-#cancelar-modificar:hover,
-#cancelar-eliminar:hover {
+.modal-buttons button[id^="cancelar"]:hover {
   background: #b3b3b3;
 }
 
-/* Botón guardar */
-#guardar-modificar {
+/* Botón guardar/modificar */
+.modal-buttons button[id^="guardar"] {
   background: var(--color-primary);
   color: #fff;
   border: none;
@@ -810,12 +623,12 @@ dialog::backdrop {
   transition: opacity 0.3s ease;
 }
 
-#guardar-modificar:hover {
+.modal-buttons button[id^="guardar"]:hover {
   opacity: 0.9;
 }
 
-/* Botón eliminar (color rojo coherente con sistema) */
-#confirmar-eliminar {
+/* Botón eliminar */
+.modal-buttons button[id^="confirmar"] {
   background: #dc3545;
   color: #fff;
   border: none;
@@ -826,60 +639,40 @@ dialog::backdrop {
   transition: opacity 0.3s ease;
 }
 
-#confirmar-eliminar:hover {
+.modal-buttons button[id^="confirmar"]:hover {
   opacity: 0.9;
 }
 
-/* Párrafo de confirmación en eliminar */
-#modal-eliminar p {
-  color: #444;
-  font-size: 16px;
-  margin-bottom: 24px;
-  line-height: 1.5;
-}
-.modal-content {
-  max-height: 80vh;       /* Limita altura del modal */
-  overflow-y: auto;       /* Habilita scroll si hay muchos campos */
-  padding: 20px;
-}
-
-.campo-con-lapiz {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
-.campo-con-lapiz input[readonly] {
-  background-color: #f5f5f5;
-}
-
-.editar-campo {
-  cursor: pointer;
-  background: none;
+/* Botones del modal nuevo */
+#cancelar-nuevo {
+  background: #ccc;
+  color: #222;
   border: none;
-  font-size: 1.2em;
-}
-
-/* Inputs de modales */
-#form-modificar input[readonly] {
-  background-color: #f5f5f5; /* color de fondo claro */
-  border: 1px solid transparent; /* sin borde visible */
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08); /* sombra sutil interna */
-  color: #555; /* texto ligeramente gris */
-  padding: 10px 12px;
   border-radius: 8px;
-  font-size: 15px;
-  outline: none;
-  transition: box-shadow 0.3s ease, background-color 0.3s ease;
+  padding: 10px 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s ease;
 }
 
-/* Opcional: al hacer focus aunque esté bloqueado, mantener sin borde fuerte */
-#form-modificar input[readonly]:focus {
-  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.12);
-  background-color: #f5f5f5;
+#cancelar-nuevo:hover {
+  background: #b3b3b3;
 }
 
+#guardar-nuevo {
+  background: var(--color-primary, #28a745);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.3s ease;
+}
+
+#guardar-nuevo:hover {
+  opacity: 0.9;
+}
 .editar-campo {
   background: none;
   border: none;

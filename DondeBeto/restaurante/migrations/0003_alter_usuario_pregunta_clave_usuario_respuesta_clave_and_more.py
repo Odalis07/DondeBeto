@@ -11,12 +11,12 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AlterField(
-            model_name='Login',
+            model_name='usuario',
             name='pregunta_clave',
             field=models.CharField(blank=True, max_length=255, null=True),
         ),
         migrations.AddField(
-            model_name='Login',
+            model_name='usuario',
             name='respuesta_clave',
             field=models.CharField(blank=True, max_length=255, null=True),
         ),

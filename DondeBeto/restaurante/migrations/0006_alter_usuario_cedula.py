@@ -11,7 +11,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AlterField(
-            model_name='Login',
+            model_name='usuario',
             name='cedula',
             field=models.CharField(max_length=10),
         ),
