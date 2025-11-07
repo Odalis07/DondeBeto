@@ -11,16 +11,17 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AlterField(
-            model_name='Login',
+            model_name='usuario',  # ✅ nombre del modelo, no el db_table
             name='pregunta_clave',
             field=models.CharField(blank=True, max_length=255, null=True),
         ),
         migrations.AddField(
-            model_name='Login',
+            model_name='usuario',  # ✅ igual aquí
             name='respuesta_clave',
             field=models.CharField(blank=True, max_length=255, null=True),
         ),
         migrations.DeleteModel(
-            name='PreguntaClave',
+            name='PreguntaClave',  # ✅ esto está bien
         ),
     ]
+

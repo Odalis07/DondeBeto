@@ -25,13 +25,14 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.AddField(
-            model_name='Login',
+            model_name='usuario',  # ✅ minúscula
             name='rol',
-            field=models.CharField(default='Login', max_length=20),
+            field=models.CharField(default='usuario', max_length=20),  # ✅ corregido
         ),
         migrations.AddField(
-            model_name='Login',
+            model_name='usuario',  # ✅ minúscula
             name='pregunta_clave',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='restaurante.preguntaclave'),
+            field=models.CharField(max_length=255, null=True, blank=True),  # ✅ correcta
         ),
     ]
+    
