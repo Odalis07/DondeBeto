@@ -27,3 +27,7 @@ media/
 *.sqlite3
 *.mo
 *.log
+
+# Ignorar archivos compilados
+__pycache__/
+*.pyc
