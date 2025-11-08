@@ -1,73 +1,75 @@
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
-from django.shortcuts import render, redirect
+from django.http import JsonResponse
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.views.decorators.csrf import csrf_exempt
+import json
+from .models import Usuario, Producto, Categoria, Mesa
 
-from .models import Usuario, Mesa
 
-
-
+# ---------------------------
+# LOGIN VIEW
+# ---------------------------
 def login_view(request):
     if request.method == "POST":
-        # Recibimos los datos del formulario
         email = request.POST.get("email")
         contraseña = request.POST.get("contraseña")
 
-        # Intentamos obtener al usuario con el email proporcionado
         try:
             usuario = Usuario.objects.get(email=email)
+            if usuario.checkpassword(contraseña):
+                request.session['usuario_id'] = usuario.id
+                rol = usuario.rol.strip().lower()
 
-            # Verificamos si la contraseña es correcta
-            if usuario.checkpassword(contraseña):  # Usamos checkpassword de tu modelo personalizado
-                # Si la contraseña es correcta, establecemos manualmente la sesión
-                request.session['usuario_id'] = usuario.id  # Guardamos el id de usuario en la sesión
-                return redirect('vista_adm')  # Redirigir a la vista de administración
+                if rol == "administrador":
+                    return redirect('vista_adm')
+                elif rol == "cliente":
+                    return redirect('home_cliente')
+                elif rol == "cajero":
+                    return redirect('vista_cajero')
+                elif rol == "mesero":
+                    return redirect('vista_mesero')
+                elif rol == "repartidor":
+                    return redirect('vista_repartidor')
+                else:
+                    messages.error(request, "Rol de usuario no reconocido.")
             else:
                 messages.error(request, "Contraseña incorrecta.")
         except Usuario.DoesNotExist:
             messages.error(request, "El correo no está registrado.")
 
-    return render(request, 'usuario/login.html')
+    return render(request, 'Login/login.html')
 
-# Vista para manejar el registro de usuario
+
 def registro_view(request):
     if request.method == 'POST':
-        # Obtener los datos del formulario
         cedula = request.POST.get('cedula')
         nombre = request.POST.get('nombre')
         apellido = request.POST.get('apellido')
         email = request.POST.get('email')
         password = request.POST.get('password')
         rol = request.POST.get('rol')
-        pregunta_clave = request.POST.get('pregunta_clave')  # Obtener la pregunta de seguridad
-        respuesta_clave = request.POST.get('respuesta_clave')  # Obtener la respuesta de seguridad
+        pregunta_clave = request.POST.get('pregunta_clave')
+        respuesta_clave = request.POST.get('respuesta_clave')
 
-        # Crear un nuevo usuario
         usuario = Usuario(
             cedula=cedula,
             nombre=nombre,
             apellido=apellido,
             email=email,
-            contraseña=make_password(password),  # Encriptar la contraseña
+            contraseña=make_password(password),
             rol=rol,
-            pregunta_clave=pregunta_clave,  # Almacenar la pregunta clave
-            respuesta_clave=respuesta_clave  # Almacenar la respuesta clave
+            pregunta_clave=pregunta_clave,
+            respuesta_clave=respuesta_clave
         )
-
-        # Guardar el usuario en la base de datos
         usuario.save()
-
-        # Guardar el ID del usuario en la sesión para usarlo en el siguiente paso
         request.session['usuario_id'] = usuario.id
-
-        # Mostrar mensaje de éxito
         messages.success(request, '¡Registro exitoso! Ahora puedes iniciar sesión.')
+        return redirect('login')
 
-        # Redirigir a la página de login
-        return redirect('login')  # Redirigir a login después del registro
-
-    return render(request, 'usuario/registro.html')  # Formulario de registro básico
+    return render(request, 'Login/registro.html')
 
 
 def clave_olvidada(request):
@@ -79,145 +81,112 @@ def clave_olvidada(request):
             usuario = Usuario.objects.get(email=email)
         except Usuario.DoesNotExist:
             messages.error(request, 'No se encuentra un usuario con ese correo electrónico.')
-            return render(request, 'usuario/clave_olvidada.html')
+            return render(request, 'Login/clave_olvidada.html')
 
-        # Si el usuario ya está respondiendo la pregunta
         if respuesta:
             if usuario.respuesta_clave.strip().lower() == respuesta.strip().lower():
-                # Redirigir si la respuesta es correcta
                 return redirect('clave_cambiada')
-
             else:
                 messages.error(request, 'La respuesta a la pregunta de seguridad es incorrecta.')
-                # Volver a mostrar la pregunta
-                return render(request, 'usuario/clave_olvidada.html', {
+                return render(request, 'Login/clave_olvidada.html', {
                     'email': email,
                     'pregunta_clave': usuario.pregunta_clave,
                 })
-
-        # Si solo se envió el email, mostrar la pregunta
         else:
-            return render(request, 'usuario/clave_olvidada.html', {
+            return render(request, 'Login/clave_olvidada.html', {
                 'email': email,
                 'pregunta_clave': usuario.pregunta_clave,
             })
 
-    # Si es GET
-    return render(request, 'usuario/clave_olvidada.html')
+    return render(request, 'Login/clave_olvidada.html')
+
 
 def clave_cambiada(request):
-    return render(request, 'usuario/clave_cambiada.html')
+    return render(request, 'Login/clave_cambiada.html')
+
+
+# ---------------------------
+# ADMINISTRADOR VIEW
+# ---------------------------
 def vista_adm(request):
-
     usuario_id = request.session.get('usuario_id')
+    if not usuario_id:
+        return redirect('login')
 
-    if usuario_id:
-        try:
+    try:
+        usuario = Usuario.objects.get(id=usuario_id)
+    except Usuario.DoesNotExist:
+        return redirect('login')
 
-            usuario = Usuario.objects.get(id=usuario_id)
-        except Usuario.DoesNotExist:
-            usuario = None
-    else:
-        usuario = None
-
-    return render(request, 'adm/Vista_Adm.html',{'usuario': usuario, 'rol': usuario.rol if usuario else None})
+    return render(request, 'Vista_Adm/Vista_Adm.html', {'usuario': usuario, 'rol': usuario.rol if usuario else None})
 
 
 def usuarios_view(request):
-    # Obtener el rol seleccionado desde la URL (por ejemplo, 'Todos', 'cajero', etc.)
-    rol_seleccionado = request.GET.get('rol', 'Todos').lower()  # Convertir siempre a minúsculas
-
+    rol_seleccionado = request.GET.get('rol', 'Todos').lower()
     if rol_seleccionado == 'todos':
-        # Excluir el rol 'cliente' para que no aparezca en la vista "Todos"
-        usuarios = Usuario.objects.exclude(rol='cliente')  # Excluimos 'cliente' en minúsculas
+        usuarios = Usuario.objects.exclude(rol='cliente')
     elif rol_seleccionado in ['cajero', 'mesero', 'repartidor', 'administrador']:
-        # Filtramos según el rol seleccionado en minúsculas
         usuarios = Usuario.objects.filter(rol=rol_seleccionado)
     else:
-        # Si no se pasa un rol válido, mostramos todos los usuarios
         usuarios = Usuario.objects.all()
 
-    # Obtener el usuario actual (opcional)
     usuario_id = request.session.get('usuario_id')
-    if usuario_id:
-        try:
-            usuario = Usuario.objects.get(id=usuario_id)
-        except Usuario.DoesNotExist:
-            usuario = None
-    else:
-        usuario = None
+    usuario = Usuario.objects.filter(id=usuario_id).first() if usuario_id else None
 
-    # Pasamos los usuarios y el rol seleccionado a la plantilla
-    return render(request, 'adm/Usuarios.html', {'usuario': usuario, 'usuarios': usuarios, 'rol_seleccionado': rol_seleccionado})
+    return render(request, 'Vista_Adm/Usuarios.html', {
+        'usuario': usuario,
+        'usuarios': usuarios,
+        'rol_seleccionado': rol_seleccionado,
+        'rol': usuario.rol if usuario else None
+    })
 
 
-# Vista para registrar un trabajador
 def registrar_usuario_view(request):
     if request.method == 'POST':
-        # Obtener datos del formulario
         cedula = request.POST.get('cedula')
         nombre = request.POST.get('nombre')
         apellido = request.POST.get('apellido')
         email = request.POST.get('email')
         password = request.POST.get('password')
-        rol = request.POST.get('rol').lower()  # Convertimos a minúsculas
+        rol = request.POST.get('rol').lower()
         pregunta_clave = request.POST.get('pregunta_clave')
         respuesta_clave = request.POST.get('respuesta_clave')
 
-        # Validar que el rol sea uno de los válidos para trabajadores
         roles_validos = ['cajero', 'mesero', 'repartidor', 'administrador']
         if rol not in roles_validos:
             messages.error(request, 'Rol no válido para trabajadores.')
-            return redirect('usuarios')  # Redirige de nuevo a la lista de usuarios
+            return redirect('usuarios')
 
-        # Validar que la cédula no exista (ya que es unique)
         if Usuario.objects.filter(cedula=cedula).exists():
             messages.error(request, 'Ya existe un usuario con esa cédula.')
             return redirect('usuarios')
 
-        # Crear nuevo usuario
         usuario = Usuario(
             cedula=cedula,
             nombre=nombre,
             apellido=apellido,
             email=email,
-            contraseña=make_password(password),  # Encriptar contraseña
+            contraseña=make_password(password),
             rol=rol,
             pregunta_clave=pregunta_clave,
             respuesta_clave=respuesta_clave
         )
         usuario.save()
-
         messages.success(request, f'Trabajador {nombre} {apellido} registrado correctamente.')
-        return redirect('usuarios')  # Redirige de nuevo a la lista de usuarios
+        return redirect('usuarios')
 
-    # Si no es POST, redirigir a la lista de usuarios
     return redirect('usuarios')
-
 
 
 def clientes_view(request):
     usuario_id = request.session.get('usuario_id')
-
-    # Verificamos si hay un usuario en la sesión
-    if usuario_id:
-        try:
-            usuario = Usuario.objects.get(id=usuario_id)  # El usuario logueado
-        except Usuario.DoesNotExist:
-            usuario = None
-    else:
-        usuario = None
-
-    # Filtrar los usuarios con el rol 'cliente'
+    usuario = Usuario.objects.filter(id=usuario_id).first() if usuario_id else None
     clientes = Usuario.objects.filter(rol='cliente')
+    return render(request, 'Vista_Adm/Clientes.html', {'usuario': usuario, 'clientes': clientes, 'rol': usuario.rol if usuario else None})
 
-    # Pasar a la plantilla
-    return render(request, 'adm/clientes.html', {'usuario': usuario, 'clientes': clientes})
 
-# Vista para registrar nuevos clientes
 def registrar_cliente_view(request):
     if request.method == 'POST':
-        # Obtener los datos del formulario
         cedula = request.POST.get('cedula')
         nombre = request.POST.get('nombre')
         apellido = request.POST.get('apellido')
@@ -226,7 +195,6 @@ def registrar_cliente_view(request):
         pregunta_clave = request.POST.get('pregunta_clave')
         respuesta_clave = request.POST.get('respuesta_clave')
 
-        # Crear un nuevo cliente (rol fijo: cliente)
         cliente = Usuario(
             cedula=cedula,
             nombre=nombre,
@@ -237,58 +205,102 @@ def registrar_cliente_view(request):
             pregunta_clave=pregunta_clave,
             respuesta_clave=respuesta_clave
         )
-
         cliente.save()
         messages.success(request, '¡Cliente registrado exitosamente!')
-
-        # Redirigir de vuelta a la lista de clientes
         return redirect('clientes')
 
-    # Si es GET, simplemente recargar la página de clientes
     return redirect('clientes')
 
-def lista_clientes(request):
-    # Filtramos solo los usuarios con rol 'cliente'
-    clientes = Usuario.objects.filter(rol='cliente')  # Asegúrate que los clientes tienen rol 'cliente'
-    return render(request, 'Clientes.html', {'clientes': clientes})
 
+# ---------------------------
+# CLIENTE Y OTRAS VISTAS
+# ---------------------------
+def home_cliente(request):
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id:
+        return redirect('login')
+    usuario = Usuario.objects.get(id=usuario_id)
+    return render(request, 'Vista_cliente/homeCliente.html', {'usuario': usuario})
+
+
+def ubicacion(request):
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id:
+        return redirect('login')
+    usuario = Usuario.objects.get(id=usuario_id)
+    return render(request, 'Vista_cliente/ubicacion.html', {'usuario': usuario})
+
+
+def sobre_nosotros(request):
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id:
+        return redirect('login')
+    usuario = Usuario.objects.get(id=usuario_id)
+    return render(request, 'Vista_cliente/Nosotros.html', {'usuario': usuario})
+
+
+def mi_perfil(request):
+    user_id = request.session.get('usuario_id')
+    if not user_id:
+        return redirect('login')
+    usuario = Usuario.objects.get(id=user_id)
+    return render(request, 'Vista_cliente/perfil.html', {'usuario': usuario})
+
+
+# ---------------------------
+# VISTAS POR ROL
+# ---------------------------
+def vista_cajero(request):
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id:
+        return redirect('login')
+    usuario = Usuario.objects.get(id=usuario_id)
+    return render(request, 'Vista_cajero/Vista_Cajero.html', {'usuario': usuario, 'rol': usuario.rol})
+
+
+def vista_mesero(request):
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id:
+        return redirect('login')
+    usuario = Usuario.objects.get(id=usuario_id)
+    return render(request, 'Vista_mesero/Vista_Mesero.html', {'usuario': usuario, 'rol': usuario.rol})
+
+
+def vista_repartidor(request):
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id:
+        return redirect('login')
+    usuario = Usuario.objects.get(id=usuario_id)
+    return render(request, 'Vista_repartidor/Vista_Repartidor.html', {'usuario': usuario, 'rol': usuario.rol})
+
+
+# ---------------------------
+# MESAS
+# ---------------------------
 def mesas_view(request):
     usuario_id = request.session.get('usuario_id')
+    usuario = Usuario.objects.filter(id=usuario_id).first() if usuario_id else None
 
-    # Verificamos si hay un usuario en la sesión
-    if usuario_id:
-        try:
-            usuario = Usuario.objects.get(id=usuario_id)
-        except Usuario.DoesNotExist:
-            usuario = None
+    estado = request.GET.get('estado')
+    if estado in ['disponible', 'ocupada', 'reservada']:
+        mesas = Mesa.objects.filter(estado=estado)
     else:
-        usuario = None
+        mesas = Mesa.objects.all()
 
-    # Obtener todas las mesas registradas
-    mesas = Mesa.objects.all()
+    context = {
+        'usuario': usuario,
+        'rol': usuario.rol if usuario else None,
+        'mesas': mesas,
+        'estado_filtro': estado
+    }
+    return render(request, 'Vista_adm/Mesas.html', context)
 
 
-    return render(request, 'adm/Mesas.html', {'usuario': usuario, 'mesas': mesas})
-
-
-# Vista para registrar nuevas mesas
 def registrar_mesa_view(request):
     if request.method == 'POST':
-        # Obtener los datos del formulario
         numero = request.POST.get('numero')
         capacidad = request.POST.get('capacidad')
         estado = request.POST.get('estado')
-
-        # Crear una nueva mesa
-        mesa = Mesa(
-            numero=numero,
-            capacidad=capacidad,
-            estado=estado
-        )
-        mesa.save()
-
+        Mesa.objects.create(numero=numero, capacidad=capacidad, estado=estado)
         messages.success(request, '¡Mesa registrada exitosamente!')
-        return redirect('mesas')
-
-
     return redirect('mesas')

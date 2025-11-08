@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="es">
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="{% static 'css/Vista_adm/Mesas.css' %}" />
+    <link rel="icon" href="{% static 'img/logoOficial.svg' %}" type="image/x-icon" />
+    <title>Vista Administrador</title>
+  </head>
+
+  <body>
+    <div class="admin-container">
+      <!-- Menú lateral -->
+      <aside class="sidebar">
+        <div class="logo">
+          <img src="{% static 'img/logoOficial.svg' %}" alt="Logo Beto" class="logo-icon">
+          <span class="logo-text">Beto</span>
+        </div>
+
+        <nav class="menu">
+          <a href="{% url 'productos' %}" class="menu-item">
+            <img src="{% static 'img/icon-productos.svg' %}" alt=""> Productos
+          </a>
+          <a href="{% url 'mesas' %}" class="menu-item">
+            <img src="{% static 'img/icon-mesas.svg' %}" alt=""> Mesas
+          </a>
+          <a href="#" class="menu-item">
+            <img src="{% static 'img/icon-facturas.svg' %}" alt=""> Facturas
+          </a>
+          <a href="{% url 'clientes' %}" class="menu-item">
+            <img src="{% static 'img/icon-clientes.svg' %}" alt=""> Clientes
+          </a>
+          <a href="{% url 'usuarios' %}" class="menu-item">
+            <img src="{% static 'img/icon-clientes.svg' %}" alt=""> Trabajadores
+          </a>
+          <a href="{% url 'login' %}" class="menu-item logout">
+            <img src="{% static 'img/icon-cerrar.svg' %}" alt=""> Cerrar
+          </a>
+        </nav>
+      </aside>
+
+      <main class="main-content">
+        <header class="topbar">
+          <div class="caja">
+            {% if rol %}
+              Rol: {{ rol }}
+            {% else %}
+              No disponible.
+            {% endif %}
+          </div>
+          <div class="titulo">DONDE BETO RESTO BAR</div>
+          <div class="usuario">
+            {% if usuario %}
+              ¡Hola, {{ usuario.nombre }} {{ usuario.apellido }}!
+            {% else %}
+              No has iniciado sesión.
+            {% endif %}
+          </div>
+        </header>
+
+        <section class="content">
+          <!-- TABS -->
+          <div class="tabs">
+            <a href="{% url 'mesas' %}" class="tab {% if not estado_filtro %}active{% endif %}">Mesas</a>
+            <a href="{% url 'mesas' %}?estado=disponible" class="tab {% if estado_filtro == 'disponible' %}active{% endif %}">Disponibles</a>
+            <a href="{% url 'mesas' %}?estado=ocupada" class="tab {% if estado_filtro == 'ocupada' %}active{% endif %}">Ocupadas</a>
+            <a href="{% url 'mesas' %}?estado=reservada" class="tab {% if estado_filtro == 'reservada' %}active{% endif %}">Reservadas</a>
+          </div>
+
+          <!-- GRID MESAS -->
+          <div class="mesas-grid">
+            {% for mesa in mesas %}
+            <div class="card-mesa
+              {% if mesa.estado == 'ocupada' %}ocupada
+              {% elif mesa.estado == 'reservada' %}reservada
+              {% else %}libre{% endif %}">
+
+              <img src="{% static 'img/imagen_mesa.svg' %}" alt="Mesa">
+              <div class="name"> Mesa{{ mesa.numero }}</div>
+              <div class="detail">
+                <strong>Numero:</strong> {{ mesa.numero }} <br>
+                <strong>Capacidad:</strong> {{ mesa.capacidad }} <br>
+                <strong>Estado:</strong> {{ mesa.estado }} <br>
+              </div>
+
+              <div class="acciones">
+                <!-- BOTONES CON DATA-ATTRIBUTES -->
+                <button class="btn-modificar"
+                        data-id="{{ mesa.id }}"
+                        data-numero="{{ mesa.numero }}"
+                        data-capacidad="{{ mesa.capacidad }}"
+                        data-estado="{{ mesa.estado }}">MODIFICAR</button>
+
+                <button class="btn-eliminar"
+                        data-id="{{ mesa.id }}"
+                        data-numero="{{ mesa.numero }}">ELIMINAR</button>
+              </div>
+            </div>
+            {% empty %}
+              <p>No hay mesas registradas.</p>
+            {% endfor %}
+          </div>
+
+          <!-- BOTÓN NUEVO -->
+          <div class="acciones">
+            <button id="btn-nuevo" class="btn-nuevo">NUEVO</button>
+          </div>
+
+          <!-- MODAL NUEVA MESA -->
+          <dialog id="modal-nuevo">
+            <div class="modal">
+              <div class="login-right">
+                <span class="close">&times;</span>
+                <h2>Registrar nueva mesa</h2>
+                <p class="subtitle">Añade una nueva mesa al sistema</p>
+
+                <form class="login-form" action="{% url 'registrar_mesa' %}" method="POST">
+                  {% csrf_token %}
+                  <div class="form-column">
+                    <input type="number" id="numero-nuevo" name="numero" required placeholder="Número" />
+                    <input type="number" id="capacidad-nuevo" name="capacidad" required placeholder="Capacidad" />
+                    <select id="estado-nuevo" name="estado" required>
+                      <option value="">Seleccione estado</option>
+                      <option value="disponible">Disponible</option>
+                      <option value="ocupada">Ocupada</option>
+                      <option value="reservada">Reservada</option>
+                    </select>
+                  </div>
+
+                  <button type="submit" class="continuar">Registrar mesa</button>
+                  <button type="button" id="cancelar-nuevo">Cancelar</button>
+                </form>
+              </div>
+            </div>
+          </dialog>
+
+          <!-- MODAL MODIFICAR -->
+          <dialog id="modal-modificar">
+            <div class="modal">
+              <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2>Modificar Mesa</h2>
+
+                <form id="form-modificar">
+                  <label for="numero-modificar">Número:</label>
+                  <input type="number" id="numero-modificar" name="numero" placeholder="Ingrese el número" required>
+
+                  <label for="capacidad-modificar">Capacidad:</label>
+                  <input type="number" id="capacidad-modificar" name="capacidad" placeholder="Capacidad Mesa" required>
+
+                  <label for="estado-modificar">Estado:</label>
+                  <select id="estado-modificar" name="estado" required>
+                    <option value="disponible">Disponible</option>
+                    <option value="ocupada">Ocupada</option>
+                    <option value="reservada">Reservada</option>
+                  </select>
+
+                  <div class="modal-buttons">
+                    <button type="button" id="cancelar-modificar">Cancelar</button>
+                    <button type="submit" id="guardar-modificar">Guardar Cambios</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </dialog>
+
+          <!-- MODAL ELIMINAR -->
+          <dialog id="modal-eliminar">
+            <div class="modal">
+              <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2>Eliminar Mesa</h2>
+                <p>¿Estás seguro de que deseas eliminar esta mesa?</p>
+                <div class="modal-buttons">
+                  <button type="button" id="cancelar-eliminar">Cancelar</button>
+                  <button type="button" id="confirmar-eliminar">Eliminar</button>
+                </div>
+              </div>
+            </div>
+          </dialog>
+        </section>
+      </main>
+    </div>
+
+    <!-- SCRIPT MODALES -->
+    <script>
+      const modalNuevo = document.getElementById('modal-nuevo');
+      const modalModificar = document.getElementById('modal-modificar');
+      const modalEliminar = document.getElementById('modal-eliminar');
+
+      // --- BOTÓN NUEVO ---
+      document.getElementById('btn-nuevo').addEventListener('click', () => modalNuevo.showModal());
+
+      // --- CERRAR MODALES (X) ---
+      document.querySelectorAll('.modal .close').forEach(btn => {
+        btn.addEventListener('click', () => {
+          modalNuevo.close();
+          modalModificar.close();
+          modalEliminar.close();
+        });
+      });
+
+      // --- BOTONES CANCELAR ---
+      document.getElementById('cancelar-nuevo').addEventListener('click', () => modalNuevo.close());
+      document.getElementById('cancelar-modificar').addEventListener('click', () => modalModificar.close());
+      document.getElementById('cancelar-eliminar').addEventListener('click', () => modalEliminar.close());
+
+      // --- CONFIRMAR ELIMINAR ---
+      document.getElementById('confirmar-eliminar').addEventListener('click', () => {
+        alert("Mesa eliminada");
+        modalEliminar.close();
+      });
+
+      // --- MODIFICAR MESAS ---
+      document.querySelectorAll('.btn-modificar').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.dataset.id;
+          document.getElementById('numero-modificar').value = btn.dataset.numero;
+          document.getElementById('capacidad-modificar').value = btn.dataset.capacidad;
+          document.getElementById('estado-modificar').value = btn.dataset.estado;
+          modalModificar.showModal();
+
+          const form = document.getElementById('form-modificar');
+          form.onsubmit = async (e) => {
+            e.preventDefault();
+            const data = {
+              numero: document.getElementById('numero-modificar').value,
+              capacidad: document.getElementById('capacidad-modificar').value,
+              estado: document.getElementById('estado-modificar').value
+            };
+
+            const response = await fetch(`/mesa/actualizar/${id}/`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+              },
+              body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+            if (result.success) {
+              alert(result.message);
+              location.reload();
+            } else {
+              alert("Error: " + result.error);
+            }
+          };
+        });
+      });
+
+      // --- ELIMINAR MESAS ---
+      document.querySelectorAll('.btn-eliminar').forEach(btn => {
+        btn.addEventListener('click', () => {
+          modalEliminar.showModal();
+          const id = btn.dataset.id;
+
+          document.getElementById('confirmar-eliminar').onclick = async () => {
+            const response = await fetch(`/mesa/eliminar/${id}/`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+              }
+            });
+
+            const result = await response.json();
+            if (result.success) {
+              alert(result.message);
+              location.reload();
+            } else {
+              alert("Error: " + result.error);
+            }
+            modalEliminar.close();
+          };
+        });
+      });
+    </script>
+  </body>
+</html>

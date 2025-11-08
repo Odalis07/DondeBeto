@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+{% load static %}
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BETO - Ubicación</title>
+  <link rel="stylesheet" href="{% static 'css/Vista_cliente/ubicacion.css' %}">
+   <link rel="icon" href="{% static 'img/logoOficial.svg' %}" type="image/x-icon" />
+</head>
+<body>
+
+  <!-- Panel lateral oculto -->
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-header">
+      <img src="{% static 'img/usuario.png' %}" alt="Foto usuario" class="perfil-img">
+      <h2>{{ usuario.nombre }} {{ usuario.apellido }}</h2>
+      <p>{{ usuario.email }}</p>
+    </div>
+    <div class="sidebar-links">
+      <a href="{% url 'mi_perfil' %}">Mi perfil</a>
+      <a href="{% url 'home_cliente' %}">Mis pedidos</a>
+      <a href="{% url 'login' %}" class="logout">Cerrar sesión</a>
+    </div>
+  </aside>
+
+  <!-- Encabezado -->
+  <header class="navbar">
+    <div class="menu-icon" onclick="toggleSidebar()">☰</div>
+    <div class="logo">
+      <img src="{% static 'img/logoOficial.svg' %}" alt="Logo Beto" class="logo-icon"> BETO
+    </div>
+    <a href="{% url 'login' %}" class="btn-login">Salir</a>
+  </header>
+
+  <!-- Menú de navegación -->
+  <nav class="nav-links">
+    <a href="{% url 'home_cliente' %}">Productos</a>
+    <a href="{% url 'ubicacion' %}" class="active">Ubicación</a>
+    <a href="{% url 'sobre_nosotros' %}">Sobre nosotros</a>
+  </nav>
+
+  <!-- Contenido principal -->
+  <main class="main-content">
+    <section class="about-us">
+      <h2>📍 Nuestra Ubicación</h2>
+      <p class="lead">
+        Encuéntranos en el corazón de la ciudad, con fácil acceso y el mejor ambiente para disfrutar de cada comida.
+      </p>
+
+      <!-- Información en cajitas -->
+      <div class="info-sections">
+        <div class="info-card">
+          <h3>Dirección</h3>
+          <p>Calle Principal #123<br>Centro de la Ciudad</p>
+        </div>
+        <div class="info-card">
+          <h3>Teléfono</h3>
+          <p>+593 999 888 777<br>¡Llámanos para reservas o pedidos!</p>
+        </div>
+        <div class="info-card">
+          <h3>Horario</h3>
+          <p>Lunes a Domingo<br>8:00 AM - 10:00 PM</p>
+        </div>
+      </div>
+
+      <!-- Imagen del mapa -->
+      <img src="{% static 'img/ubicacion.png' %}" alt="Mapa de ubicación" class="about-img">
+
+    </section>
+  </main>
+
+  <script>
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('active');
+    }
+  </script>
+
+</body>
+</html>

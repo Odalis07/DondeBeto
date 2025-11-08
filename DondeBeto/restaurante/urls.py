@@ -13,6 +13,32 @@ urlpatterns = [
     path('clientes/', views.lista_clientes, name='clientes'),
     path('clientes/registrar/', views.registrar_cliente_view, name='registrar_cliente'),
     path('usuarios/registrar/', views.registrar_usuario_view, name='registrar_usuario'),
+
+    # 🔹 Rutas que estaban en tu rama
     path('mesas/', views.mesas_view, name='mesas'),
     path('mesas/registrar/', views.registrar_mesa_view, name='registrar_mesa'),
+
+    # 🔹 Rutas que venían desde master
+    path('home-Vista_cliente/', views.home_cliente, name='home_cliente'),
+    path('ubicacion/', views.ubicacion, name='ubicacion'),
+    path('sobre-nosotros/', views.sobre_nosotros, name='sobre_nosotros'),
+    path('perfil/', views.mi_perfil, name='mi_perfil'),
+    path('cajero/', views.vista_cajero, name='vista_cajero'),
+    path('mesero/', views.vista_mesero, name='vista_mesero'),
+    path('repartidor/', views.vista_repartidor, name='vista_repartidor'),
+    path('perfil/cajero/', views.perfil_cajero, name='perfil_cajero'),
+    path('perfil/mesero/', views.perfil_mesero, name='perfil_mesero'),
+    path('perfil/repartidor/', views.perfil_repartidor, name='perfil_repartidor'),
+
+    path('clientes/actualizar/<int:id>/', views.actualizar_cliente, name='actualizar_cliente'),
+    path('clientes/eliminar/<int:id>/', views.eliminar_cliente, name='eliminar_cliente'),
+
+    path('productos/', views.productos, name='productos'),
+    path('productos/registrar/', views.registrar_producto, name='registrar_producto'),
+    path('productos/eliminar/<int:id>/', views.eliminar_producto, name='eliminar_producto'),
+    path('productos/actualizar/<int:id>/', views.actualizar_producto, name='actualizar_producto'),
+
+    # 🔹 Más rutas de master
+    path('mesa/actualizar/<int:id>/', views.actualizar_mesa, name='actualizar_mesa'),
+    path('mesa/eliminar/<int:id>/', views.eliminar_mesa, name='eliminar_mesa'),
 ]

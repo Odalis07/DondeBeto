@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="es">
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="{% static 'css/Vista_adm/Clientes.css' %}" />
+      <link rel="icon" href="{% static 'img/logoOficial.svg' %}" type="image/x-icon" />
+    <title>Vista Administrador</title>
+  </head>
+
+  <body>
+    <div class="admin-container">
+      <!-- Menú lateral -->
+      <aside class="sidebar">
+        <div class="logo">
+          <img src="{% static 'img/logoOficial.svg' %}" alt="Logo Beto" class="logo-icon">
+          <span class="logo-text">Beto</span>
+        </div>
+
+            <nav class="menu">
+                  <a href="{% url 'productos' %}" class="menu-item">
+                    <img src="{% static 'img/icon-productos.svg' %}" alt=""> Productos
+                </a>
+                <a href="{% url 'mesas' %}" class="menu-item">
+                    <img src="{% static 'img/icon-mesas.svg' %}" alt=""> Mesas
+                </a>
+                <a href="#" class="menu-item">
+                    <img src="{% static 'img/icon-pedidos.svg' %}" alt=""> Pedidos
+                </a>
+                 <a href="#" class="menu-item">
+                    <img src="{% static 'img/icon-facturas.svg' %}" alt=""> Facturas
+                </a>
+
+                <a href="{% url 'clientes' %}" class="menu-item">
+                    <img src="{% static 'img/icon-clientes.svg' %}" alt=""> Clientes
+                </a>
+
+                <a href="{% url 'usuarios' %}" class="menu-item">
+                    <img src="{% static 'img/icon-clientes.svg' %}" alt=""> Trabajadores
+                </a>
+
+                <a href="{% url 'login' %}" class="menu-item logout">
+                    <img src="{% static 'img/icon-cerrar.svg' %}" alt=""> Cerrar
+                </a>
+            </nav>
+      </aside>
+
+      <main class="main-content">
+        <header class="topbar">
+          <div class="caja">
+            {% if rol %}
+              Rol: {{ rol }}
+            {% else %}
+              No disponible.
+            {% endif %}
+          </div>
+          <div class="titulo">DONDE BETO RESTO BAR</div>
+          <div class="usuario">
+            {% if usuario %}
+              ¡Hola, {{ usuario.nombre }} {{ usuario.apellido }}!
+            {% else %}
+              No has iniciado sesión.
+            {% endif %}
+          </div>
+        </header>
+
+
+        <section class="content">
+  <!-- TABS -->
+  <div class="tabs">
+    <a href="?rol=Todos" class="tab {% if rol_seleccionado == 'todos' %}active{% endif %}">Todos</a>
+    <a href="?rol=cajero" class="tab {% if rol_seleccionado == 'cajero' %}active{% endif %}">Cajeros</a>
+    <a href="?rol=mesero" class="tab {% if rol_seleccionado == 'mesero' %}active{% endif %}">Meseros</a>
+    <a href="?rol=repartidor" class="tab {% if rol_seleccionado == 'repartidor' %}active{% endif %}">Repartidores</a>
+    <a href="?rol=administrador" class="tab {% if rol_seleccionado == 'administrador' %}active{% endif %}">Administrador</a>
+  </div>
+
+  <!-- GRID USUARIOS -->
+  <div class="usuarios-grid">
+    {% for user in usuarios %}
+    <div class="card-user">
+       <!-- BOTONES DE ACCIÓN -->
+
+      <img src="{% static 'img/usuario.png' %}" alt="Foto usuario">
+      <div class="name">{{ user.nombre }} {{ user.apellido }}</div>
+      <div class="detail">
+        <strong>Cédula:</strong> {{ user.cedula }} <br>
+        <strong>Nombre:</strong> {{ user.nombre }} <br>
+        <strong>Apellido:</strong> {{ user.apellido }} <br>
+        <strong>Email:</strong> {{ user.email }} <br>
+        <strong>Contraseña:</strong> ******** <br>
+        <strong>Rol:</strong> {{ user.rol }} <br>
+        <strong>Pregunta clave:</strong> {{ user.pregunta_clave }} <br>
+        <strong>Respuesta clave:</strong> {{ user.respuesta_clave }} <br>
+      </div>
+        <div class="acciones">
+            <button id="btn-modificar" class="btn-modificar" data-id="{{ user.id }}">MODIFICAR</button>
+
+            <button id="btn-eliminar" class="btn-eliminar" data-id="{{ user.id }}">ELIMINAR</button>
+
+          </div>
+    </div>
+    {% empty %}
+    <p>No hay usuarios registrados para este rol.</p>
+    {% endfor %}
+  </div>
+</section>
+
+
+          <!-- BOTONES DE ACCIÓN -->
+          <div class="acciones">
+            <button id="btn-nuevo" class="btn-nuevo">NUEVO</button>
+
+          </div>
+
+<!-- MODAL NUEVO TRABAJADOR -->
+<dialog id="modal">
+  <div id="modal-nuevo" class="modal">
+    <div class="login-right">
+      <span class="close">&times;</span>
+      <h2>Ingreso de un nuevo trabajador</h2>
+      <p class="subtitle">Añade un nuevo integrante a tu equipo del restaurante</p>
+
+      <!-- FORMULARIO adaptado a la vista de Usuarios -->
+      <form class="login-form" action="{% url 'registrar_usuario' %}" method="POST">
+        {% csrf_token %}
+        <div class="form-column">
+          <input type="text" id="cedula" name="cedula" required placeholder="Cédula" />
+          <input type="text" id="nombre" name="nombre" required placeholder="Ingresa un nombre" />
+          <input type="text" id="apellido" name="apellido" required placeholder="Ingresa un apellido" />
+        </div>
+
+        <div class="form-column">
+          <input type="email" id="email" name="email" required placeholder="correo@ejemplo.com" />
+
+          <div class="password-wrapper">
+            <input
+              type="password"
+              id="password"
+              name="password"
+              required
+              placeholder="Contraseña"
+              pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,12}$"
+              title="8-12 caracteres, mayúsculas, minúsculas y número"
+            />
+            <button type="button" class="toggle-password" aria-label="Mostrar contraseña">
+              <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" fill="none"
+                viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M2.458 12C3.732 7.943 7.523 5 12 5s8.268 2.943 9.542 7
+                  c-1.274 4.057-5.065 7-9.542 7s-8.268-2.943-9.542-7z" />
+              </svg>
+            </button>
+          </div>
+
+          <small class="password-info">
+            Debe tener entre 8 y 12 caracteres<br />
+            Debe incluir mayúsculas y minúsculas<br />
+            Debe incluir al menos un número
+          </small>
+
+          <input
+            type="password"
+            id="password-repeat"
+            name="password-repeat"
+            required
+            placeholder="Repite tu contraseña"
+          />
+
+          <label for="rol">Rol</label>
+            <select id="rol" name="rol">
+              <option value="">Seleccione un rol</option>
+              <option value="cajero">cajero</option>
+              <option value="mesero">mesero</option>
+              <option value="repartidor">repartidor</option>
+              <option value="administrador">administrador</option>
+            </select>
+        </div>
+
+        <label for="pregunta_clave">Pregunta clave:</label>
+        <select id="pregunta_clave" name="pregunta_clave" required>
+          <option value="">Seleccione una pregunta</option>
+          <option value="mascota">¿Cuál es el nombre de tu primera mascota?</option>
+          <option value="ciudad">¿En qué ciudad naciste?</option>
+          <option value="comida">¿Cuál es tu comida favorita?</option>
+          <option value="maestro">¿Cuál es el nombre de tu maestro o maestra favorita?</option>
+          <option value="trabajo">¿Cuál fue tu primer trabajo?</option>
+        </select>
+
+        <input type="text" name="respuesta_clave" required placeholder="Respuesta" />
+
+        <button type="submit" class="continuar">Registrar trabajador</button>
+      </form>
+    </div>
+  </div>
+</dialog>
+
+<!-- MODAL MODIFICAR -->
+<dialog id="modal-modificar">
+  <div id="modal-modificar-content" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+
+      <h2>Datos del Trabajador</h2>
+
+      <form id="form-modificar">
+        <!-- Cédula -->
+        <div class="campo-con-lapiz">
+          <label for="cedula1">Cédula:</label>
+          <input type="text" id="cedula1" name="cedula" readonly>
+          <button type="button" class="editar-campo" data-campo="cedula1"> <img src="{% static 'img/lapiz.svg' %}" alt="Editar" class="icono-editar"></button>
+        </div>
+
+        <!-- Nombre -->
+        <div class="campo-con-lapiz">
+          <label for="nombre1">Nombre:</label>
+          <input type="text" id="nombre1" name="nombre" readonly>
+          <button type="button" class="editar-campo" data-campo="nombre1"> <img src="{% static 'img/lapiz.svg' %}" alt="Editar" class="icono-editar"></button>
+        </div>
+
+        <!-- Apellido -->
+        <div class="campo-con-lapiz">
+          <label for="apellido1">Apellido:</label>
+          <input type="text" id="apellido1" name="apellido" readonly>
+          <button type="button" class="editar-campo" data-campo="apellido1"> <img src="{% static 'img/lapiz.svg' %}" alt="Editar" class="icono-editar"></button>
+        </div>
+
+        <!-- Email -->
+        <div class="campo-con-lapiz">
+          <label for="email1">Email:</label>
+          <input type="email" id="email1" name="email" readonly>
+          <button type="button" class="editar-campo" data-campo="email1"> <img src="{% static 'img/lapiz.svg' %}" alt="Editar" class="icono-editar">
+</button></button>
+        </div>
+
+        <!-- Contraseña -->
+        <div class="campo-con-lapiz">
+          <label for="contrasena1">Contraseña:</label>
+          <input type="password" id="contrasena1" name="contrasena" placeholder="Nueva contraseña (opcional)" readonly>
+          <button type="button" class="editar-campo" data-campo="contrasena1"> <img src="{% static 'img/lapiz.svg' %}" alt="Editar" class="icono-editar"></button>
+        </div>
+
+        <!-- Rol -->
+        <div class="campo-con-lapiz">
+          <label for="rol1">Rol:</label>
+          <input type="text" id="rol1" name="rol" readonly>
+          <button type="button" class="editar-campo" data-campo="rol1"><img src="{% static 'img/lapiz.svg' %}" alt="Editar" class="icono-editar"></button>
+        </div>
+
+        <!-- Pregunta de seguridad -->
+        <div class="campo-con-lapiz">
+          <label for="pregunta_clave1">Pregunta de seguridad:</label>
+          <input type="text" id="pregunta_clave1" name="pregunta_clave" readonly>
+          <button type="button" class="editar-campo" data-campo="pregunta_clave1"><img src="{% static 'img/lapiz.svg' %}" alt="Editar" class="icono-editar"></button>
+        </div>
+
+        <!-- Respuesta de seguridad -->
+        <div class="campo-con-lapiz">
+          <label for="respuesta_clave1">Respuesta de seguridad:</label>
+          <input type="text" id="respuesta_clave1" name="respuesta_clave" readonly>
+          <button type="button" class="editar-campo" data-campo="respuesta_clave1"><img src="{% static 'img/lapiz.svg' %}" alt="Editar" class="icono-editar"></button>
+        </div>
+
+        <div class="modal-buttons">
+          <button type="button" id="cancelar-modificar" onclick="document.getElementById('modal-modificar').close()">Cerrar</button>
+          <button type="submit" id="guardar-modificar" disabled>Guardar Cambios</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</dialog>
+
+
+<!-- MODAL ELIMINAR -->
+<dialog id="modal-eliminar">
+  <div id="modal-eliminar-content" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>Eliminar Usuario</h2>
+      <p>¿Estás seguro de que deseas eliminar a este usuario?</p>
+     <div class="modal-buttons">
+  <button type="button" id="cancelar-eliminar" onclick="document.getElementById('modal-eliminar').close()">Cancelar</button>
+  <button type="button" id="confirmar-eliminar" onclick="document.getElementById('modal-eliminar').close()">Eliminar</button>
+</div>
+
+    </div>
+  </div>
+</dialog>
+
+
+
+
+
+        </section>
+      </main>
+    </div>
+
+
+<script>
+const modalNuevo = document.getElementById('modal');
+const modalModificar = document.getElementById('modal-modificar');
+const modalEliminar = document.getElementById('modal-eliminar');
+
+const closeBtns = document.querySelectorAll('.close');
+const formModificar = document.getElementById('form-modificar');
+const btnGuardar = document.getElementById('guardar-modificar');
+
+let clienteSeleccionado = null;
+
+// ---------- MODAL NUEVO ----------
+document.getElementById('btn-nuevo').addEventListener('click', () => modalNuevo.showModal());
+
+// ---------- MODAL MODIFICAR ----------
+document.querySelectorAll('.btn-modificar').forEach(boton => {
+  boton.addEventListener('click', () => {
+    clienteSeleccionado = boton.dataset.id;
+    const card = boton.closest('.card-user');
+    modalModificar.showModal();
+
+    // Obtener datos del card
+    const detailText = card.querySelector('.detail').innerText.split('\n');
+    const datos = {};
+    detailText.forEach(linea => {
+      const partes = linea.split(':');
+      if (partes.length === 2) {
+        datos[partes[0].trim().toLowerCase()] = partes[1].trim();
+      }
+    });
+
+    // Rellenar inputs
+    document.getElementById('cedula1').value = datos["cédula"] || '';
+    document.getElementById('nombre1').value = datos["nombre"] || '';
+    document.getElementById('apellido1').value = datos["apellido"] || '';
+    document.getElementById('email1').value = datos["email"] || '';
+    document.getElementById('rol1').value = datos["rol"] || '';
+    document.getElementById('pregunta_clave1').value = datos["pregunta clave"] || '';
+    document.getElementById('respuesta_clave1').value = datos["respuesta clave"] || '';
+
+    // Bloquear todos los campos
+    bloquearCamposTodos();
+  });
+});
+
+// ---------- LÁPICES INDIVIDUALES ----------
+document.querySelectorAll('.editar-campo').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const campoId = btn.dataset.campo;
+    const input = document.getElementById(campoId);
+
+    // Toggle readonly
+    if (input.readOnly) {
+      input.readOnly = false;
+      input.focus();
+      // Cambiar a candado
+      btn.innerHTML = `<img src="{% static 'img/candado.svg' %}" alt="Candado" />`;
+      btnGuardar.disabled = false; // habilitar guardar
+    } else {
+      input.readOnly = true;
+      // Volver a lápiz
+      btn.innerHTML = `<img src="{% static 'img/lapiz.svg' %}" alt="Editar" />`;
+    }
+  });
+});
+
+// Bloquear todos los campos y deshabilitar guardar
+function bloquearCamposTodos() {
+  formModificar.querySelectorAll('input').forEach(input => input.readOnly = true);
+  btnGuardar.disabled = true;
+}
+
+// ---------- GUARDAR MODIFICACIONES ----------
+formModificar.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData(formModificar).entries());
+
+  const response = await fetch(`/clientes/actualizar/${clienteSeleccionado}/`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': getCSRFToken()
+    },
+    body: JSON.stringify(data)
+  });
+
+  const result = await response.json();
+  if (result.success) {
+    alert('Cliente actualizado correctamente');
+    location.reload();
+  } else {
+    alert('Error: ' + result.error);
+  }
+});
+
+// ---------- MODAL ELIMINAR ----------
+document.querySelectorAll('.btn-eliminar').forEach(boton => {
+  boton.addEventListener('click', () => {
+    clienteSeleccionado = boton.dataset.id;
+    modalEliminar.showModal();
+  });
+});
+
+document.getElementById('confirmar-eliminar').addEventListener('click', async () => {
+  const response = await fetch(`/clientes/eliminar/${clienteSeleccionado}/`, {
+    method: 'POST',
+    headers: { 'X-CSRFToken': getCSRFToken() }
+  });
+  const result = await response.json();
+
+  if (result.success) {
+    alert('Cliente eliminado correctamente');
+    location.reload();
+  } else {
+    alert('Error: ' + result.error);
+  }
+  modalEliminar.close();
+});
+
+// ---------- CERRAR MODALES ----------
+closeBtns.forEach(btn => btn.addEventListener('click', () => {
+  modalNuevo.close();
+  modalModificar.close();
+  modalEliminar.close();
+}));
+
+// ---------- CSRF ----------
+function getCSRFToken() {
+  return document.querySelector('[name=csrfmiddlewaretoken]').value;
+}
+</script>
+
+  </body>
+</html>

@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="{% static 'css/Vista_adm/Productos.css' %}" />
+    <link rel="icon" href="{% static 'img/logoOficial.svg' %}" type="image/x-icon" />
+    <title>Gestión de Productos</title>
+  </head>
+
+  <body>
+    <div class="admin-container">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="logo">
+          <img src="{% static 'img/logoOficial.svg' %}" alt="Logo Beto" class="logo-icon">
+          <span class="logo-text">Beto</span>
+        </div>
+
+           <nav class="menu">
+                  <a href="{% url 'productos' %}" class="menu-item">
+                    <img src="{% static 'img/icon-productos.svg' %}" alt=""> Productos
+                </a>
+                <a href="{% url 'mesas' %}" class="menu-item">
+                    <img src="{% static 'img/icon-mesas.svg' %}" alt=""> Mesas
+                </a>
+                <a href="#" class="menu-item">
+                    <img src="{% static 'img/icon-pedidos.svg' %}" alt=""> Pedidos
+                </a>
+                 <a href="#" class="menu-item">
+                    <img src="{% static 'img/icon-facturas.svg' %}" alt=""> Facturas
+                </a>
+
+                <a href="{% url 'clientes' %}" class="menu-item">
+                    <img src="{% static 'img/icon-clientes.svg' %}" alt=""> Clientes
+                </a>
+
+                <a href="{% url 'usuarios' %}" class="menu-item">
+                    <img src="{% static 'img/icon-clientes.svg' %}" alt=""> Trabajadores
+                </a>
+
+                <a href="{% url 'login' %}" class="menu-item logout">
+                    <img src="{% static 'img/icon-cerrar.svg' %}" alt=""> Cerrar
+                </a>
+            </nav>
+      </aside>
+
+      <!-- Main -->
+      <main class="main-content">
+        <header class="topbar">
+          <div class="caja">
+            Rol: {{ rol|default:"No disponible" }}
+          </div>
+          <div class="titulo">DONDE BETO RESTO BAR</div>
+          <div class="usuario">
+            {% if usuario %}
+              ¡Hola, {{ usuario.nombre }} {{ usuario.apellido }}!
+            {% else %}
+              No has iniciado sesión.
+            {% endif %}
+          </div>
+        </header>
+
+        <!-- CONTENIDO -->
+        <section class="content">
+          <div class="tabs">
+  <a href="{% url 'productos' %}?categoria=Todos" class="tab {% if categoria_seleccionada == 'Todos' %}active{% endif %}">Todos</a>
+  <a href="{% url 'productos' %}?categoria=Bebidas" class="tab {% if categoria_seleccionada == 'Bebidas' %}active{% endif %}">Bebidas</a>
+  <a href="{% url 'productos' %}?categoria=Almuerzos" class="tab {% if categoria_seleccionada == 'Almuerzos' %}active{% endif %}">Almuerzos</a>
+  <a href="{% url 'productos' %}?categoria=Desayunos" class="tab {% if categoria_seleccionada == 'Desayunos' %}active{% endif %}">Desayunos</a>
+  <a href="{% url 'productos' %}?categoria=Comida rápida" class="tab {% if categoria_seleccionada == 'Comida rápida' %}active{% endif %}">Comida rápida</a>
+  <a href="{% url 'productos' %}?categoria=Especiales" class="tab {% if categoria_seleccionada == 'Especiales' %}active{% endif %}">Especiales</a>
+  <a href="{% url 'productos' %}?categoria=Acompañantes" class="tab {% if categoria_seleccionada == 'Acompañantes' %}active{% endif %}">Acompañantes</a>
+</div>
+
+          <!-- GRID PRODUCTOS -->
+         <div class="productos-grid">
+  {% for producto in productos %}
+  <div class="card-producto"
+       data-nombre="{{ producto.nombre }}"
+       data-descripcion="{{ producto.descripcion }}"
+       data-precio="{{ producto.precio }}"
+       data-categoria="{{ producto.categoria.nombre }}"
+       data-imagen="{% if producto.imagen %}{{ producto.imagen.url }}{% endif %}">
+    <img src="{% if producto.imagen %}{{ producto.imagen.url }}{% else %}{% static 'img/default-product.svg' %}{% endif %}" alt="Imagen producto">
+    <div class="name">{{ producto.nombre }}</div>
+    <div class="detail">
+      <strong>Descripción:</strong> {{ producto.descripcion }} <br>
+      <strong>Precio:</strong> ${{ producto.precio }} <br>
+      <strong>Categoría:</strong> {{ producto.categoria.nombre }} <br>
+    </div>
+    <div class="acciones">
+      <button class="btn-modificar" data-id="{{ producto.id }}">MODIFICAR</button>
+      <button class="btn-eliminar" data-id="{{ producto.id }}">ELIMINAR</button>
+    </div>
+  </div>
+  {% empty %}
+  <p>No hay productos registrados.</p>
+  {% endfor %}
+</div>
+
+<div class="acciones">
+  <button id="btn-nuevo" class="btn-nuevo">NUEVO PRODUCTO</button>
+</div>
+
+        </section>
+      </main>
+    </div>
+
+    <!-- MODAL NUEVO -->
+<dialog id="modal-nuevo">
+  <div class="modal-content">
+    <span class="close" onclick="document.getElementById('modal-nuevo').close()">&times;</span>
+    <h2>Registrar Producto</h2>
+    <form action="{% url 'registrar_producto' %}" method="POST" enctype="multipart/form-data">
+      {% csrf_token %}
+
+      <label>Nombre:</label>
+      <input type="text" name="nombre" required>
+
+      <label>Descripción:</label>
+      <textarea name="descripcion" rows="3" required></textarea>
+
+      <label>Precio ($):</label>
+      <input type="number" name="precio" step="0.01" min="0" required>
+
+      <label>Categoría:</label>
+      <select name="categoria" required>
+        {% for categoria in categorias %}
+          <option value="{{ categoria.id }}">{{ categoria.nombre }}</option>
+        {% endfor %}
+      </select>
+
+      <label>Imagen:</label>
+      <input type="file" name="imagen" accept="image/*">
+
+      <div class="modal-buttons">
+        <button type="button" id="cancelar-nuevo" onclick="document.getElementById('modal-nuevo').close()">Cancelar</button>
+        <button type="submit" id="guardar-nuevo">Guardar</button>
+      </div>
+    </form>
+  </div>
+</dialog>
+
+<!-- MODAL MODIFICAR PRODUCTO -->
+<dialog id="modal-modificar-producto">
+  <div id="modal-modificar-producto-content" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+
+      <h2>Modificar Producto</h2>
+
+      <form id="form-modificar-producto" enctype="multipart/form-data">
+        <!-- Nombre -->
+        <div class="campo-con-lapiz">
+          <label for="nombre_producto">Nombre:</label>
+          <input type="text" id="nombre_producto" name="nombre" readonly>
+          <button type="button" class="editar-campo" data-campo="nombre_producto">
+            <img src="{% static 'img/lapiz.svg' %}" alt="Editar" class="icono-editar">
+          </button>
+        </div>
+
+        <!-- Descripción -->
+        <div class="campo-con-lapiz">
+          <label for="descripcion_producto">Descripción:</label>
+          <textarea id="descripcion_producto" name="descripcion" readonly></textarea>
+          <button type="button" class="editar-campo" data-campo="descripcion_producto">
+            <img src="{% static 'img/lapiz.svg' %}" alt="Editar" class="icono-editar">
+          </button>
+        </div>
+
+        <!-- Precio -->
+        <div class="campo-con-lapiz">
+          <label for="precio_producto">Precio:</label>
+          <input type="number" step="0.01" id="precio_producto" name="precio" readonly>
+          <button type="button" class="editar-campo" data-campo="precio_producto">
+            <img src="{% static 'img/lapiz.svg' %}" alt="Editar" class="icono-editar">
+          </button>
+        </div>
+
+        <!-- Categoría -->
+        <div class="campo-con-lapiz">
+          <label for="categoria_producto">Categoría:</label>
+          <select id="categoria_producto" name="categoria" disabled>
+  {% for cat in categorias %}
+    <option value="{{ cat.nombre }}">{{ cat.nombre }}</option>
+  {% endfor %}
+</select>
+          <button type="button" class="editar-campo" data-campo="categoria_producto">
+            <img src="{% static 'img/lapiz.svg' %}" alt="Editar" class="icono-editar">
+          </button>
+        </div>
+
+        <!-- Imagen -->
+<div class="campo-con-lapiz-imagen">
+  <label for="imagen_producto">Imagen:</label>
+
+  <div class="imagen-wrapper">
+    <!-- Imagen de vista previa -->
+    <img id="preview_imagen_producto" src="" alt="Imagen actual">
+
+    <!-- Botón de edición sobre la imagen -->
+    <button type="button" class="editar-campo" data-campo="imagen_producto">
+      <img src="{% static 'img/lapiz.svg' %}" alt="Editar" class="icono-editar">
+    </button>
+  </div>
+
+  <!-- Input file debajo de la imagen -->
+  <input type="file" id="imagen_producto" name="imagen" accept="image/*" disabled>
+</div>
+
+
+        <div class="modal-buttons">
+          <button type="button" id="cancelar-modificar-producto" onclick="document.getElementById('modal-modificar-producto').close()">Cerrar</button>
+          <button type="submit" id="guardar-modificar-producto" disabled>Guardar Cambios</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</dialog>
+   <!-- MODAL ELIMINAR PRODUCTO -->
+<dialog id="modal-eliminar-producto">
+  <div id="modal-eliminar-producto-content" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>Eliminar Producto</h2>
+      <p>¿Estás seguro de que deseas eliminar este producto?</p>
+
+      <div class="modal-buttons">
+        <button type="button" id="cancelar-eliminar-producto" onclick="document.getElementById('modal-eliminar-producto').close()">Cancelar</button>
+        <button type="button" id="confirmar-eliminar-producto">Eliminar</button>
+      </div>
+    </div>
+  </div>
+</dialog>
+<script>
+// ----- MODALES -----
+const modalNuevo = document.getElementById('modal-nuevo');
+const modalModificar = document.getElementById('modal-modificar-producto');
+const modalEliminar = document.getElementById('modal-eliminar-producto');
+
+// Botones de cerrar
+const closeBtns = document.querySelectorAll('.close');
+
+// Formulario de modificar
+const formModificar = document.getElementById('form-modificar-producto');
+const btnGuardar = document.getElementById('guardar-modificar-producto');
+
+let productoSeleccionado = null;
+
+// ----- MODAL NUEVO -----
+document.getElementById('btn-nuevo').addEventListener('click', () => modalNuevo.showModal());
+
+// ----- MODAL MODIFICAR -----
+document.querySelectorAll('.btn-modificar').forEach(boton => {
+  boton.addEventListener('click', () => {
+    productoSeleccionado = boton.dataset.id;
+    const card = boton.closest('.card-producto');
+
+    // Llenar formulario usando data-*
+    document.getElementById('nombre_producto').value = card.dataset.nombre;
+    document.getElementById('descripcion_producto').value = card.dataset.descripcion;
+    document.getElementById('precio_producto').value = card.dataset.precio;
+    document.getElementById('categoria_producto').value = card.dataset.categoria;
+
+    const previewImagen = document.getElementById('preview_imagen_producto');
+    previewImagen.src = card.dataset.imagen || "{% static 'img/default-product.svg' %}";
+    // Bloquear todos los campos al inicio
+    bloquearCamposTodos();
+
+    modalModificar.showModal();
+  });
+});
+
+// ----- LÁPICES INDIVIDUALES -----
+document.querySelectorAll('.editar-campo').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const campoId = btn.dataset.campo;
+    const input = document.getElementById(campoId);
+
+    if (input.readOnly || input.disabled) {
+      input.readOnly = false;
+      input.disabled = false;
+      input.focus();
+      btn.innerHTML = `<img src="{% static 'img/candado.svg' %}" alt="Candado" />`;
+      btnGuardar.disabled = false;
+    } else {
+      input.readOnly = true;
+      if (input.tagName === 'SELECT' || input.type === 'file') input.disabled = true;
+      btn.innerHTML = `<img src="{% static 'img/lapiz.svg' %}" alt="Editar" />`;
+    }
+  });
+});
+
+// ----- BLOQUEAR TODOS LOS CAMPOS -----
+function bloquearCamposTodos() {
+  formModificar.querySelectorAll('input, textarea, select').forEach(input => {
+    input.readOnly = true;
+    if (input.tagName === 'SELECT' || input.type === 'file') input.disabled = true;
+  });
+  btnGuardar.disabled = true;
+}
+
+// ----- GUARDAR MODIFICACIONES -----
+formModificar.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const data = new FormData(formModificar);
+  const jsonData = {};
+
+  data.forEach((value, key) => {
+    if (key === 'imagen' && value.size === 0) return; // ignorar si no hay imagen nueva
+    jsonData[key] = value;
+  });
+
+  const response = await fetch(`/productos/actualizar/${productoSeleccionado}/`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': getCSRFToken()
+    },
+    body: JSON.stringify(jsonData)
+  });
+
+  const result = await response.json();
+  if (result.success) {
+    alert('Producto actualizado correctamente');
+    location.reload();
+  } else {
+    alert('Error: ' + result.error);
+  }
+  modalModificar.close();
+});
+
+// ----- MODAL ELIMINAR -----
+document.querySelectorAll('.btn-eliminar').forEach(boton => {
+  boton.addEventListener('click', () => {
+    productoSeleccionado = boton.dataset.id;
+    modalEliminar.showModal();
+  });
+});
+
+document.getElementById('confirmar-eliminar-producto').addEventListener('click', async () => {
+  const response = await fetch(`/productos/eliminar/${productoSeleccionado}/`, {
+    method: 'POST',
+    headers: { 'X-CSRFToken': getCSRFToken() }
+  });
+  const result = await response.json();
+
+  if (result.success) {
+    alert('Producto eliminado correctamente');
+    location.reload();
+  } else {
+    alert('Error: ' + result.error);
+  }
+  modalEliminar.close();
+});
+
+// ----- CERRAR MODALES -----
+closeBtns.forEach(btn => btn.addEventListener('click', () => {
+  modalNuevo.close();
+  modalModificar.close();
+  modalEliminar.close();
+}));
+
+// ----- CSRF -----
+function getCSRFToken() {
+  return document.querySelector('[name=csrfmiddlewaretoken]').value;
+}
+</script>
+
+  </body>
+</html>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+{% load static %}
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BETO - Mi Perfil</title>
+  <link rel="stylesheet" href="{% static 'css/Vista_cliente/perfil.css' %}">
+  <link rel="icon" href="{% static 'img/logoOficial.svg' %}" type="image/x-icon" />
+</head>
+<body>
+
+  <!-- Panel lateral -->
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-header">
+      <img src="{% static 'img/usuario.png' %}" alt="Foto usuario">
+      <h2>{{ usuario.nombre }} {{ usuario.apellido }}</h2>
+      <p>{{ usuario.email }}</p>
+    </div>
+    <div class="sidebar-links">
+      <a href="{% url 'mi_perfil' %}" class="active">Mi perfil</a>
+      <a href="#">Mis pedidos</a>
+      <a href="{% url 'login' %}" class="logout">Cerrar sesión</a>
+    </div>
+  </aside>
+
+  <!-- Navbar -->
+  <header class="navbar">
+    <div class="menu-icon" onclick="toggleSidebar()">☰</div>
+    <div class="logo"> <img src="{% static 'img/logoOficial.svg' %}" alt="Logo Beto" class="logo-icon"> BETO</div>
+    <a href="{% url 'login' %}" class="btn-login">Salir</a>
+  </header>
+
+  <!-- Nav links -->
+  <nav class="nav-links">
+    <a href="{% url 'home_cliente' %}">Productos</a>
+    <a href="{% url 'ubicacion' %}">Ubicación</a>
+    <a href="{% url 'sobre_nosotros' %}">Sobre nosotros</a>
+  </nav>
+
+  <!-- Contenido principal: Perfil -->
+  <main class="main-content">
+    <section class="categories" style="max-width:600px;">
+      <div class="card" style="padding:20px; text-align:left;">
+        <h2>Información de mi perfil</h2>
+        <p><strong>Cédula:</strong> {{ usuario.cedula }}</p>
+        <p><strong>Nombre:</strong> {{ usuario.nombre }}</p>
+        <p><strong>Apellido:</strong> {{ usuario.apellido }}</p>
+        <p><strong>Email:</strong> {{ usuario.email }}</p>
+        <p><strong>Rol:</strong> {{ usuario.rol }}</p>
+        {% if usuario.pregunta_clave %}
+        <p><strong>Pregunta de seguridad:</strong> {{ usuario.pregunta_clave }}</p>
+        {% endif %}
+      </div>
+    </section>
+  </main>
+
+  <script>
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('active');
+    }
+  </script>
+
+</body>
+</html>
