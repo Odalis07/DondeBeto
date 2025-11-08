@@ -1,0 +1,29 @@
+# --- Archivos compilados de Python ---
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# --- Entorno virtual ---
+.venv/
+venv/
+env/
+
+# --- Base de datos local ---
+db.sqlite3
+
+# --- Archivos de configuración del IDE ---
+.idea/
+.vscode/
+
+# --- Archivos estáticos y multimedia generados ---
+staticfiles/
+media/
+
+# --- Archivos temporales ---
+*.log
+*.pot
+*.pyc
+*.sqlite3
+*.mo
+*.log
