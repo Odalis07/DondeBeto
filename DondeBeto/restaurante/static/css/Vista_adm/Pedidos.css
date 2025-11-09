@@ -115,8 +115,8 @@ html, body {
 --------------------------------------------------- */
 .productos-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(auto-fill, minmax(680px, 1fr));
+  gap: 30px;
 }
 
 /* ---------------------------------------------------
@@ -132,6 +132,8 @@ html, body {
   gap: 14px;
   box-shadow: 0 0 0 rgba(0,0,0,0);
   transition: 0.25s ease;
+   width: 100%;
+  max-width: 700px;
 }
 
 .card-producto:hover {
@@ -811,6 +813,7 @@ dialog::backdrop {
   flex-direction: column;
   gap: 8px;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+
 }
 
 .card-pedido:hover {
@@ -825,12 +828,14 @@ dialog::backdrop {
 /* Botones dentro de las cards */
 .card-pedido .acciones {
   display: flex;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 5px;
   margin-top: 10px;
+
 }
 
 .card-pedido button {
-  flex: 1;
+  flex: 1 1 auto;
   padding: 8px 10px;
   border: none;
   border-radius: 8px;

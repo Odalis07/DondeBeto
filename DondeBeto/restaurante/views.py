@@ -1,10 +1,12 @@
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
-from django.http import JsonResponse, HttpResponseRedirect
+from django.http import JsonResponse, HttpResponseRedirect, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.urls import reverse
+from django.template.loader import get_template
+from xhtml2pdf import pisa
 from django.views.decorators.csrf import csrf_exempt
 import json
 from .models import Usuario, Producto, Categoria, Mesa, Pedido, DetallePedido
@@ -862,3 +864,44 @@ def guardar_detalles_pedido(request, id):
         return JsonResponse({'success': True, 'created': created})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+def generar_pdf(request, pedido_id):
+    pedido = Pedido.objects.select_related('usuario', 'mesa').get(id=pedido_id)
+    detalles = DetallePedido.objects.filter(pedido=pedido)
+
+    # calcular total
+    total = sum(d.subtotal for d in detalles)
+
+    template = get_template("pdf/pedido.html")
+    html = template.render({
+        "pedido": pedido,
+        "detalles": detalles,
+        "total": total,  # <-- pasar al template
+    })
+
+    response = HttpResponse(content_type="application/pdf")
+    response['Content-Disposition'] = f'inline; filename="pedido_{pedido.id}.pdf"'
+
+    pisa_status = pisa.CreatePDF(html, dest=response)
+    if pisa_status.err:
+        return HttpResponse("Error al generar PDF", status=500)
+    return response
+
+def modificar_detalle_pedido(request, pedido_id):
+    if request.method == "POST":
+        import json
+        data = json.loads(request.body)
+        items = data.get("items", [])
+        pedido = Pedido.objects.get(id=pedido_id)
+
+        for item in items:
+            detalle_id = item.get("id_existente")
+            cantidad = item.get("cantidad")
+            if detalle_id:
+                detalle = DetallePedido.objects.get(id=detalle_id, pedido=pedido)
+                detalle.cantidad = cantidad
+                detalle.subtotal = detalle.producto.precio * cantidad
+                detalle.save()
+        return JsonResponse({"success": True})
+    return JsonResponse({"success": False, "error": "Método no permitido"})

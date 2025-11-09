@@ -126,6 +126,8 @@
                 <button type="button" class="btn-detalle" data-id="{{ pedido.id }}">VER DETALLE</button>
                 <button type="button" class="btn-modificar" data-id="{{ pedido.id }}">MODIFICAR</button>
                 <button type="button" class="btn-eliminar" data-id="{{ pedido.id }}">ELIMINAR</button>
+                  <button type="button" class="btn-imprimir" data-id="{{ pedido.id }}">IMPRIMIR</button>
+
               </div>
             </div>
             {% empty %}
@@ -155,12 +157,12 @@
           </select>
 
           <label>Mesa:</label>
-          <select name="mesa">
-            <option value="">Sin mesa</option>
-            {% for m in mesas %}
-            <option value="{{ m.id }}">Mesa {{ m.numero }}</option>
-            {% endfor %}
-          </select>
+            <select name="mesa" id="mesa-nuevo" disabled>
+              <option value="">Sin mesa</option>
+              {% for m in mesas %}
+              <option value="{{ m.id }}">Mesa {{ m.numero }}</option>
+              {% endfor %}
+            </select>
 
           <label>Tipo de Pedido:</label>
           <select name="tipo_pedido" required>
@@ -282,7 +284,7 @@
     </dialog>
 
     <!-- ========================= -->
-    <!-- SCRIPTS (funcionalidad) -->
+    <!-- SCRIPTS -->
     <!-- ========================= -->
     <script>
     // ---------- util ----------
@@ -530,6 +532,47 @@
     });
 
     // quitar comportamientos automáticos/animaciones por CSS no JS (si tu CSS tiene animaciones revisa y elimina)
+    // ---------- IMPRIMIR PEDIDO ----------
+document.querySelectorAll('.btn-imprimir').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const id = btn.dataset.id;
+        window.open(`/pedidos/${id}/pdf/`, '_blank');
+    });
+});
+// PARA QUE SOLO SE PUEDA ESCOGER MESA EN EL LOCAL
+const tipoPedidoNuevo = document.querySelector('#modal-nuevo select[name="tipo_pedido"]');
+const mesaNuevo = document.getElementById('mesa-nuevo');
+
+tipoPedidoNuevo.addEventListener('change', () => {
+  if (tipoPedidoNuevo.value === 'local') {
+    mesaNuevo.disabled = false;       // habilitar
+    mesaNuevo.required = true;        // obligatorio
+  } else {
+    mesaNuevo.disabled = true;        // deshabilitar
+    mesaNuevo.value = '';             // limpiar selección
+    mesaNuevo.required = false;       // no obligatorio
+  }
+});
+function actualizarEstadoMesa() {
+  if (tipoPedidoNuevo.value === 'local') {
+    mesaNuevo.disabled = false;
+    mesaNuevo.required = true;
+  } else {
+    mesaNuevo.disabled = true;
+    mesaNuevo.value = '';
+    mesaNuevo.required = false;
+  }
+}
+
+// Llamar al abrir modal
+btnNuevo.addEventListener('click', () => {
+  modalNuevo.showModal();
+  actualizarEstadoMesa(); // <- aquí es clave
+});
+
+// También vincular con el change
+tipoPedidoNuevo.addEventListener('change', actualizarEstadoMesa);
     </script>
+
   </body>
 </html>
