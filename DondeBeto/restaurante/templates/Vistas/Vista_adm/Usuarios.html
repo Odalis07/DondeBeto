@@ -18,14 +18,14 @@
           <span class="logo-text">Beto</span>
         </div>
 
-               <nav class="menu">
+             <nav class="menu">
                   <a href="{% url 'productos' %}" class="menu-item">
                     <img src="{% static 'img/icon-productos.svg' %}" alt=""> Productos
                 </a>
                 <a href="{% url 'mesas' %}" class="menu-item">
                     <img src="{% static 'img/icon-mesas.svg' %}" alt=""> Mesas
                 </a>
-                <a href="#" class="menu-item">
+                <a href="{% url 'pedidos' %}" class="menu-item">
                     <img src="{% static 'img/icon-pedidos.svg' %}" alt=""> Pedidos
                 </a>
                  <a href="#" class="menu-item">
@@ -65,41 +65,47 @@
           </div>
         </header>
 
-       <section class="content">
+
+        <section class="content">
   <!-- TABS -->
   <div class="tabs">
-    <button class="tab active">Clientes</button>
-
+    <a href="?rol=Todos" class="tab {% if rol_seleccionado == 'todos' %}active{% endif %}">Todos</a>
+    <a href="?rol=cajero" class="tab {% if rol_seleccionado == 'cajero' %}active{% endif %}">Cajeros</a>
+    <a href="?rol=mesero" class="tab {% if rol_seleccionado == 'mesero' %}active{% endif %}">Meseros</a>
+    <a href="?rol=repartidor" class="tab {% if rol_seleccionado == 'repartidor' %}active{% endif %}">Repartidores</a>
+    <a href="?rol=administrador" class="tab {% if rol_seleccionado == 'administrador' %}active{% endif %}">Administrador</a>
   </div>
 
   <!-- GRID USUARIOS -->
   <div class="usuarios-grid">
-    {% for cliente in clientes %}
-      <div class="card-user">
+    {% for user in usuarios %}
+    <div class="card-user">
+       <!-- BOTONES DE ACCIÓN -->
 
-          <!-- BOTONES DE ACCIÓN -->
-
-        <img src="{% static 'img/usuario.png' %}" alt="Foto usuario">
-        <div class="name">{{ cliente.nombre }} {{ cliente.apellido }}</div>
-        <div class="detail">
-          <strong>Cédula:</strong> {{ cliente.cedula }} <br>
-          <strong>Nombre:</strong> {{ cliente.nombre }} <br>
-          <strong>Apellido:</strong> {{ cliente.apellido }} <br>
-          <strong>Email:</strong> {{ cliente.email }} <br>
-          <strong>Contraseña:</strong> ******** <br>  <!-- No se muestra la contraseña por seguridad -->
-          <strong>Rol:</strong> {{ cliente.rol }} <br>
-          <strong>Pregunta de seguridad:</strong> {{ cliente.pregunta_clave }} <br>
-          <strong>Respuesta de seguridad:</strong> {{ cliente.respuesta_clave }} <br>
-        <div class="acciones">
-           <button class="btn-modificar" data-id="{{ cliente.id }}">MODIFICAR</button>
-           <button class="btn-eliminar" data-id="{{ cliente.id }}">ELIMINAR</button>
-        </div>
-        </div>
+      <img src="{% static 'img/usuario.png' %}" alt="Foto usuario">
+      <div class="name">{{ user.nombre }} {{ user.apellido }}</div>
+      <div class="detail">
+        <strong>Cédula:</strong> {{ user.cedula }} <br>
+        <strong>Nombre:</strong> {{ user.nombre }} <br>
+        <strong>Apellido:</strong> {{ user.apellido }} <br>
+        <strong>Email:</strong> {{ user.email }} <br>
+        <strong>Contraseña:</strong> ******** <br>
+        <strong>Rol:</strong> {{ user.rol }} <br>
+        <strong>Pregunta clave:</strong> {{ user.pregunta_clave }} <br>
+        <strong>Respuesta clave:</strong> {{ user.respuesta_clave }} <br>
       </div>
+        <div class="acciones">
+            <button id="btn-modificar" class="btn-modificar" data-id="{{ user.id }}">MODIFICAR</button>
+
+            <button id="btn-eliminar" class="btn-eliminar" data-id="{{ user.id }}">ELIMINAR</button>
+
+          </div>
+    </div>
     {% empty %}
-      <p>No hay clientes registrados.</p>
+    <p>No hay usuarios registrados para este rol.</p>
     {% endfor %}
   </div>
+</section>
 
 
           <!-- BOTONES DE ACCIÓN -->
@@ -107,20 +113,22 @@
             <button id="btn-nuevo" class="btn-nuevo">NUEVO</button>
 
           </div>
-        <!-- MODAL NUEVO CLIENTE -->
+
+<!-- MODAL NUEVO TRABAJADOR -->
 <dialog id="modal">
   <div id="modal-nuevo" class="modal">
     <div class="login-right">
       <span class="close">&times;</span>
-      <h2>Registrar nuevo cliente</h2>
-      <p class="subtitle">Añade un nuevo cliente al sistema</p>
+      <h2>Ingreso de un nuevo trabajador</h2>
+      <p class="subtitle">Añade un nuevo integrante a tu equipo del restaurante</p>
 
-      <form class="login-form" action="{% url 'registrar_cliente' %}" method="POST">
+      <!-- FORMULARIO adaptado a la vista de Usuarios -->
+      <form class="login-form" action="{% url 'registrar_usuario' %}" method="POST">
         {% csrf_token %}
         <div class="form-column">
           <input type="text" id="cedula" name="cedula" required placeholder="Cédula" />
-          <input type="text" id="nombre" name="nombre" required placeholder="Nombre" />
-          <input type="text" id="apellido" name="apellido" required placeholder="Apellido" />
+          <input type="text" id="nombre" name="nombre" required placeholder="Ingresa un nombre" />
+          <input type="text" id="apellido" name="apellido" required placeholder="Ingresa un apellido" />
         </div>
 
         <div class="form-column">
@@ -150,10 +158,26 @@
 
           <small class="password-info">
             Debe tener entre 8 y 12 caracteres<br />
-            Incluir mayúsculas, minúsculas y al menos un número
+            Debe incluir mayúsculas y minúsculas<br />
+            Debe incluir al menos un número
           </small>
 
-          <input type="password" id="password-repeat" name="password-repeat" required placeholder="Repite tu contraseña" />
+          <input
+            type="password"
+            id="password-repeat"
+            name="password-repeat"
+            required
+            placeholder="Repite tu contraseña"
+          />
+
+          <label for="rol">Rol</label>
+            <select id="rol" name="rol">
+              <option value="">Seleccione un rol</option>
+              <option value="cajero">cajero</option>
+              <option value="mesero">mesero</option>
+              <option value="repartidor">repartidor</option>
+              <option value="administrador">administrador</option>
+            </select>
         </div>
 
         <label for="pregunta_clave">Pregunta clave:</label>
@@ -168,7 +192,7 @@
 
         <input type="text" name="respuesta_clave" required placeholder="Respuesta" />
 
-        <button type="submit" class="continuar">Registrar cliente</button>
+        <button type="submit" class="continuar">Registrar trabajador</button>
       </form>
     </div>
   </div>
@@ -180,7 +204,7 @@
     <div class="modal-content">
       <span class="close">&times;</span>
 
-      <h2>Datos del Cliente</h2>
+      <h2>Datos del Trabajador</h2>
 
       <form id="form-modificar">
         <!-- Cédula -->
@@ -249,6 +273,7 @@
   </div>
 </dialog>
 
+
 <!-- MODAL ELIMINAR -->
 <dialog id="modal-eliminar">
   <div id="modal-eliminar-content" class="modal">
@@ -272,6 +297,7 @@
         </section>
       </main>
     </div>
+
 
 <script>
 const modalNuevo = document.getElementById('modal');
@@ -310,8 +336,8 @@ document.querySelectorAll('.btn-modificar').forEach(boton => {
     document.getElementById('apellido1').value = datos["apellido"] || '';
     document.getElementById('email1').value = datos["email"] || '';
     document.getElementById('rol1').value = datos["rol"] || '';
-    document.getElementById('pregunta_clave1').value = datos["pregunta de seguridad"] || '';
-    document.getElementById('respuesta_clave1').value = datos["respuesta de seguridad"] || '';
+    document.getElementById('pregunta_clave1').value = datos["pregunta clave"] || '';
+    document.getElementById('respuesta_clave1').value = datos["respuesta clave"] || '';
 
     // Bloquear todos los campos
     bloquearCamposTodos();
@@ -404,8 +430,6 @@ function getCSRFToken() {
   return document.querySelector('[name=csrfmiddlewaretoken]').value;
 }
 </script>
-
-
 
   </body>
 </html>

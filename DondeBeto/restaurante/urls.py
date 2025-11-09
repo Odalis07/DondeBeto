@@ -34,4 +34,11 @@ urlpatterns = [
     path('mesas/registrar/', views.registrar_mesa_view, name='registrar_mesa'),
     path('mesa/actualizar/<int:id>/', views.actualizar_mesa, name='actualizar_mesa'),
     path('mesa/eliminar/<int:id>/', views.eliminar_mesa, name='eliminar_mesa'),
+    path('pedidos/', views.pedidos, name='pedidos'),
+    path('pedidos/registrar/', views.registrar_pedido, name='registrar_pedido'),
+    path('pedidos/actualizar/<int:id>/', views.actualizar_pedido, name='actualizar_pedido'),
+    path('pedidos/eliminar/<int:id>/', views.eliminar_pedido, name='eliminar_pedido'),
+    path('pedidos/<int:id>/detalles/', views.ver_detalle_pedido, name='ver_detalle_pedido'),
+    path('pedidos/<int:id>/detalles/agregar/', views.agregar_detalle_pedido, name='agregar_detalle_pedido'),
+path('pedidos/<int:id>/detalles/guardar/', views.guardar_detalles_pedido, name='guardar_detalles_pedido'),
 ]

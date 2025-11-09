@@ -105,7 +105,6 @@ html, body {
   justify-content: center;
   align-items: center;
   transition: background-color 0.3s ease, color 0.3s ease;
-  margin-top: auto; /* Empuja el logout al fondo */
 }
 
 .logout img {

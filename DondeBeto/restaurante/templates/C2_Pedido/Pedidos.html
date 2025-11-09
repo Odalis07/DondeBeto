@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="{% static 'css/Vista_adm/Pedidos.css' %}">
+    <link rel="icon" href="{% static 'img/logoOficial.svg' %}" type="image/x-icon" />
+    <title>Gestión de Pedidos</title>
+  </head>
+
+  <body>
+    <div class="admin-container">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="logo">
+          <img src="{% static 'img/logoOficial.svg' %}" alt="Logo Beto" class="logo-icon">
+          <span class="logo-text">Beto</span>
+        </div>
+
+ <nav class="menu">
+
+  {% if rol == "administrador" %}
+      <a href="{% url 'productos' %}" class="menu-item">
+          <img src="{% static 'img/icon-productos.svg' %}" alt=""> Productos
+      </a>
+      <a href="{% url 'mesas' %}" class="menu-item">
+          <img src="{% static 'img/icon-mesas.svg' %}" alt=""> Mesas
+      </a>
+      <a href="{% url 'pedidos' %}" class="menu-item">
+          <img src="{% static 'img/icon-pedidos.svg' %}" alt=""> Pedidos
+      </a>
+      <a href="#" class="menu-item">
+          <img src="{% static 'img/icon-facturas.svg' %}" alt=""> Facturas
+      </a>
+      <a href="{% url 'clientes' %}" class="menu-item">
+          <img src="{% static 'img/icon-clientes.svg' %}" alt=""> Clientes
+      </a>
+      <a href="{% url 'usuarios' %}" class="menu-item">
+          <img src="{% static 'img/icon-clientes.svg' %}" alt=""> Trabajadores
+      </a>
+
+  {% elif rol == "mesero" %}
+      <a href="{% url 'productos' %}" class="menu-item">
+          <img src="{% static 'img/icon-productos.svg' %}" alt=""> Productos
+      </a>
+      <a href="{% url 'mesas' %}" class="menu-item">
+          <img src="{% static 'img/icon-mesas.svg' %}" alt=""> Mesas
+      </a>
+      <a href="{% url 'pedidos' %}" class="menu-item">
+          <img src="{% static 'img/icon-pedidos.svg' %}" alt=""> Pedidos
+      </a>
+      <a href="#" class="menu-item">
+          <img src="{% static 'img/icon-facturas.svg' %}" alt=""> Facturas
+      </a>
+      <a href="{% url 'perfil_mesero' %}" class="menu-item">
+          <img src="{% static 'img/icon-clientes.svg' %}" alt=""> Perfil
+      </a>
+
+  {% elif rol == "cajero" %}
+      <a href="{% url 'pedidos' %}" class="menu-item">
+          <img src="{% static 'img/icon-pedidos.svg' %}" alt=""> Pedidos
+      </a>
+      <a href="#" class="menu-item">
+          <img src="{% static 'img/icon-facturas.svg' %}" alt=""> Facturas
+      </a>
+      <a href="{% url 'perfil_cajero' %}" class="menu-item">
+          <img src="{% static 'img/icon-clientes.svg' %}" alt=""> Perfil
+      </a>
+
+  {% elif rol == "repartidor" %}
+      <a href="{% url 'pedidos' %}" class="menu-item">
+          <img src="{% static 'img/icon-pedidos.svg' %}" alt=""> Pedidos
+      </a>
+      <a href="#" class="menu-item">
+          <img src="{% static 'img/icon-facturas.svg' %}" alt=""> Facturas
+      </a>
+      <a href="{% url 'perfil_repartidor' %}" class="menu-item">
+          <img src="{% static 'img/icon-clientes.svg' %}" alt=""> Perfil
+      </a>
+  {% endif %}
+
+  <a href="{% url 'login' %}" class="menu-item logout">
+      <img src="{% static 'img/icon-cerrar.svg' %}" alt=""> Cerrar
+  </a>
+</nav>
+      </aside>
+
+      <!-- Main -->
+      <main class="main-content">
+        <header class="topbar">
+          <div class="caja">
+            Rol: {{ rol|default:"No disponible" }}
+          </div>
+          <div class="titulo">DONDE BETO RESTO BAR</div>
+          <div class="usuario">
+            {% if usuario %}
+              ¡Hola, {{ usuario.nombre }} {{ usuario.apellido }}!
+            {% else %}
+              No has iniciado sesión.
+            {% endif %}
+          </div>
+        </header>
+
+        <section class="content">
+          <div class="tabs">
+            <a href="{% url 'pedidos' %}?tipo_pedido=Todos" class="tab {% if tipo_pedido_seleccionado == 'Todos' %}active{% endif %}">Todos</a>
+            <a href="{% url 'pedidos' %}?tipo_pedido=En el local" class="tab {% if tipo_pedido_seleccionado == 'En el local' %}active{% endif %}">En el local</a>
+            <a href="{% url 'pedidos' %}?tipo_pedido=Domicilio" class="tab {% if tipo_pedido_seleccionado == 'Domicilio' %}active{% endif %}">Domicilio</a>
+            <a href="{% url 'pedidos' %}?tipo_pedido=Para llevar" class="tab {% if tipo_pedido_seleccionado == 'Para llevar' %}active{% endif %}">Para llevar</a>
+          </div>
+
+          <div class="pedidos-grid">
+            {% for pedido in pedidos %}
+            <div class="card-pedido"
+                 data-id="{{ pedido.id }}"
+                 data-tipo="{{ pedido.tipo_pedido }}"
+                 data-estado="{{ pedido.estado }}"
+                 data-mesa="{% if pedido.mesa %}{{ pedido.mesa.numero }}{% else %}N/A{% endif %}"
+                 data-usuario="{{ pedido.usuario.nombre }} {{ pedido.usuario.apellido }}">
+              <div><strong>ID:</strong> {{ pedido.id }}</div>
+              <div><strong>Usuario:</strong> {{ pedido.usuario }}</div>
+              <div><strong>Mesa:</strong> {% if pedido.mesa %}{{ pedido.mesa.numero }}{% else %}Sin mesa{% endif %}</div>
+              <div><strong>Tipo:</strong> {{ pedido.get_tipo_pedido_display }}</div>
+              <div><strong>Estado:</strong> {{ pedido.estado }}</div>
+              <div class="acciones">
+                <button type="button" class="btn-detalle" data-id="{{ pedido.id }}">VER DETALLE</button>
+                <button type="button" class="btn-modificar" data-id="{{ pedido.id }}">MODIFICAR</button>
+                <button type="button" class="btn-eliminar" data-id="{{ pedido.id }}">ELIMINAR</button>
+              </div>
+            </div>
+            {% empty %}
+            <p>No hay pedidos registrados.</p>
+            {% endfor %}
+          </div>
+
+          <div class="acciones">
+            <button class="btn-nuevo" id="btn-nuevo">NUEVO PEDIDO</button>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- MODAL NUEVO -->
+    <dialog id="modal-nuevo">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Registrar Pedido</h2>
+        <form action="{% url 'registrar_pedido' %}" method="POST">
+          {% csrf_token %}
+          <label>Usuario:</label>
+          <select name="usuario" required>
+            {% for u in usuarios %}
+            <option value="{{ u.id }}">{{ u.nombre }} {{ u.apellido }}</option>
+            {% endfor %}
+          </select>
+
+          <label>Mesa:</label>
+          <select name="mesa">
+            <option value="">Sin mesa</option>
+            {% for m in mesas %}
+            <option value="{{ m.id }}">Mesa {{ m.numero }}</option>
+            {% endfor %}
+          </select>
+
+          <label>Tipo de Pedido:</label>
+          <select name="tipo_pedido" required>
+            <option value="local">En el local</option>
+            <option value="domicilio">Domicilio</option>
+            <option value="para_llevar">Para llevar</option>
+          </select>
+
+          <label>Estado:</label>
+          <select name="estado" required>
+            <option value="pendiente">Pendiente</option>
+            <option value="en preparación">En preparación</option>
+            <option value="entregado">Entregado</option>
+            <option value="pagado">Pagado</option>
+          </select>
+
+          <div class="modal-buttons">
+            <button type="button" id="cancelar-nuevo" onclick="document.getElementById('modal-nuevo').close()">Cancelar</button>
+            <button class="continuar" type="submit">Guardar</button>
+          </div>
+        </form>
+      </div>
+    </dialog>
+
+    <!-- MODAL MODIFICAR -->
+    <dialog id="modal-modificar">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Modificar Pedido</h2>
+        <form id="form-modificar">
+          <div class="campo-con-lapiz">
+            <label for="tipo_pedido">Tipo de Pedido:</label>
+            <select id="tipo_pedido" name="tipo_pedido" disabled>
+              <option value="local">En el local</option>
+              <option value="domicilio">Domicilio</option>
+              <option value="para_llevar">Para llevar</option>
+            </select>
+            <button type="button" class="editar-campo" data-campo="tipo_pedido">
+              <img src="{% static 'img/lapiz.svg' %}" alt="Editar" class="icono-editar">
+            </button>
+          </div>
+
+          <div class="campo-con-lapiz">
+            <label for="estado">Estado:</label>
+            <select id="estado" name="estado" disabled>
+              <option value="pendiente">Pendiente</option>
+              <option value="en preparación">En preparación</option>
+              <option value="entregado">Entregado</option>
+              <option value="pagado">Pagado</option>
+            </select>
+            <button type="button" class="editar-campo" data-campo="estado">
+              <img src="{% static 'img/lapiz.svg' %}" alt="Editar" class="icono-editar">
+            </button>
+          </div>
+
+          <div class="campo-con-lapiz">
+            <label for="mesa">Mesa:</label>
+            <input type="text" id="mesa" name="mesa" readonly>
+            <button type="button" class="editar-campo" data-campo="mesa">
+              <img src="{% static 'img/lapiz.svg' %}" alt="Editar" class="icono-editar">
+            </button>
+          </div>
+
+          <div class="modal-buttons">
+            <button type="button" id="cancelar-modificar" onclick="document.getElementById('modal-modificar').close()">Cancelar</button>
+            <button type="submit" id="guardar" disabled>Guardar</button>
+          </div>
+        </form>
+      </div>
+    </dialog>
+
+    <!-- MODAL ELIMINAR -->
+    <dialog id="modal-eliminar">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Eliminar Pedido</h2>
+        <p>¿Seguro que deseas eliminar este pedido?</p>
+        <div class="modal-buttons">
+          <button type="button" onclick="document.getElementById('modal-eliminar').close()">Cancelar</button>
+          <button id="confirmar-eliminar">Eliminar</button>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- MODAL DETALLE -->
+    <dialog id="modal-detalle">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Detalle del Pedido</h2>
+
+        <table id="tabla-detalle">
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th>Cantidad</th>
+              <th>Subtotal</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+
+        <div id="total-pedido" style="text-align:right; font-weight:700; margin-top:6px;">
+          Total: $<span id="total-valor">0.00</span>
+        </div>
+
+        <h3>Agregar Producto</h3>
+        <div class="agregar" style="display:flex; gap:12px; align-items:center; margin-top:10px;">
+          <select id="select-producto" name="producto" style="min-width:220px;"></select>
+          <input type="number" id="cantidad" name="cantidad" min="1" value="1" style="width:80px;">
+          <button type="button" id="btn-agregar-detalle">Agregar</button>
+        </div>
+
+        <div class="modal-buttons" style="margin-top:18px;">
+          <button type="button" id="btn-cerrar-detalle">Cerrar</button>
+          <button type="button" id="btn-guardar-detalle">Guardar</button>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- ========================= -->
+    <!-- SCRIPTS (funcionalidad) -->
+    <!-- ========================= -->
+    <script>
+    // ---------- util ----------
+    function getCSRFToken() {
+      const el = document.querySelector('[name=csrfmiddlewaretoken]');
+      return el ? el.value : '';
+    }
+
+    // ---------- referencias ----------
+    const modalNuevo = document.getElementById('modal-nuevo');
+    const modalModificar = document.getElementById('modal-modificar');
+    const modalEliminar = document.getElementById('modal-eliminar');
+    const modalDetalle = document.getElementById('modal-detalle');
+
+    const btnNuevo = document.getElementById('btn-nuevo');
+    const guardarModificarBtn = document.getElementById('guardar');
+
+    const tablaDetalleBody = document.querySelector('#tabla-detalle tbody');
+    const selectProducto = document.getElementById('select-producto');
+    const cantidadInput = document.getElementById('cantidad');
+    const totalValorSpan = document.getElementById('total-valor');
+    const btnAgregarDetalle = document.getElementById('btn-agregar-detalle');
+    const btnGuardarDetalle = document.getElementById('btn-guardar-detalle');
+    const btnCerrarDetalle = document.getElementById('btn-cerrar-detalle');
+
+    // estados globales
+    let pedidoId = null;
+    let pedidoDetalleId = null;
+    let productosRemote = [];
+    let pendientes = [];
+
+    // ---------- abrir modal nuevo ----------
+    btnNuevo.addEventListener('click', () => modalNuevo.showModal());
+
+    // ---------- MODIFICAR ----------
+    document.querySelectorAll('.btn-modificar').forEach(btn => {
+      btn.addEventListener('click', () => {
+        pedidoId = btn.dataset.id;
+        const card = btn.closest('.card-pedido');
+        if (!card) return alert('No se encontró la tarjeta del pedido.');
+
+        // completar campos (usamos valores almacenados en data-*)
+        document.getElementById('tipo_pedido').value = card.dataset.tipo || '';
+        document.getElementById('estado').value = card.dataset.estado || '';
+        document.getElementById('mesa').value = card.dataset.mesa || '';
+
+        // bloquear campos inicialmente
+        document.querySelectorAll('#form-modificar input, #form-modificar select').forEach(i=>{
+          i.readOnly = true;
+          if (i.tagName === 'SELECT') i.disabled = true;
+        });
+        guardarModificarBtn.disabled = true;
+
+        modalModificar.showModal();
+      });
+    });
+
+    // permitir editar campo individual con botón lápiz
+    document.querySelectorAll('.editar-campo').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const campoId = btn.dataset.campo;
+        const input = document.getElementById(campoId);
+        if (!input) return;
+
+        if (input.readOnly || input.disabled) {
+          input.readOnly = false;
+          input.disabled = false;
+          input.focus();
+          guardarModificarBtn.disabled = false;
+          // cambiar icono a candado si quieres (opcional)
+        } else {
+          input.readOnly = true;
+          if (input.tagName === 'SELECT') input.disabled = true;
+        }
+      });
+    });
+
+    // submit modificar
+    document.getElementById('form-modificar').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!pedidoId) return alert('No hay pedido seleccionado.');
+
+      const payload = {
+        tipo_pedido: document.getElementById('tipo_pedido').value,
+        estado: document.getElementById('estado').value,
+        mesa: document.getElementById('mesa').value
+      };
+
+      try {
+        const res = await fetch(`/pedidos/actualizar/${pedidoId}/`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCSRFToken() },
+          body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+        if (json.success) {
+          alert('Pedido actualizado correctamente.');
+          modalModificar.close();
+          location.reload();
+        } else {
+          alert(json.error || 'Error al actualizar pedido');
+        }
+      } catch (err) {
+        alert('Error en la petición: ' + err);
+      }
+    });
+
+    // ---------- ELIMINAR ----------
+    document.querySelectorAll('.btn-eliminar').forEach(btn => {
+      btn.addEventListener('click', () => {
+        pedidoId = btn.dataset.id;
+        modalEliminar.showModal();
+      });
+    });
+
+    document.getElementById('confirmar-eliminar').addEventListener('click', async () => {
+      if (!pedidoId) return alert('No hay pedido seleccionado.');
+      try {
+        const res = await fetch(`/pedidos/eliminar/${pedidoId}/`, {
+          method: 'POST',
+          headers: { 'X-CSRFToken': getCSRFToken() }
+        });
+        const json = await res.json();
+        if (json.success) {
+          alert('Pedido eliminado correctamente.');
+          location.reload();
+        } else {
+          alert(json.error || 'No se pudo eliminar');
+        }
+      } catch (err) {
+        alert('Error en la petición: ' + err);
+      }
+    });
+
+    // ---------- DETALLE ----------
+    function renderPendientes() {
+      tablaDetalleBody.innerHTML = '';
+      let total = 0;
+      pendientes.forEach((item, idx) => {
+        total += item.subtotal;
+        tablaDetalleBody.insertAdjacentHTML('beforeend', `
+          <tr data-idx="${idx}">
+            <td>${item.nombre}</td>
+            <td>${item.cantidad}</td>
+            <td>$${item.subtotal.toFixed(2)}</td>
+            <td><button type="button" class="btn-eliminar-fila" data-idx="${idx}">Eliminar</button></td>
+          </tr>
+        `);
+      });
+      totalValorSpan.textContent = total.toFixed(2);
+
+      // listeners eliminar fila
+      document.querySelectorAll('.btn-eliminar-fila').forEach(b => {
+        b.addEventListener('click', e => {
+          const idx = Number(e.currentTarget.dataset.idx);
+          pendientes.splice(idx, 1);
+          renderPendientes();
+        });
+      });
+    }
+
+    // abrir modal detalle y cargar datos
+    document.querySelectorAll('.btn-detalle').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        pedidoDetalleId = btn.dataset.id;
+        pendientes = [];
+        tablaDetalleBody.innerHTML = '<tr><td colspan="4">Cargando...</td></tr>';
+        modalDetalle.showModal();
+
+        try {
+          const res = await fetch(`/pedidos/${pedidoDetalleId}/detalles/`);
+          const data = await res.json();
+
+          // productos para select
+          productosRemote = data.productos || [];
+          selectProducto.innerHTML = '';
+          productosRemote.forEach(p => {
+            selectProducto.insertAdjacentHTML('beforeend', `<option value="${p.id}">${p.nombre} ($${parseFloat(p.precio).toFixed(2)})</option>`);
+          });
+
+          // cargar detalles existentes (como pendientes iniciales para mostrar)
+          pendientes = (data.detalles || []).map(d => ({
+            id_existente: d.id,
+            producto_id: null,
+            nombre: d.producto,
+            cantidad: d.cantidad,
+            subtotal: parseFloat(d.subtotal)
+          }));
+
+          renderPendientes();
+        } catch (err) {
+          tablaDetalleBody.innerHTML = `<tr><td colspan="4">Error al cargar detalle: ${err}</td></tr>`;
+        }
+      });
+    });
+
+    // agregar producto localmente
+    btnAgregarDetalle.addEventListener('click', () => {
+      const prodId = Number(selectProducto.value);
+      const cantidad = Number(cantidadInput.value) || 1;
+      const producto = productosRemote.find(p => Number(p.id) === prodId);
+      if (!producto) return alert('Selecciona un producto válido.');
+
+      pendientes.push({
+        producto_id: producto.id,
+        nombre: producto.nombre,
+        cantidad,
+        subtotal: parseFloat(producto.precio) * cantidad
+      });
+      renderPendientes();
+      cantidadInput.value = 1;
+    });
+
+    // guardar detalles en backend
+    btnGuardarDetalle.addEventListener('click', async () => {
+      if (!pedidoDetalleId) return alert('Pedido no seleccionado.');
+      if (pendientes.length === 0) return alert('No hay productos para guardar.');
+
+      const payload = { items: pendientes.map(it => ({ producto: it.producto_id, cantidad: it.cantidad })) };
+      try {
+        const res = await fetch(`/pedidos/${pedidoDetalleId}/detalles/guardar/`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCSRFToken() },
+          body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+        if (json.success) {
+          alert('Detalles guardados correctamente.');
+          modalDetalle.close();
+          location.reload();
+        } else {
+          alert('Error: ' + (json.error || 'No se pudo guardar'));
+        }
+      } catch (err) {
+        alert('Error en la petición: ' + err);
+      }
+    });
+
+    // cerrar detalle
+    btnCerrarDetalle.addEventListener('click', () => modalDetalle.close());
+
+    // cerrar todos los modales con la X
+    document.querySelectorAll('dialog .close').forEach(span => {
+      span.addEventListener('click', e => e.target.closest('dialog').close());
+    });
+
+    // quitar comportamientos automáticos/animaciones por CSS no JS (si tu CSS tiene animaciones revisa y elimina)
+    </script>
+  </body>
+</html>

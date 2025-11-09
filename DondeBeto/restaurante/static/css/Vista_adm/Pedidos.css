@@ -1,0 +1,1058 @@
+/* ---------------------------------------------------
+1. RESET
+--------------------------------------------------- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  font-family: "SF Pro Display", Arial, sans-serif;
+  background-color: #f4f4f4;
+  color: #333;
+}
+
+/* ---------------------------------------------------
+2. VARIABLES
+--------------------------------------------------- */
+:root {
+  --sidebar-width: 250px;
+  --color-primary: #007aff;
+  --color-bg: #f4f4f4;
+  --color-white: #fff;
+  --color-text: #222;
+  --card-radius: 12px;
+  --shadow-color: rgba(0, 0, 0, 0.1);
+}
+
+/* ---------------------------------------------------
+3. LAYOUT GENERAL
+--------------------------------------------------- */
+.vista-administrador {
+  display: grid;
+  grid-template-columns: var(--sidebar-width) 1fr;
+  grid-template-rows: auto 1fr;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.encabezado {
+  grid-column: 1 / span 2;
+  background: var(--color-white);
+  border-bottom: 1px solid #ddd;
+  padding: 14px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* ---------------------------------------------------
+4. SIDEBAR
+--------------------------------------------------- */
+.men {
+  background: var(--color-white);
+  height: 100%;
+  border-right: 1px solid #ddd;
+  padding-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+  position: fixed;
+  width: var(--sidebar-width);
+}
+
+/* ---------------------------------------------------
+5. CONTENIDO PRINCIPAL
+--------------------------------------------------- */
+.contenedor {
+  grid-column: 2 / 3;
+  padding: 20px 40px;
+  overflow-y: auto;
+}
+
+/* ---------------------------------------------------
+6. TABS
+--------------------------------------------------- */
+.tabs {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 30px;
+}
+
+/* Estilo de los enlaces/tab */
+.tab {
+  padding: 10px 28px;
+  background: #e8e8e8;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+  border: none;
+  text-decoration: none; /* Asegura que no haya subrayado */
+  color: black; /* Color de texto negro por defecto */
+}
+
+/* Estilo cuando el tab está en hover */
+.tab:hover {
+  background: #dcdcdc;
+}
+
+/* Estilo cuando el tab está activo */
+.tab.active {
+  background: var(--color-primary);
+  color: #fff; /* Letras blancas para el estado activo */
+  font-weight: 700; /* Puede ser más grueso si lo prefieres */
+  text-decoration: none; /* Asegura que el texto no esté subrayado */
+  border-bottom: 2px solid #fff; /* Opcional: subrayado en blanco si quieres destacar el tab activo */
+}
+
+/* ---------------------------------------------------
+7. GRID DE USUARIOS
+--------------------------------------------------- */
+.productos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+/* ---------------------------------------------------
+8. CARD
+--------------------------------------------------- */
+.card-producto {
+  background: var(--color-white);
+  border-radius: var(--card-radius);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 0 0 rgba(0,0,0,0);
+  transition: 0.25s ease;
+}
+
+.card-producto:hover {
+  transform: translateY(-5px);
+  box-shadow: 0px 8px 22px var(--shadow-color);
+}
+
+.card-producto img {
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 5%;
+}
+
+.card-producto .name {
+  font-weight: 700;
+  text-align: center;
+}
+
+.card-producto .detail {
+  font-size: 14px;
+  text-align: justify;
+  color: #555;
+  line-height: 2;
+}
+
+
+/* ---------------------------------------------------
+10. RESPONSIVE
+--------------------------------------------------- */
+
+/* Tablets */
+@media (max-width: 992px) {
+  :root {
+    --sidebar-width: 200px;
+  }
+}
+
+/* Celulares */
+@media (max-width: 768px) {
+  .vista-administrador {
+    grid-template-columns: 1fr;
+  }
+
+  .men {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    height: 70px;
+    flex-direction: row;
+    justify-content: space-around;
+    border-right: none;
+    border-top: 1px solid #ddd;
+  }
+
+  .contenedor {
+    grid-column: 1;
+    padding: 80px 20px 100px 20px;
+  }
+
+  .tabs {
+    overflow-x: auto;
+  }
+
+  .btn-nuevo {
+    bottom: 90px;
+  }
+}
+
+/* ---------------------------------------------------
+ESTILOS ADICIONALES
+--------------------------------------------------- */
+
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  background-color: #f7f8fa;
+}
+
+.admin-container {
+  display: flex;
+  height: 100vh;
+}
+
+.sidebar {
+  width: 220px;
+  background-color: #ffffff;
+  color: #000000;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 0;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  height: 100vh;  /* Asegura que la sidebar tenga toda la altura de la pantalla */
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 30px;
+  gap: 10px;
+}
+
+.logo-icon {
+  width: 40px;
+  height: auto;
+}
+
+.logo-text {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #000000;
+}
+
+.menu {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  flex-grow: 1; /* Esto hace que el menú ocupe el espacio restante */
+  margin-bottom: 20px;  /* Espacio antes del botón logout */
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start; /* Alineamos el contenido a la izquierda */
+  width: 100%;
+  padding: 20px 20px; /* Espaciado en los elementos */
+  background-color: transparent;
+  color: #333;
+  font-size: 16px;
+  font-weight: 500;
+  text-align: left; /* Alineamos el texto a la izquierda */
+  transition: background-color 0.3s ease, color 0.3s ease;
+  text-decoration: none;
+}
+
+.menu-item img {
+  width: 23px;
+  height: 26.833px;
+  margin-right: 10px; /* Espacio entre el icono y el texto */
+}
+
+.menu-item:hover {
+  background-color: #4a93e3; /* Verde al pasar el mouse */
+  color: white;
+}
+
+.logout {
+  background-color: transparent;
+  color: #28394c;
+  font-weight: 600;
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.logout img {
+  width: 20px;
+  height: 20px;
+  margin-right: 10px;
+}
+
+.logout:hover {
+  background-color: #28394c;
+  color: white;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: #ffffff;
+  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 30px;
+  background-color: #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  font-weight: 600;
+  border-bottom: 2px solid #f1f1f1;
+}
+
+.caja, .titulo, .usuario {
+  font-size: 16px;
+  color: #333;
+}
+
+.content {
+  flex: 1;
+  padding: 40px;
+  background-color: #f7f8fa;
+  overflow-y: auto;
+}
+
+.content h2 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.content p {
+  font-size: 18px;
+  color: #666;
+}
+
+/* ---------------------------------------------------
+1. BOTONES DE ACCIÓN
+--------------------------------------------------- */
+.acciones {
+  display: flex;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.btn-nuevo, .btn-modificar, .btn-eliminar {
+  padding: 14px 26px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: 0.25s;
+}
+
+/* Botón de "nuevo" */
+.btn-nuevo {
+  position: fixed;
+  right: 40px;
+  bottom: 40px;
+  background: var(--color-primary);
+  color: #fff;
+}
+.btn-nuevo:hover { opacity: 0.9; }
+
+.btn-modificar {
+  background: #ffc107;
+  color: white;
+}
+
+.btn-modificar:hover {
+  opacity: 0.9;
+}
+
+.btn-eliminar {
+  background: #dc3545;
+  color: white;
+}
+
+.btn-eliminar:hover {
+  opacity: 0.9;
+}
+
+/* ===================================================
+   MODALES GENERALES
+   =================================================== */
+dialog {
+  width: 420px;
+  max-width: 90%;
+  border: none;
+  border-radius: 12px;
+  padding: 0;
+  background: var(--color-white);
+  font-family: 'Inter', sans-serif;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+dialog::backdrop {
+  background: rgba(0, 0, 0, 0.45);
+}
+
+/* Contenedor general dentro del modal */
+.modal-content {
+  padding: 28px 30px;
+  max-height: 80vh;       /* Limita altura del modal */
+  overflow-y: auto;       /* Scroll si hay muchos campos */
+  position: relative;
+}
+
+/* Cabecera del modal */
+.modal-content h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 20px;
+}
+
+/* Cerrar (X) */
+.modal-content .close {
+  position: absolute;
+  top: 12px;
+  right: 18px;
+  font-size: 24px;
+  color: #555;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.modal-content .close:hover {
+  color: #ff3b30;
+}
+
+/* Inputs y selects */
+.modal-content label {
+  display: block;
+  font-weight: 600;
+  color: #333;
+  margin-top: 12px;
+  margin-bottom: 6px;
+}
+
+.modal-content input,
+.modal-content select,
+.modal-content textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.modal-content input:focus,
+.modal-content select:focus,
+.modal-content textarea:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 6px rgba(0, 122, 255, 0.4);
+}
+
+/* Campos con lápiz para edición */
+.campo-con-lapiz {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.campo-con-lapiz-imagen {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Imagen y lápiz centrados */
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.campo-con-lapiz-imagen label {
+  align-self: flex-start; /* Esto hace que el label quede a la izquierda */
+}
+
+.imagen-wrapper {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.imagen-wrapper img {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+  display: block;
+  transition: 0.3s transform;
+}
+
+.imagen-wrapper:hover img {
+  transform: scale(1.05);
+}
+
+.imagen-wrapper .editar-campo {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 50%;
+  padding: 6px;
+  border: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.imagen-wrapper:hover .editar-campo {
+  opacity: 1;
+}
+
+.imagen-wrapper .editar-campo img {
+  width: 18px;
+  height: 18px;
+}
+
+.campo-con-lapiz-imagen input[type="file"] {
+  display: block;
+  margin-top: 5px;
+}
+
+
+
+
+.campo-con-lapiz input[readonly],
+.campo-con-lapiz textarea[readonly],
+.campo-con-lapiz select:disabled {
+  background-color: #f5f5f5;
+  border: 1px solid transparent;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08);
+  color: #555;
+  cursor: not-allowed;
+  transition: box-shadow 0.3s ease, background-color 0.3s ease;
+}
+
+.editar-campo {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.editar-campo img.icono-editar {
+  width: 20px;
+  height: 20px;
+}
+
+/* ===================================================
+   MODALES (GENERAL)
+   =================================================== */
+.modal {
+  display: none; /* se muestra con JS */
+  position: fixed;
+  z-index: 9999;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  background-color: rgba(0,0,0,0.4);
+  backdrop-filter: blur(3px);
+}
+
+.modal-content {
+  background: #ffffff;
+  margin: 4% auto;
+  padding: 25px 30px;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 700px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+  position: relative;
+
+}
+
+@keyframes aparecerModal {
+  from { transform: translateY(-20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Cabecera del modal */
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #f0f0f0;
+  margin-bottom: 15px;
+}
+
+.modal-header h2 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #333;
+}
+
+.modal-header .close {
+  background: none;
+  border: none;
+  font-size: 1.8rem;
+  color: #666;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.modal-header .close:hover {
+  color: #000;
+}
+
+/* Cuerpo del modal */
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Campos de formulario */
+.modal-body label {
+  font-weight: 600;
+  color: #444;
+  margin-bottom: 5px;
+}
+
+.modal-body input[type="text"],
+.modal-body input[type="number"],
+.modal-body select {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1.5px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: #333;
+  background: #fafafa;
+  transition: border 0.2s, background 0.2s;
+}
+
+.modal-body input:focus,
+.modal-body select:focus {
+  border-color: #007aff;
+  background: #fff;
+  outline: none;
+}
+
+/* ===================================================
+   DETALLE DE PEDIDO
+   =================================================== */
+
+/* Tabla de detalles */
+#tabla-detalle {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+#tabla-detalle th, #tabla-detalle td {
+  border-bottom: 1px solid #eee;
+  padding: 8px;
+  text-align: center;
+}
+
+#tabla-detalle th {
+  background-color: #007aff;
+  color: white;
+  font-weight: 600;
+}
+
+#tabla-detalle td select,
+#tabla-detalle td input {
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  padding: 4px;
+  width: 100%;
+  text-align: center;
+}
+
+/* Total */
+.total-container {
+  margin-top: 12px;
+  text-align: right;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #007aff;
+}
+
+/* ===================================================
+   BOTONES DE ACCIÓN (GENERAL)
+   =================================================== */
+
+.btn {
+  display: inline-block;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+/* Colores base */
+.btn-azul {
+  background-color: #007aff;
+  color: white;
+}
+.btn-azul:hover {
+  background-color: #005fcb;
+}
+
+.btn-verde {
+  background-color: #28a745;
+  color: white;
+}
+.btn-verde:hover {
+  background-color: #208c3b;
+}
+
+.btn-rojo {
+  background-color: #dc3545;
+  color: white;
+}
+.btn-rojo:hover {
+  background-color: #b52a35;
+}
+
+.btn-amarillo {
+  background-color: #ffc107;
+  color: #333;
+}
+.btn-amarillo:hover {
+  background-color: #e0a800;
+}
+
+/* ===================================================
+   PIE DE MODAL (BOTONES INFERIORES)
+   =================================================== */
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.modal-footer .btn {
+  min-width: 100px;
+}
+
+/* ===================================================
+   SCROLL DENTRO DEL MODAL
+   =================================================== */
+.modal-content::-webkit-scrollbar {
+  width: 8px;
+}
+.modal-content::-webkit-scrollbar-thumb {
+  background-color: #ccc;
+  border-radius: 6px;
+}
+.modal-content::-webkit-scrollbar-thumb:hover {
+  background-color: #999;
+}
+
+/* ===================================================
+   RESPONSIVE
+   =================================================== */
+@media (max-width: 600px) {
+  .modal-content {
+    padding: 20px;
+    width: 95%;
+  }
+
+  #tabla-detalle th, #tabla-detalle td {
+    font-size: 0.85rem;
+  }
+}
+/* ===================================================
+   AJUSTES VISUALES MÍNIMOS PARA PEDIDOS
+   =================================================== */
+
+/* Grid de pedidos */
+.pedidos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+/* Cada card de pedido */
+.card-pedido {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-pedido:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.12);
+}
+
+.card-pedido strong {
+  color: #222;
+}
+
+/* Botones dentro de las cards */
+.card-pedido .acciones {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.card-pedido button {
+  flex: 1;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.card-pedido .btn-detalle {
+  background-color: #007aff;
+  color: white;
+}
+
+.card-pedido .btn-modificar {
+  background-color: #ffc107;
+  color: white;
+}
+
+.card-pedido .btn-eliminar {
+  background-color: #dc3545;
+  color: white;
+}
+
+.card-pedido button:hover {
+  opacity: 0.85;
+}
+/* === BOTONES DE LOS MODALES === */
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.modal-buttons button {
+  padding: 10px 22px;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+/* Botón Cancelar */
+.modal-buttons .btn-cancelar,
+#cancelar-nuevo,
+#cancelar-modificar,
+#cancelar-eliminar,
+#btn-cerrar-detalle {
+  background: #ccc;
+  color: #222;
+}
+.modal-buttons .btn-cancelar:hover,
+#cancelar-nuevo:hover,
+#cancelar-modificar:hover,
+#cancelar-eliminar:hover,
+#btn-cerrar-detalle:hover {
+  background: #b3b3b3;
+}
+
+/* Botón Guardar / Continuar */
+.modal-buttons .btn-guardar,
+.continuar,
+#btn-guardar-detalle,
+#guardar {
+  background: #28a745;
+  color: #fff;
+}
+.modal-buttons .btn-guardar:hover,
+.continuar:hover,
+#btn-guardar-detalle:hover,
+#guardar:hover {
+  background: #218838;
+}
+
+/* Botón Eliminar */
+.modal-buttons .btn-eliminar,
+#confirmar-eliminar {
+  background: #dc3545;
+  color: #fff;
+}
+.modal-buttons .btn-eliminar:hover,
+#confirmar-eliminar:hover {
+  background: #c82333;
+}
+
+/* Alinear bien todos los botones */
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Botón Agregar producto */
+#btn-agregar-detalle {
+  background: #28a745;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+#btn-agregar-detalle:hover {
+  background: #218838;
+}
+
+/* Botón Eliminar fila del detalle */
+.btn-eliminar-fila {
+  background: #dc3545;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.btn-eliminar-fila:hover {
+  background: #c82333;
+}
+
+/* Botones Guardar / Cerrar del detalle (ya incluidos en modal-buttons, pero por si quieres uniformidad total) */
+#btn-cerrar-detalle,
+#btn-guardar-detalle {
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+#btn-cerrar-detalle {
+  background: #ccc;
+  color: #222;
+}
+
+#btn-cerrar-detalle:hover {
+  background: #b3b3b3;
+}
+
+#btn-guardar-detalle {
+  background: #007bff;
+  color: #fff;
+}
+
+#btn-guardar-detalle:hover {
+  background: #0069d9;
+}
+/* === SECCIÓN AGREGAR PRODUCTO (dentro del modal detalle) === */
+#modal-detalle h3 {
+  margin-top: 20px;
+  margin-bottom: 10px;
+  font-size: 1.1rem;
+}
+
+#modal-detalle div > select,
+#modal-detalle div > input[type="number"],
+#modal-detalle div > button {
+  margin-right: 12px;
+  vertical-align: middle;
+}
+
+#select-producto {
+  min-width: 200px;
+  padding: 6px 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+#cantidad {
+  width: 90px;
+  padding: 6px 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  margin-bottom: 20px;
+}
+.agregar {
+  display: flex;
+  flex-direction: column;   /* Los coloca uno debajo del otro */
+  gap: 12px;                /* Espacio entre cada elemento */
+  margin-top: 10px;
+  width: 100%;
+  max-width: 320px;         /* Opcional: limita el ancho */
+}
+
+.agregar select,
+.agregar input {
+  width: 100%;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.agregar button {
+  align-self: flex-start;   /* Alinea el botón a la izquierda */
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  background: var(--color-primary, #007bff);
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.agregar button:hover {
+  background: #0056b3;
+}
+#btn-agregar-detalle {
+  background: #28a745;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+#btn-agregar-detalle:hover {
+  background: #218838;
+}

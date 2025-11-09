@@ -18,32 +18,73 @@
           <span class="logo-text">Beto</span>
         </div>
 
-           <nav class="menu">
-                  <a href="{% url 'productos' %}" class="menu-item">
-                    <img src="{% static 'img/icon-productos.svg' %}" alt=""> Productos
-                </a>
-                <a href="{% url 'mesas' %}" class="menu-item">
-                    <img src="{% static 'img/icon-mesas.svg' %}" alt=""> Mesas
-                </a>
-                <a href="#" class="menu-item">
-                    <img src="{% static 'img/icon-pedidos.svg' %}" alt=""> Pedidos
-                </a>
-                 <a href="#" class="menu-item">
-                    <img src="{% static 'img/icon-facturas.svg' %}" alt=""> Facturas
-                </a>
+ <nav class="menu">
 
-                <a href="{% url 'clientes' %}" class="menu-item">
-                    <img src="{% static 'img/icon-clientes.svg' %}" alt=""> Clientes
-                </a>
+  {% if rol == "administrador" %}
+      <a href="{% url 'productos' %}" class="menu-item">
+          <img src="{% static 'img/icon-productos.svg' %}" alt=""> Productos
+      </a>
+      <a href="{% url 'mesas' %}" class="menu-item">
+          <img src="{% static 'img/icon-mesas.svg' %}" alt=""> Mesas
+      </a>
+      <a href="{% url 'pedidos' %}" class="menu-item">
+          <img src="{% static 'img/icon-pedidos.svg' %}" alt=""> Pedidos
+      </a>
+      <a href="#" class="menu-item">
+          <img src="{% static 'img/icon-facturas.svg' %}" alt=""> Facturas
+      </a>
+      <a href="{% url 'clientes' %}" class="menu-item">
+          <img src="{% static 'img/icon-clientes.svg' %}" alt=""> Clientes
+      </a>
+      <a href="{% url 'usuarios' %}" class="menu-item">
+          <img src="{% static 'img/icon-clientes.svg' %}" alt=""> Trabajadores
+      </a>
 
-                <a href="{% url 'usuarios' %}" class="menu-item">
-                    <img src="{% static 'img/icon-clientes.svg' %}" alt=""> Trabajadores
-                </a>
+  {% elif rol == "mesero" %}
+      <a href="{% url 'productos' %}" class="menu-item">
+          <img src="{% static 'img/icon-productos.svg' %}" alt=""> Productos
+      </a>
+      <a href="{% url 'mesas' %}" class="menu-item">
+          <img src="{% static 'img/icon-mesas.svg' %}" alt=""> Mesas
+      </a>
+      <a href="{% url 'pedidos' %}" class="menu-item">
+          <img src="{% static 'img/icon-pedidos.svg' %}" alt=""> Pedidos
+      </a>
+      <a href="#" class="menu-item">
+          <img src="{% static 'img/icon-facturas.svg' %}" alt=""> Facturas
+      </a>
+      <a href="{% url 'perfil_mesero' %}" class="menu-item">
+          <img src="{% static 'img/icon-clientes.svg' %}" alt=""> Perfil
+      </a>
 
-                <a href="{% url 'login' %}" class="menu-item logout">
-                    <img src="{% static 'img/icon-cerrar.svg' %}" alt=""> Cerrar
-                </a>
-            </nav>
+  {% elif rol == "cajero" %}
+      <a href="{% url 'pedidos' %}" class="menu-item">
+          <img src="{% static 'img/icon-pedidos.svg' %}" alt=""> Pedidos
+      </a>
+      <a href="#" class="menu-item">
+          <img src="{% static 'img/icon-facturas.svg' %}" alt=""> Facturas
+      </a>
+      <a href="{% url 'perfil_cajero' %}" class="menu-item">
+          <img src="{% static 'img/icon-clientes.svg' %}" alt=""> Perfil
+      </a>
+
+  {% elif rol == "repartidor" %}
+      <a href="{% url 'pedidos' %}" class="menu-item">
+          <img src="{% static 'img/icon-pedidos.svg' %}" alt=""> Pedidos
+      </a>
+      <a href="#" class="menu-item">
+          <img src="{% static 'img/icon-facturas.svg' %}" alt=""> Facturas
+      </a>
+      <a href="{% url 'perfil_repartidor' %}" class="menu-item">
+          <img src="{% static 'img/icon-clientes.svg' %}" alt=""> Perfil
+      </a>
+  {% endif %}
+
+  <a href="{% url 'login' %}" class="menu-item logout">
+      <img src="{% static 'img/icon-cerrar.svg' %}" alt=""> Cerrar
+  </a>
+</nav>
+
       </aside>
 
       <!-- Main -->

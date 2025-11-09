@@ -18,29 +18,73 @@
           <span class="logo-text">Beto</span>
         </div>
 
-        <nav class="menu">
-          <a href="{% url 'productos' %}" class="menu-item">
-            <img src="{% static 'img/icon-productos.svg' %}" alt=""> Productos
-          </a>
-          <a href="{% url 'mesas' %}" class="menu-item">
-            <img src="{% static 'img/icon-mesas.svg' %}" alt=""> Mesas
-          </a>
-          <a href="#" class="menu-item">
-            <img src="{% static 'img/icon-pedidos.svg' %}" alt=""> Pedidos
-          </a>
-          <a href="#" class="menu-item">
-            <img src="{% static 'img/icon-facturas.svg' %}" alt=""> Facturas
-          </a>
-          <a href="{% url 'clientes' %}" class="menu-item">
-            <img src="{% static 'img/icon-clientes.svg' %}" alt=""> Clientes
-          </a>
-          <a href="{% url 'usuarios' %}" class="menu-item">
-            <img src="{% static 'img/icon-clientes.svg' %}" alt=""> Trabajadores
-          </a>
-          <a href="{% url 'login' %}" class="menu-item logout">
-            <img src="{% static 'img/icon-cerrar.svg' %}" alt=""> Cerrar
-          </a>
-        </nav>
+  <nav class="menu">
+
+  {% if rol == "administrador" %}
+      <a href="{% url 'productos' %}" class="menu-item">
+          <img src="{% static 'img/icon-productos.svg' %}" alt=""> Productos
+      </a>
+      <a href="{% url 'mesas' %}" class="menu-item">
+          <img src="{% static 'img/icon-mesas.svg' %}" alt=""> Mesas
+      </a>
+      <a href="{% url 'pedidos' %}" class="menu-item">
+          <img src="{% static 'img/icon-pedidos.svg' %}" alt=""> Pedidos
+      </a>
+      <a href="#" class="menu-item">
+          <img src="{% static 'img/icon-facturas.svg' %}" alt=""> Facturas
+      </a>
+      <a href="{% url 'clientes' %}" class="menu-item">
+          <img src="{% static 'img/icon-clientes.svg' %}" alt=""> Clientes
+      </a>
+      <a href="{% url 'usuarios' %}" class="menu-item">
+          <img src="{% static 'img/icon-clientes.svg' %}" alt=""> Trabajadores
+      </a>
+
+  {% elif rol == "mesero" %}
+      <a href="{% url 'productos' %}" class="menu-item">
+          <img src="{% static 'img/icon-productos.svg' %}" alt=""> Productos
+      </a>
+      <a href="{% url 'mesas' %}" class="menu-item">
+          <img src="{% static 'img/icon-mesas.svg' %}" alt=""> Mesas
+      </a>
+      <a href="{% url 'pedidos' %}" class="menu-item">
+          <img src="{% static 'img/icon-pedidos.svg' %}" alt=""> Pedidos
+      </a>
+      <a href="#" class="menu-item">
+          <img src="{% static 'img/icon-facturas.svg' %}" alt=""> Facturas
+      </a>
+      <a href="{% url 'perfil_mesero' %}" class="menu-item">
+          <img src="{% static 'img/icon-clientes.svg' %}" alt=""> Perfil
+      </a>
+
+  {% elif rol == "cajero" %}
+      <a href="{% url 'pedidos' %}" class="menu-item">
+          <img src="{% static 'img/icon-pedidos.svg' %}" alt=""> Pedidos
+      </a>
+      <a href="#" class="menu-item">
+          <img src="{% static 'img/icon-facturas.svg' %}" alt=""> Facturas
+      </a>
+      <a href="{% url 'perfil_cajero' %}" class="menu-item">
+          <img src="{% static 'img/icon-clientes.svg' %}" alt=""> Perfil
+      </a>
+
+  {% elif rol == "repartidor" %}
+      <a href="{% url 'pedidos' %}" class="menu-item">
+          <img src="{% static 'img/icon-pedidos.svg' %}" alt=""> Pedidos
+      </a>
+      <a href="#" class="menu-item">
+          <img src="{% static 'img/icon-facturas.svg' %}" alt=""> Facturas
+      </a>
+      <a href="{% url 'perfil_repartidor' %}" class="menu-item">
+          <img src="{% static 'img/icon-clientes.svg' %}" alt=""> Perfil
+      </a>
+  {% endif %}
+
+  <a href="{% url 'login' %}" class="menu-item logout">
+      <img src="{% static 'img/icon-cerrar.svg' %}" alt=""> Cerrar
+  </a>
+</nav>
+
       </aside>
 
       <main class="main-content">
@@ -280,6 +324,32 @@ document.querySelectorAll('.btn-eliminar').forEach(btn => {
     };
   });
 });
+// --- ACTUALIZAR ESTADO VISUAL DE MESA (sin recargar) ---
+async function actualizarEstadoMesa(id, nuevoEstado) {
+  const response = await fetch(`/mesa/estado/${id}/`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': '{{ csrf_token }}'
+    },
+    body: JSON.stringify({ estado: nuevoEstado })
+  });
+
+  const result = await response.json();
+  if (result.success) {
+    // Actualizar texto dentro de la card sin recargar
+    const card = document.querySelector(`.btn-modificar[data-id="${id}"]`).closest('.card-mesa');
+    card.classList.remove('libre', 'ocupada', 'reservada');
+    card.classList.add(nuevoEstado === 'ocupada' ? 'ocupada' : nuevoEstado === 'reservada' ? 'reservada' : 'libre');
+    card.querySelector('.detail').innerHTML = `
+      <strong>Numero:</strong> ${card.dataset.numero} <br>
+      <strong>Capacidad:</strong> ${card.dataset.capacidad} <br>
+      <strong>Estado:</strong> ${nuevoEstado} <br>
+    `;
+  } else {
+    alert("Error al actualizar mesa: " + result.error);
+  }
+}
     </script>
   </body>
 </html>

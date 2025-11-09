@@ -1,18 +1,23 @@
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseRedirect
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 import json
-from .models import Usuario, Producto, Categoria, Mesa
-
+from .models import Usuario, Producto, Categoria, Mesa, Pedido, DetallePedido
 
 
 # ---------------------------
-# LOGIN VIEW
+# COMPONENTE 1 - Usuario
 # ---------------------------
+# ---------------------------
+# VISTA DE USUARIO
+# ---------------------------
+
+#Vista del login
 def login_view(request):
     if request.method == "POST":
         email = request.POST.get("email")
@@ -26,7 +31,7 @@ def login_view(request):
             if usuario.checkpassword(contraseña):
                 # Guardar el ID en sesión
                 request.session['usuario_id'] = usuario.id
-
+                request.session['rol'] = usuario.rol
                 # Redirección según el rol
                 rol = usuario.rol.strip().lower()
 
@@ -48,9 +53,9 @@ def login_view(request):
             messages.error(request, "El correo no está registrado.")
 
     # Si no es POST o hay error, mostrar login
-    return render(request, 'Login/login.html')
+    return render(request, 'C1_Usuario/login.html')
 
-# Vista para manejar el registro de usuario
+# Vista registro de usuario
 def registro_view(request):
     if request.method == 'POST':
         # Obtener los datos del formulario
@@ -87,9 +92,9 @@ def registro_view(request):
         # Redirigir a la página de login
         return redirect('login')  # Redirigir a login después del registro
 
-    return render(request, 'Login/registro.html')  # Formulario de registro básico
+    return render(request, 'C1_Usuario/registro.html')  # Formulario de registro básico
 
-
+# Vista clave olvidada de usuario
 def clave_olvidada(request):
     if request.method == 'POST':
         email = request.POST.get('email')
@@ -97,9 +102,11 @@ def clave_olvidada(request):
 
         try:
             usuario = Usuario.objects.get(email=email)
+            # Guardamos el correo en la sesión
+            request.session['email_recuperacion'] = email
         except Usuario.DoesNotExist:
             messages.error(request, 'No se encuentra un usuario con ese correo electrónico.')
-            return render(request, 'Login/clave_olvidada.html')
+            return render(request, 'C1_Usuario/clave_olvidada.html')
 
         # Si el usuario ya está respondiendo la pregunta
         if respuesta:
@@ -110,26 +117,65 @@ def clave_olvidada(request):
             else:
                 messages.error(request, 'La respuesta a la pregunta de seguridad es incorrecta.')
                 # Volver a mostrar la pregunta
-                return render(request, 'Login/clave_olvidada.html', {
+                return render(request, 'C1_Usuario/clave_olvidada.html', {
                     'email': email,
                     'pregunta_clave': usuario.pregunta_clave,
                 })
 
         # Si solo se envió el email, mostrar la pregunta
         else:
-            return render(request, 'Login/clave_olvidada.html', {
+            return render(request, 'C1_Usuario/clave_olvidada.html', {
                 'email': email,
                 'pregunta_clave': usuario.pregunta_clave,
             })
 
     # Si es GET
-    return render(request, 'Login/clave_olvidada.html')
+    return render(request, 'C1_Usuario/clave_olvidada.html')
+
+
+# Vista cambio de contraseña
 
 def clave_cambiada(request):
-    return render(request, 'Login/clave_cambiada.html')
+    if request.method == 'POST':
+        nueva_clave = request.POST.get('new-password')
+        repetir_clave = request.POST.get('password-repeat')
+        email = request.session.get('email_recuperacion')
+
+        if not email:
+            messages.error(request, "No se encontró el correo del usuario.")
+            return redirect('Clave_Olvidada')
+
+        if not nueva_clave or not repetir_clave:
+            messages.error(request, "Completa todos los campos.")
+            return redirect('clave_cambiada')
+
+        if nueva_clave != repetir_clave:
+            messages.error(request, "Las contraseñas no coinciden.")
+            return redirect('clave_cambiada')
+
+        try:
+            usuario = Usuario.objects.get(email=email)
+            usuario.contraseña = make_password(nueva_clave)
+            usuario.save()
+
+            # Borrar el email guardado
+            del request.session['email_recuperacion']
+
+            # Enviar mensaje de éxito que se mostrará con alert JS
+            messages.success(request, "Tu contraseña se cambió correctamente.")
+            return redirect('login')
+
+        except Usuario.DoesNotExist:
+            messages.error(request, "Usuario no encontrado.")
+            return redirect('clave_olvidada')
+
+    return render(request, 'C1_Usuario/clave_cambiada.html')
 
 # ---------------------------
-# ADMINISTRADOR VIEW
+# VITAS
+# ---------------------------
+# ---------------------------
+# ADMINISTRADOR - VISTA
 # ---------------------------
 
 def vista_adm(request):
@@ -144,7 +190,7 @@ def vista_adm(request):
     except Usuario.DoesNotExist:
         return redirect('login')
 
-    return render(request, 'Vista_Adm/Vista_Adm.html',{'usuario': usuario, 'rol': usuario.rol if usuario else None})
+    return render(request, 'Vistas/Vista_Adm/Vista_Adm.html',{'usuario': usuario, 'rol': usuario.rol if usuario else None})
 
 
 def usuarios_view(request):
@@ -172,7 +218,7 @@ def usuarios_view(request):
         usuario = None
 
     # Pasamos los usuarios y el rol seleccionado a la plantilla
-    return render(request, 'Vista_Adm/Usuarios.html', {'usuario': usuario, 'usuarios': usuarios, 'rol_seleccionado': rol_seleccionado,'rol': usuario.rol if usuario else None})
+    return render(request, 'Vistas/Vista_Adm/Usuarios.html', {'usuario': usuario, 'usuarios': usuarios, 'rol_seleccionado': rol_seleccionado,'rol': usuario.rol if usuario else None})
 
 
 # Vista para registrar un trabajador
@@ -218,7 +264,7 @@ def registrar_usuario_view(request):
     # Si no es POST, redirigir a la lista de usuarios
     return redirect('usuarios')
 
-
+#vista de los clientes del sistema, esto lo vera el administrador
 
 def clientes_view(request):
     usuario_id = request.session.get('usuario_id')
@@ -236,7 +282,7 @@ def clientes_view(request):
     clientes = Usuario.objects.filter(rol='cliente')
 
     # Pasar a la plantilla
-    return render(request, 'Vista_Adm/Clientes.html', {'usuario': usuario, 'clientes': clientes,'rol': usuario.rol if usuario else None})
+    return render(request, 'Vistas/Vista_Adm/Clientes.html', {'usuario': usuario, 'clientes': clientes,'rol': usuario.rol if usuario else None})
 
 # Vista para registrar nuevos clientes
 def registrar_cliente_view(request):
@@ -276,6 +322,9 @@ def lista_clientes(request):
     clientes = Usuario.objects.filter(rol='cliente')  # Asegúrate que los clientes tienen rol 'cliente'
     return render(request, 'Clientes.html', {'clientes': clientes})
 
+# ---------------------------
+# CLIENTE - VISTA
+# ---------------------------
 def home_cliente(request):
     # Verificamos si hay sesión activa
     usuario_id = request.session.get('usuario_id')
@@ -286,7 +335,7 @@ def home_cliente(request):
     usuario = Usuario.objects.get(id=usuario_id)
     contexto = {'usuario': usuario}
 
-    return render(request, 'Vista_cliente/homeCliente.html', contexto)
+    return render(request, 'Vistas/Vista_cliente/homeCliente.html', contexto)
 
 def ubicacion(request):
     # Verificamos si hay sesión activa
@@ -297,7 +346,7 @@ def ubicacion(request):
     # Opcional: obtener datos del usuario
     usuario = Usuario.objects.get(id=usuario_id)
     contexto = {'usuario': usuario}
-    return render(request, 'Vista_cliente/ubicacion.html', contexto)
+    return render(request, 'Vistas/Vista_cliente/ubicacion.html', contexto)
 
 def sobre_nosotros(request):
     # Verificamos si hay sesión activa
@@ -308,7 +357,7 @@ def sobre_nosotros(request):
     # Opcional: obtener datos del usuario
     usuario = Usuario.objects.get(id=usuario_id)
     contexto = {'usuario': usuario}
-    return render(request, 'Vista_cliente/Nosotros.html', contexto)
+    return render(request, 'Vistas/Vista_cliente/Nosotros.html', contexto)
 
 
 def mi_perfil(request):
@@ -322,8 +371,11 @@ def mi_perfil(request):
     context = {
         'usuario': usuario
     }
-    return render(request, 'Vista_cliente/perfil.html', context)
-#VISTAS ACTORES
+    return render(request, 'Vistas/Vista_cliente/perfil.html', context)
+
+# ---------------------------
+# CAJERO - VISTA
+# ---------------------------
 def vista_cajero(request):
     usuario_id = request.session.get('usuario_id')
 
@@ -335,10 +387,25 @@ def vista_cajero(request):
     except Usuario.DoesNotExist:
         return redirect('login')
 
-    return render(request, 'Vista_cajero/Vista_Cajero.html',{'usuario': usuario, 'rol': usuario.rol if usuario else None})
+    return render(request, 'Vistas/Vista_cajero/Vista_Cajero.html',{'usuario': usuario, 'rol': usuario.rol if usuario else None})
+
+def perfil_cajero(request):
+    usuario_id = request.session.get('usuario_id')
+
+    if not usuario_id:
+        return redirect('login')
+
+    try:
+        usuario = Usuario.objects.get(id=usuario_id)
+    except Usuario.DoesNotExist:
+        return redirect('login')
+
+    return render(request, 'Vistas/Vista_cajero/perfil_cajero.html', {'usuario': usuario, 'rol': usuario.rol})
 
 
-
+# ---------------------------
+# MESERO - VISTA
+# ---------------------------
 
 
 def vista_mesero(request):
@@ -352,37 +419,7 @@ def vista_mesero(request):
     except Usuario.DoesNotExist:
         return redirect('login')
 
-    return render(request, 'Vista_mesero/Vista_Mesero.html',{'usuario': usuario, 'rol': usuario.rol if usuario else None})
-
-def vista_repartidor(request):
-    usuario_id = request.session.get('usuario_id')
-
-    if not usuario_id:
-        return redirect('login')
-
-    try:
-        usuario = Usuario.objects.get(id=usuario_id)
-    except Usuario.DoesNotExist:
-        return redirect('login')
-
-    return render(request, 'Vista_repartidor/Vista_Repartidor.html',{'usuario': usuario, 'rol': usuario.rol if usuario else None})
-
-# ---------------------------
-# VISTAS DE PERFIL POR ROL
-# ---------------------------
-def perfil_cajero(request):
-    usuario_id = request.session.get('usuario_id')
-
-    if not usuario_id:
-        return redirect('login')
-
-    try:
-        usuario = Usuario.objects.get(id=usuario_id)
-    except Usuario.DoesNotExist:
-        return redirect('login')
-
-    return render(request, 'Vista_cajero/perfil_cajero.html', {'usuario': usuario, 'rol': usuario.rol})
-
+    return render(request, 'Vistas/Vista_mesero/Vista_Mesero.html',{'usuario': usuario, 'rol': usuario.rol if usuario else None})
 
 def perfil_mesero(request):
     usuario_id = request.session.get('usuario_id')
@@ -395,7 +432,24 @@ def perfil_mesero(request):
     except Usuario.DoesNotExist:
         return redirect('login')
 
-    return render(request, 'Vista_mesero/perfil_mesero.html', {'usuario': usuario, 'rol': usuario.rol})
+    return render(request, 'Vistas/Vista_mesero/perfil_mesero.html', {'usuario': usuario, 'rol': usuario.rol})
+
+# ---------------------------
+# REPARTIDOR - VISTA
+# ---------------------------
+
+def vista_repartidor(request):
+    usuario_id = request.session.get('usuario_id')
+
+    if not usuario_id:
+        return redirect('login')
+
+    try:
+        usuario = Usuario.objects.get(id=usuario_id)
+    except Usuario.DoesNotExist:
+        return redirect('login')
+
+    return render(request, 'Vistas/Vista_repartidor/Vista_Repartidor.html',{'usuario': usuario, 'rol': usuario.rol if usuario else None})
 
 
 def perfil_repartidor(request):
@@ -409,8 +463,12 @@ def perfil_repartidor(request):
     except Usuario.DoesNotExist:
         return redirect('login')
 
-    return render(request, 'Vista_repartidor/perfil_repartidor.html', {'usuario': usuario, 'rol': usuario.rol})
+    return render(request, 'Vistas/Vista_repartidor/perfil_repartidor.html', {'usuario': usuario, 'rol': usuario.rol})
 
+#
+# ---------------------------
+# ACTUALIZAR CLIENTE METODO
+# ---------------------------
 @csrf_exempt
 def actualizar_cliente(request, id):
     """Recibe datos JSON y actualiza el cliente"""
@@ -438,7 +496,9 @@ def actualizar_cliente(request, id):
 
     return JsonResponse({'success': False, 'error': 'Método no permitido'})
 
-
+# ---------------------------
+# ELIMINAR CLIENTE METODO
+# ---------------------------
 @csrf_exempt
 def eliminar_cliente(request, id):
     """Elimina un cliente por ID"""
@@ -452,6 +512,12 @@ def eliminar_cliente(request, id):
 
     return JsonResponse({'success': False, 'error': 'Método no permitido'})
 
+# ---------------------------
+# COMPONENTE 2 - PEDIDOS
+# ---------------------------
+# ---------------------------
+# PRODUCTOS - VISTA
+# ---------------------------
 def productos(request):
     usuario_id = request.session.get('usuario_id')
 
@@ -474,12 +540,12 @@ def productos(request):
     else:
         productos = Producto.objects.filter(categoria__nombre=categoria_seleccionada)
 
-    return render(request, 'Vista_adm/Productos.html', {
+    return render(request, 'C2_Pedido/Productos.html', {
         'usuario': usuario,
         'rol': usuario.rol,
         'productos': productos,
         'categorias': categorias,
-        'categoria_seleccionada': categoria_seleccionada  # 👈 para el template
+        'categoria_seleccionada': categoria_seleccionada
     })
 
 
@@ -538,6 +604,9 @@ def eliminar_producto(request, id):
 
     return JsonResponse({'success': False, 'error': 'Método no permitido'})
 
+# ---------------------------
+# MESAS - VISTA
+# ---------------------------
 def mesas_view(request):
     usuario_id = request.session.get('usuario_id')
 
@@ -565,7 +634,7 @@ def mesas_view(request):
         'estado_filtro': estado  # para marcar tab activo
     }
 
-    return render(request, 'Vista_adm/Mesas.html', context)
+    return render(request, 'C2_Pedido/Mesas.html', context)
 
 
 # Vista para registrar nuevas mesas
@@ -621,3 +690,175 @@ def eliminar_mesa(request, id):
             return JsonResponse({'success': False, 'error': str(e)})
 
     return JsonResponse({'success': False, 'error': 'Método no permitido'})
+
+
+# ---------------------------
+# PEDIDOS - VISTA
+# ---------------------------
+def pedidos(request):
+    usuario_id = request.session.get('usuario_id')
+
+    if not usuario_id:
+        return redirect('login')
+
+    try:
+        usuario = Usuario.objects.get(id=usuario_id)
+    except Usuario.DoesNotExist:
+        return redirect('login')
+
+    # Valor que viene en la URL (ej: "En el local", "Domicilio", "Para llevar", o "Todos")
+    tipo_pedido_param = request.GET.get('tipo_pedido', 'Todos')
+
+    # Mapeo etiqueta -> codigo interno de la DB
+    etiqueta_a_codigo = {
+        'En el local': 'local',
+        'Domicilio': 'domicilio',
+        'Para llevar': 'para_llevar',
+        # También soportamos las claves internas si alguien las pasa directamente
+        'local': 'local',
+        'domicilio': 'domicilio',
+        'para_llevar': 'para_llevar',
+        'Todos': 'Todos'
+    }
+
+    # Determinar código a usar en el filtro
+    codigo = etiqueta_a_codigo.get(tipo_pedido_param, 'Todos')
+
+    if codigo == 'Todos':
+        pedidos_qs = Pedido.objects.select_related('usuario', 'mesa').order_by('-fecha')
+    else:
+        pedidos_qs = Pedido.objects.filter(tipo_pedido=codigo).select_related('usuario', 'mesa').order_by('-fecha')
+
+    usuarios = Usuario.objects.all()
+    mesas = Mesa.objects.filter(estado='disponible')
+
+    # Pasamos a la plantilla la etiqueta original (para que las tabs sigan comparando por texto visible)
+    context = {
+        'pedidos': pedidos_qs,
+        'usuarios': usuarios,
+        'mesas': mesas,
+        'usuario': usuario,
+        'rol': usuario.rol,
+        'tipo_pedido_seleccionado': tipo_pedido_param,  # IMPORTANT: la plantilla usa esta variable
+    }
+
+    return render(request, 'C2_Pedido/Pedidos.html', context)
+
+# ---- REGISTRAR PEDIDO ----
+def registrar_pedido(request):
+    if request.method == 'POST':
+        usuario_id = request.POST.get('usuario')
+        mesa_id = request.POST.get('mesa')
+        tipo_pedido = request.POST.get('tipo_pedido')
+        estado = request.POST.get('estado')
+
+        usuario = Usuario.objects.get(id=usuario_id)
+        mesa = Mesa.objects.get(id=mesa_id) if mesa_id else None
+
+        pedido = Pedido.objects.create(
+            usuario=usuario,
+            mesa=mesa,
+            tipo_pedido=tipo_pedido,
+            estado=estado
+        )
+
+        # Si el pedido es "en el local", marcar mesa como ocupada
+        if tipo_pedido == 'local' and mesa:
+            mesa.estado = 'ocupada'
+            mesa.save()
+
+        return redirect('pedidos')
+
+# ---- ACTUALIZAR PEDIDO ----
+@csrf_exempt
+def actualizar_pedido(request, id):
+    pedido = get_object_or_404(Pedido, id=id)
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+            if 'tipo_pedido' in data:
+                pedido.tipo_pedido = data['tipo_pedido']
+            if 'estado' in data:
+                pedido.estado = data['estado']
+            if 'mesa' in data:
+                mesa = Mesa.objects.filter(numero=data['mesa']).first()
+                pedido.mesa = mesa
+            pedido.save()
+            return JsonResponse({'success': True})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+    return JsonResponse({'success': False, 'error': 'Método no permitido'})
+
+# ---- ELIMINAR PEDIDO ----
+@csrf_exempt
+def eliminar_pedido(request, id):
+    pedido = get_object_or_404(Pedido, id=id)
+    if request.method == 'POST':
+        pedido.delete()
+        return JsonResponse({'success': True})
+    return JsonResponse({'success': False, 'error': 'Método no permitido'})
+
+# --- VER DETALLES DE UN PEDIDO ---
+def ver_detalle_pedido(request, id):
+    pedido = get_object_or_404(Pedido, id=id)
+    detalles_qs = DetallePedido.objects.filter(pedido=pedido).select_related('producto')
+    detalles = [{
+        'id': d.id,
+        'producto': d.producto.nombre,
+        'producto_id': d.producto.id,
+        'cantidad': d.cantidad,
+        'subtotal': float(d.subtotal)
+    } for d in detalles_qs]
+    productos = [{'id': p.id, 'nombre': p.nombre, 'precio': float(p.precio)} for p in Producto.objects.all()]
+    return JsonResponse({'pedido_id': pedido.id, 'detalles': detalles, 'productos': productos})
+
+# --- AGREGAR DETALLE A UN PEDIDO ---
+@csrf_exempt
+def agregar_detalle_pedido(request, id):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+            producto_id = data.get('producto')
+            cantidad = int(data.get('cantidad', 1))
+            producto = get_object_or_404(Producto, id=producto_id)
+            pedido = get_object_or_404(Pedido, id=id)
+
+            DetallePedido.objects.create(
+                pedido=pedido,
+                producto=producto,
+                cantidad=cantidad,
+                subtotal=cantidad * producto.precio
+            )
+            return JsonResponse({'success': True})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+    return JsonResponse({'success': False, 'error': 'Método no permitido'})
+
+@csrf_exempt
+def guardar_detalles_pedido(request, id):
+    """
+    Espera JSON: { items: [ { producto: <id>, cantidad: <n> }, ... ] }
+    Crea los detalle_pedido correspondientes (bulk).
+    """
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
+
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+        items = data.get('items', [])
+        pedido = get_object_or_404(Pedido, id=id)
+        created = []
+        for item in items:
+            producto_id = item.get('producto')
+            cantidad = int(item.get('cantidad', 1))
+            producto = get_object_or_404(Producto, id=producto_id)
+            dp = DetallePedido.objects.create(
+                pedido=pedido,
+                producto=producto,
+                cantidad=cantidad,
+                subtotal = cantidad * producto.precio
+            )
+            created.append(dp.id)
+        return JsonResponse({'success': True, 'created': created})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
