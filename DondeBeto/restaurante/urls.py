@@ -42,6 +42,7 @@ urlpatterns = [
     path('pedidos/<int:id>/detalles/agregar/', views.agregar_detalle_pedido, name='agregar_detalle_pedido'),
     path('pedidos/<int:id>/detalles/guardar/', views.guardar_detalles_pedido, name='guardar_detalles_pedido'),
     path('pedidos/<int:pedido_id>/pdf/', views.generar_pdf, name='pdf_pedido'),
-    path('pedidos/<int:pedido_id>/detalles/modificar/', views.modificar_detalle_pedido, name='modificar_detalle_pedido')
+    path('pedidos/<int:pedido_id>/detalles/modificar/', views.modificar_detalle_pedido, name='modificar_detalle_pedido'),
+
 
 ]

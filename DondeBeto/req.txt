@@ -2,3 +2,5 @@ Django==5.2.7
 dj-database-url==1.0.0
 python-decouple==3.8
 psycopg2-binary==2.9.9 
+xhtml2pdf
+factory_boy

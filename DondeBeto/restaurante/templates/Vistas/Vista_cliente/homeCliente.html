@@ -7,6 +7,8 @@
   <title>BETO - Cliente</title>
   <link rel="stylesheet" href="{% static 'css/Vista_cliente/homeCliente.css' %}">
      <link rel="icon" href="{% static 'img/logoOficial.svg' %}" type="image/x-icon" />
+  <link rel="stylesheet" href="{% static 'css/Vista_adm/Productos.css' %}" />
+    <link rel="icon" href="{% static 'img/logoOficial.svg' %}" type="image/x-icon" />
 </head>
 <body>
 
@@ -40,39 +42,144 @@
 
   <!-- Contenido principal -->
   <main class="main-content">
-    <section class="categories">
-      <div class="card">
-    <img src="{% static '/img/recursos_png/seco_de_gallina.png' %}" alt="Almuerzos">
-    <p>Almuerzos</p>
+
+     <section class="content">
+          <div class="tabs">
+          <!-- s  
+  <a href="{% url 'productos' %}?categoria=Todos" class="tab {% if categoria_seleccionada == 'Todos' %}active{% endif %}">Todos</a>
+  <a href="{% url 'productos' %}?categoria=Bebidas" class="tab {% if categoria_seleccionada == 'Bebidas' %}active{% endif %}">Bebidas</a>
+  <a href="{% url 'productos' %}?categoria=Almuerzos" class="tab {% if categoria_seleccionada == 'Almuerzos' %}active{% endif %}">Almuerzos</a>
+  <a href="{% url 'productos' %}?categoria=Desayunos" class="tab {% if categoria_seleccionada == 'Desayunos' %}active{% endif %}">Desayunos</a>
+  <a href="{% url 'productos' %}?categoria=Comida rápida" class="tab {% if categoria_seleccionada == 'Comida rápida' %}active{% endif %}">Comida rápida</a>
+  <a href="{% url 'productos' %}?categoria=Especiales" class="tab {% if categoria_seleccionada == 'Especiales' %}active{% endif %}">Especiales</a>
+  <a href="{% url 'productos' %}?categoria=Acompañantes" class="tab {% if categoria_seleccionada == 'Acompañantes' %}active{% endif %}">Acompañantes</a>
+  -->
+
 </div>
 
-<div class="card">
-    <img src="{% static 'img/recursos_png/hamburguesa.png' %}" alt="Comida rápida">
-    <p>Comida rápida</p>
+          <!-- GRID PRODUCTOS -->
+         <div class="productos-grid">
+  {% for producto in productos %}
+  <div class="card-producto"
+       data-nombre="{{ producto.nombre }}"
+       data-descripcion="{{ producto.descripcion }}"
+       data-precio="{{ producto.precio }}"
+       data-categoria="{{ producto.categoria.nombre }}"
+       data-imagen="{% if producto.imagen %}{{ producto.imagen.url }}{% endif %}">
+    <img src="{% if producto.imagen %}{{ producto.imagen.url }}{% else %}{% static 'img/default-product.svg' %}{% endif %}" alt="Imagen producto">
+    <div class="name">{{ producto.nombre }}</div>
+    <div class="detail">
+      <strong>Descripción:</strong> {{ producto.descripcion }} <br>
+      <strong>Precio:</strong> ${{ producto.precio }} <br>
+      <strong>Categoría:</strong> {{ producto.categoria.nombre }} <br>
+    </div>
+    <div class="acciones">
+  
+      <button class="btn-modificar" data-id="{{ producto.id }}">Agregar al pedido</button>
+      <!--<button class="btn-eliminar" data-id="{{ producto.id }}">ELIMINAR</button>-->
+    </div>
+  </div>
+  {% empty %}
+  <p>No hay productos registrados.</p>
+  {% endfor %}
 </div>
 
-<div class="card">
-    <img src="{% static 'img/recursos_png/bebidas.png' %}" alt="Bebidas">
-    <p>Bebidas</p>
+<div class="acciones">
+      
+  <button id="btn-nuevo" class="btn-nuevo">Hacer pedido</button>
 </div>
 
-<div class="card">
-    <img src="{% static 'img/recursos_png/desayuno.png' %}" alt="Desayunos">
-    <p>Desayunos</p>
+        </section>
+
+<div id="cantidad-modal" class="modal-overlay">
+    <div class="modal-content">
+        <h3>Agregar al carrito</h3>
+        <p id="modal-producto-nombre">Producto: [Nombre del Producto]</p>
+        
+        <div class="cantidad-control">
+            <label for="input-cantidad">Cantidad:</label>
+            <input type="number" id="input-cantidad" value="1" min="1" max="99" aria-label="Cantidad de producto">
+        </div>
+        
+        <div class="modal-actions">
+            <button id="btn-cancelar" class="btn-secundario">Cancelar</button>
+            <button id="btn-confirmar-agregar" class="btn-principal">Agregar</button>
+        </div>
+    </div>
 </div>
 
-<div class="card">
-    <img src="{% static 'img/recursos_png/especial.png' %}" alt="Especiales">
-    <p>Especiales</p>
-</div>
-    </section>
+
   </main>
 
   <script>
+
+    // ... tu función toggleSidebar() va aquí ...
     function toggleSidebar() {
-      document.getElementById('sidebar').classList.toggle('active');
+        document.getElementById('sidebar').classList.toggle('active');
     }
-  </script>
+    
+    // --- Lógica del Diálogo de Cantidad ---
+    
+    // 1. Elementos del DOM
+    const modal = document.getElementById('cantidad-modal');
+    const btnCancelar = document.getElementById('btn-cancelar');
+    const btnConfirmar = document.getElementById('btn-confirmar-agregar');
+    const inputCantidad = document.getElementById('input-cantidad');
+    const modalNombreProducto = document.getElementById('modal-producto-nombre');
+    
+    // Variable global para guardar el ID del producto que se está agregando
+    let productoIdSeleccionado = null;
+    
+    // 2. Evento para abrir el modal al hacer clic en "Agregar al carrito"
+    document.addEventListener('DOMContentLoaded', () => {
+        const botonesAgregar = document.querySelectorAll('.btn-modificar'); // Usamos tu clase existente
+        
+        botonesAgregar.forEach(button => {
+            button.addEventListener('click', function() {
+                // Obtener datos del producto desde la tarjeta
+                const card = this.closest('.card-producto');
+                const nombre = card.getAttribute('data-nombre');
+                productoIdSeleccionado = this.getAttribute('data-id');
+
+                // Llenar el modal
+                modalNombreProducto.textContent = `Producto: ${nombre}`;
+                inputCantidad.value = 1; // Resetear la cantidad a 1
+                
+                // Mostrar el modal
+                modal.classList.add('active');
+            });
+        });
+    });
+
+    // 3. Evento para cerrar el modal
+    btnCancelar.addEventListener('click', () => {
+        modal.classList.remove('active');
+        productoIdSeleccionado = null; // Limpiar el ID
+    });
+
+    // 4. Evento para confirmar y agregar al carrito
+    btnConfirmar.addEventListener('click', () => {
+        const cantidad = parseInt(inputCantidad.value);
+        
+        if (cantidad > 0 && productoIdSeleccionado) {
+            
+            // --- AQUÍ VA TU LÓGICA DE AGREGAR AL CARRITO ---
+            
+            console.log(`Agregando Producto ID: ${productoIdSeleccionado} con Cantidad: ${cantidad}`);
+            alert(`"${modalNombreProducto.textContent.replace('Producto: ', '')}" agregado x${cantidad} al carrito!`);
+            
+            // Llama a tu función real de Django/AJAX para agregar el producto
+            // Ejemplo: agregarAlCarrito(productoIdSeleccionado, cantidad);
+            
+            // Ocultar el modal
+            modal.classList.remove('active');
+            productoIdSeleccionado = null;
+        } else {
+            alert('Por favor, ingresa una cantidad válida (mínimo 1).');
+        }
+    });
+
+</script>
 
 </body>
 </html>

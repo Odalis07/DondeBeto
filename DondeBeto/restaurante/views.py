@@ -9,6 +9,7 @@ from django.template.loader import get_template
 from xhtml2pdf import pisa
 from django.views.decorators.csrf import csrf_exempt
 import json
+from .factory import PedidoFactory
 from .models import Usuario, Producto, Categoria, Mesa, Pedido, DetallePedido
 
 
@@ -328,16 +329,19 @@ def lista_clientes(request):
 # CLIENTE - VISTA
 # ---------------------------
 def home_cliente(request):
-    # Verificamos si hay sesión activa
-    usuario_id = request.session.get('usuario_id')
-    if not usuario_id:
-        return redirect('login')
+    categoria_seleccionada = request.GET.get('categoria', 'Todos')
+    productos = Producto.objects.all()
 
-    # Opcional: obtener datos del usuario
-    usuario = Usuario.objects.get(id=usuario_id)
-    contexto = {'usuario': usuario}
+    if categoria_seleccionada != 'Todos':
+        productos = productos.filter(categoria__nombre=categoria_seleccionada)
 
-    return render(request, 'Vistas/Vista_cliente/homeCliente.html', contexto)
+    context = {
+        'productos': productos,
+        'categoria_seleccionada': categoria_seleccionada,
+        'usuario': request.user,
+    }
+
+    return render(request, 'Vistas/Vista_cliente/homeCliente.html', context)
 
 def ubicacion(request):
     # Verificamos si hay sesión activa
@@ -752,24 +756,20 @@ def registrar_pedido(request):
         usuario_id = request.POST.get('usuario')
         mesa_id = request.POST.get('mesa')
         tipo_pedido = request.POST.get('tipo_pedido')
-        estado = request.POST.get('estado')
 
-        usuario = Usuario.objects.get(id=usuario_id)
-        mesa = Mesa.objects.get(id=mesa_id) if mesa_id else None
+        # Recoger productos desde el formulario
+        productos_info = []
+        for key in request.POST:
+            if key.startswith('producto_'):
+                producto_id = int(key.split('_')[1])
+                cantidad = int(request.POST[key])
+                productos_info.append({'producto_id': producto_id, 'cantidad': cantidad})
 
-        pedido = Pedido.objects.create(
-            usuario=usuario,
-            mesa=mesa,
-            tipo_pedido=tipo_pedido,
-            estado=estado
-        )
-
-        # Si el pedido es "en el local", marcar mesa como ocupada
-        if tipo_pedido == 'local' and mesa:
-            mesa.estado = 'ocupada'
-            mesa.save()
+        # Usamos el Factory para crear el pedido y sus detalles
+        PedidoFactory.crear_pedido(usuario_id, tipo_pedido, productos_info, mesa_id)
 
         return redirect('pedidos')
+
 
 # ---- ACTUALIZAR PEDIDO ----
 @csrf_exempt
