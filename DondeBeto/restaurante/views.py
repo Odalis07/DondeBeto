@@ -11,6 +11,8 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 from .factory import PedidoFactory
 from .models import Usuario, Producto, Categoria, Mesa, Pedido, DetallePedido
+from restaurante.repositories.producto_repository import ProductoRepository
+from restaurante.models import Categoria
 
 
 # ---------------------------
@@ -573,29 +575,38 @@ def registrar_producto(request):
         return redirect('productos')
 
 @csrf_exempt
+
+#SE USA REPOSITORY AQUI:
+
 def actualizar_producto(request, id):
-    """Recibe datos JSON y actualiza un producto"""
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            producto = get_object_or_404(Producto, id=id)
+    producto = ProductoRepository.get_by_id(id)
 
-            producto.nombre = data.get('nombre', producto.nombre)
-            producto.descripcion = data.get('descripcion', producto.descripcion)
-            producto.precio = data.get('precio', producto.precio)
-            producto.categoria_id = data.get('categoria_id', producto.categoria_id)
+    if not producto:
+        return HttpResponse("Producto no encontrado", status=404)
 
-            # Si manejas imagenes via MEDIA
-            if 'imagen' in data and data['imagen']:
-                producto.imagen = data['imagen']  # Asegúrate de que sea la ruta correcta
+    if request.method == "POST":
+        nombre = request.POST.get("nombre")
+        descripcion = request.POST.get("descripcion")
+        precio = request.POST.get("precio")
+        categoria = Categoria.objects.get(id=request.POST.get("categoria"))
+        imagen = request.FILES.get("imagen")
 
-            producto.save()
-            return JsonResponse({'success': True, 'message': 'Producto actualizado correctamente'})
-        except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)})
+        ProductoRepository.update(
+            producto,
+            nombre,
+            descripcion,
+            precio,
+            categoria,
+            imagen
+        )
 
-    return JsonResponse({'success': False, 'error': 'Método no permitido'})
+        return redirect("productos")
 
+    categorias = Categoria.objects.all()
+    return render(request, "Vistas/Vista_adm/actualizar_producto.html", {
+        "producto": producto,
+        "categorias": categorias
+    })
 
 @csrf_exempt
 def eliminar_producto(request, id):
@@ -751,6 +762,8 @@ def pedidos(request):
     return render(request, 'C2_Pedido/Pedidos.html', context)
 
 # ---- REGISTRAR PEDIDO ----
+
+#AQUI SE USA EL FACTORY
 def registrar_pedido(request):
     if request.method == 'POST':
         usuario_id = request.POST.get('usuario')
