@@ -75,8 +75,27 @@
     </div>
     <div class="acciones">
   
-      <button class="btn-modificar" data-id="{{ producto.id }}">Agregar al pedido</button>
+      <button class="add-to-cart" 
+        data-name="{{ producto.nombre }}" 
+        data-price="{{ producto.precio }}">
+  Agregar
+</button>
+
       <!--<button class="btn-eliminar" data-id="{{ producto.id }}">ELIMINAR</button>-->
+<div class="carrito">
+  🛒 <span id="contador-productos">0</span>
+</div>
+
+
+<button class="remove-from-cart" data-name="{{ producto.nombre }}">
+  Eliminar
+</button>
+
+<div class="cart" style="display:none">
+  <button id="close-cart">Cerrar</button>
+  <ul id="cart-items"></ul>
+  <div id="cart-total">Total: $0.00</div>
+</div>
     </div>
   </div>
   {% empty %}
@@ -91,22 +110,7 @@
 
         </section>
 
-<div id="cantidad-modal" class="modal-overlay">
-    <div class="modal-content">
-        <h3>Agregar al carrito</h3>
-        <p id="modal-producto-nombre">Producto: [Nombre del Producto]</p>
-        
-        <div class="cantidad-control">
-            <label for="input-cantidad">Cantidad:</label>
-            <input type="number" id="input-cantidad" value="1" min="1" max="99" aria-label="Cantidad de producto">
-        </div>
-        
-        <div class="modal-actions">
-            <button id="btn-cancelar" class="btn-secundario">Cancelar</button>
-            <button id="btn-confirmar-agregar" class="btn-principal">Agregar</button>
-        </div>
-    </div>
-</div>
+
 
 
   </main>
@@ -178,6 +182,18 @@
             alert('Por favor, ingresa una cantidad válida (mínimo 1).');
         }
     });
+
+
+
+
+    document.querySelectorAll(".remove-from-cart").forEach((button) => {
+  button.addEventListener("click", () => {
+    const name = button.getAttribute("data-name");
+    delete cartData[name];
+    updateCartDisplay();
+    updateProductCount();
+  });
+});
 
 </script>
 
