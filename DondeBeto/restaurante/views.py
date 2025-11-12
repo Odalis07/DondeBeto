@@ -576,7 +576,9 @@ def registrar_producto(request):
 
 @csrf_exempt
 
-#SE USA REPOSITORY AQUI:
+
+#SE USA REPOSITORY AQUI: 
+
 
 def actualizar_producto(request, id):
     producto = ProductoRepository.get_by_id(id)
@@ -763,7 +765,9 @@ def pedidos(request):
 
 # ---- REGISTRAR PEDIDO ----
 
-#AQUI SE USA EL FACTORY
+
+#AQUI SE USA EL FACTORY 
+
 def registrar_pedido(request):
     if request.method == 'POST':
         usuario_id = request.POST.get('usuario')
