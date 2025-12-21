@@ -882,15 +882,27 @@ def guardar_detalles_pedido(request, id):
 def generar_pdf(request, pedido_id):
     pedido = Pedido.objects.select_related('usuario', 'mesa').get(id=pedido_id)
     detalles = DetallePedido.objects.filter(pedido=pedido)
+    #subtotal = DetallePedido.objects.filter(subtotal=subtotal)
 
     # calcular total
     total = sum(d.subtotal for d in detalles)
+
+    # calcular iva
+    iva = (sum(d.subtotal for d in detalles) * 15) / 100
+
+    for d in detalles:
+        d.iva = (d.subtotal * 15) / 100
+
+    # total + iva
+    totalfinal=(total+iva)
 
     template = get_template("pdf/pedido.html")
     html = template.render({
         "pedido": pedido,
         "detalles": detalles,
         "total": total,  # <-- pasar al template
+        "iva": iva,
+        "totalfinal": totalfinal,
     })
 
     response = HttpResponse(content_type="application/pdf")

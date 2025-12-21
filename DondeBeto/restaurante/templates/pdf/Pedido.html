@@ -26,6 +26,7 @@ th { background-color: #f2f2f2; }
 <th>Producto</th>
 <th>Cantidad</th>
 <th>Subtotal</th>
+<th>IVA</th>
 </tr>
 </thead>
 <tbody>
@@ -34,13 +35,16 @@ th { background-color: #f2f2f2; }
 <td>{{ d.producto.nombre }}</td>
 <td>{{ d.cantidad }}</td>
 <td>${{ d.subtotal }}</td>
+<td>${{ d.iva }}</td>
 </tr>
 {% endfor %}
 </tbody>
 </table>
 
-<p class="total">
-Total: ${{ total }}
-</p>
+<p class="Subtotal">Base imponible: ${{ total }}</p>
+<p class ="IVA">IVA: ${{ iva }}</p>
+<p class ="Total">Total: ${{ totalfinal }}</p>
+
+
 </body>
 </html>
