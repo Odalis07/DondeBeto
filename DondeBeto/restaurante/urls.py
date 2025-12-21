@@ -43,6 +43,6 @@ urlpatterns = [
     path('pedidos/<int:id>/detalles/guardar/', views.guardar_detalles_pedido, name='guardar_detalles_pedido'),
     path('pedidos/<int:pedido_id>/pdf/', views.generar_pdf, name='pdf_pedido'),
     path('pedidos/<int:pedido_id>/detalles/modificar/', views.modificar_detalle_pedido, name='modificar_detalle_pedido'),
-
+path('pedido/guardar-ajax/', views.guardar_carrito_ajax, name='guardar_carrito_ajax'),
 
 ]

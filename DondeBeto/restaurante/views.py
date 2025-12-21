@@ -15,6 +15,7 @@ from restaurante.repositories.producto_repository import ProductoRepository
 from restaurante.models import Categoria
 
 
+
 # ---------------------------
 # COMPONENTE 1 - Usuario
 # ---------------------------
@@ -576,37 +577,27 @@ def registrar_producto(request):
 
 @csrf_exempt
 
-#SE USA REPOSITORY AQUI: 
+
+#SE USA REPOSITORY AQUI:
 
 def actualizar_producto(request, id):
-    producto = ProductoRepository.get_by_id(id)
-
+    repo = ProductoRepository()
+    producto = repo.obtener(id)
     if not producto:
-        return HttpResponse("Producto no encontrado", status=404)
+        return JsonResponse({"error": "Producto no encontrado"}, status=404)
 
     if request.method == "POST":
-        nombre = request.POST.get("nombre")
-        descripcion = request.POST.get("descripcion")
-        precio = request.POST.get("precio")
-        categoria = Categoria.objects.get(id=request.POST.get("categoria"))
-        imagen = request.FILES.get("imagen")
+        data = json.loads(request.body.decode('utf-8'))
+        categoria = Categoria.objects.filter(nombre=data.get("categoria")).first()
 
-        ProductoRepository.update(
-            producto,
-            nombre,
-            descripcion,
-            precio,
-            categoria,
-            imagen
-        )
+        repo.actualizar(producto, {
+            "nombre": data.get("nombre"),
+            "descripcion": data.get("descripcion"),
+            "precio": data.get("precio"),
+            "categoria": categoria,
+        })
 
-        return redirect("productos")
-
-    categorias = Categoria.objects.all()
-    return render(request, "Vistas/Vista_adm/actualizar_producto.html", {
-        "producto": producto,
-        "categorias": categorias
-    })
+        return JsonResponse({"success": True})
 
 @csrf_exempt
 def eliminar_producto(request, id):
@@ -763,7 +754,9 @@ def pedidos(request):
 
 # ---- REGISTRAR PEDIDO ----
 
+
 #AQUI SE USA EL FACTORY 
+
 def registrar_pedido(request):
     if request.method == 'POST':
         usuario_id = request.POST.get('usuario')
@@ -930,3 +923,117 @@ def modificar_detalle_pedido(request, pedido_id):
                 detalle.save()
         return JsonResponse({"success": True})
     return JsonResponse({"success": False, "error": "Método no permitido"})
+
+
+@csrf_exempt
+def guardar_carrito_ajax(request):
+    """
+    Recibe los datos del carrito (productos, cantidad) vía AJAX y crea un Pedido.
+    Utiliza el PedidoFactory para la creación.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
+
+    try:
+        # 1. Decodificar el JSON enviado desde el frontend
+        data = json.loads(request.body.decode('utf-8'))
+
+        carrito_items = data.get('carrito', [])
+        tipo_pedido = data.get('tipo_pedido')
+        # El frontend (cliente) solo envía null para mesa_id si el tipo_pedido no es 'local',
+        # en caso de ser 'local' un mesero podría asignarlo, pero aquí asumimos un flujo de cliente.
+        mesa_id = data.get('mesa_id')
+
+        # 2. Obtener el ID del usuario actual (asumiendo que está en la sesión, como en tus otras vistas)
+        usuario_id = request.session.get('usuario_id')
+        if not usuario_id:
+            return JsonResponse({'success': False, 'error': 'Usuario no autenticado'}, status=401)
+
+        # 3. Validar los datos del carrito
+        if not carrito_items:
+            return JsonResponse({'success': False, 'error': 'El carrito está vacío.'}, status=400)
+
+        # 4. Formatear los ítems del carrito para el PedidoFactory
+        # Tu PedidoFactory espera: [{'producto_id': <id>, 'cantidad': <n>}, ...]
+        productos_info = [
+            {'producto_id': item['id'], 'cantidad': item['cantidad']}
+            for item in carrito_items
+        ]
+
+        # 5. Usar el Factory para crear el pedido y sus detalles
+        # Nota: El Factory debe manejar la lógica de obtener los objetos Usuario y Producto
+        nuevo_pedido = PedidoFactory.crear_pedido(
+            usuario_id=usuario_id,
+            tipo_pedido=tipo_pedido,
+            productos_info=productos_info,
+            mesa_id=mesa_id  # Puede ser None
+        )
+
+        return JsonResponse({
+            'success': True,
+            'mensaje': f'¡Pedido #{nuevo_pedido.id} creado exitosamente!',
+            'pedido_id': nuevo_pedido.id
+        })
+
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Formato JSON inválido.'}, status=400)
+    except Exception as e:
+        # Capturar errores del Factory (ej. Producto no encontrado)
+        return JsonResponse({'success': False, 'error': f'Error interno al procesar el pedido: {str(e)}'}, status=500)
+
+
+@csrf_exempt
+def guardar_carrito_ajax(request):
+    """
+    Recibe los datos del carrito (productos, cantidad) vía AJAX y crea un Pedido.
+    Utiliza el PedidoFactory para la creación.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
+
+    try:
+        # 1. Decodificar el JSON enviado desde el frontend
+        data = json.loads(request.body.decode('utf-8'))
+
+        carrito_items = data.get('carrito', [])
+        tipo_pedido = data.get('tipo_pedido')
+        # El frontend (cliente) solo envía null para mesa_id si el tipo_pedido no es 'local',
+        # en caso de ser 'local' un mesero podría asignarlo, pero aquí asumimos un flujo de cliente.
+        mesa_id = data.get('mesa_id')
+
+        # 2. Obtener el ID del usuario actual (asumiendo que está en la sesión, como en tus otras vistas)
+        usuario_id = request.session.get('usuario_id')
+        if not usuario_id:
+            return JsonResponse({'success': False, 'error': 'Usuario no autenticado'}, status=401)
+
+        # 3. Validar los datos del carrito
+        if not carrito_items:
+            return JsonResponse({'success': False, 'error': 'El carrito está vacío.'}, status=400)
+
+        # 4. Formatear los ítems del carrito para el PedidoFactory
+        # Tu PedidoFactory espera: [{'producto_id': <id>, 'cantidad': <n>}, ...]
+        productos_info = [
+            {'producto_id': item['id'], 'cantidad': item['cantidad']}
+            for item in carrito_items
+        ]
+
+        # 5. Usar el Factory para crear el pedido y sus detalles
+        # Nota: El Factory debe manejar la lógica de obtener los objetos Usuario y Producto
+        nuevo_pedido = PedidoFactory.crear_pedido(
+            usuario_id=usuario_id,
+            tipo_pedido=tipo_pedido,
+            productos_info=productos_info,
+            mesa_id=mesa_id  # Puede ser None
+        )
+
+        return JsonResponse({
+            'success': True,
+            'mensaje': f'¡Pedido #{nuevo_pedido.id} creado exitosamente!',
+            'pedido_id': nuevo_pedido.id
+        })
+
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Formato JSON inválido.'}, status=400)
+    except Exception as e:
+        # Capturar errores del Factory (ej. Producto no encontrado)
+        return JsonResponse({'success': False, 'error': f'Error interno al procesar el pedido: {str(e)}'}, status=500)

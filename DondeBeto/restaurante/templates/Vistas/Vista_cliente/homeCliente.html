@@ -39,13 +39,40 @@
     <a href="{% url 'ubicacion' %}">Ubicación</a>
     <a href="{% url 'sobre_nosotros' %}">Sobre nosotros</a>
   </nav>
+<!--  para ver los pedidos-->
+
+  {% csrf_token %}
+
+<div id="sidebar-carrito" style="position: fixed; right: 0; top: 0; width: 300px; height: 100%; background: white; box-shadow: -2px 0 5px rgba(0,0,0,0.2); padding: 15px; z-index: 1000; display: none; overflow-y: auto;">
+    <h3>🛒 Tu Pedido</h3>
+
+    <div style="margin-bottom: 10px;">
+        <label for="tipo_pedido_select">Tipo de Pedido:</label>
+        <select id="tipo_pedido_select" class="form-control" style="width: 100%; padding: 5px;">
+            <option value="local">En el local</option>
+            <option value="domicilio">Domicilio</option>
+            <option value="para_llevar">Para llevar</option>
+        </select>
+    </div>
+
+    <ul id="lista-carrito" style="list-style: none; padding: 0;">
+        </ul>
+
+    <p style="border-top: 1px solid #ccc; padding-top: 10px;">
+        <strong>Total: <span id="total-carrito">$0.00</span></strong>
+    </p>
+
+    <button id="btn-hacer-pedido" class="btn-principal" disabled style="width: 100%; padding: 10px;">
+        Hacer Pedido
+    </button>
+</div>
 
   <!-- Contenido principal -->
   <main class="main-content">
 
      <section class="content">
           <div class="tabs">
-          <!-- s  
+          <!-- s
   <a href="{% url 'productos' %}?categoria=Todos" class="tab {% if categoria_seleccionada == 'Todos' %}active{% endif %}">Todos</a>
   <a href="{% url 'productos' %}?categoria=Bebidas" class="tab {% if categoria_seleccionada == 'Bebidas' %}active{% endif %}">Bebidas</a>
   <a href="{% url 'productos' %}?categoria=Almuerzos" class="tab {% if categoria_seleccionada == 'Almuerzos' %}active{% endif %}">Almuerzos</a>
@@ -74,7 +101,7 @@
       <strong>Categoría:</strong> {{ producto.categoria.nombre }} <br>
     </div>
     <div class="acciones">
-  
+
       <button class="btn-modificar" data-id="{{ producto.id }}">Agregar al pedido</button>
       <!--<button class="btn-eliminar" data-id="{{ producto.id }}">ELIMINAR</button>-->
     </div>
@@ -85,7 +112,7 @@
 </div>
 
 <div class="acciones">
-      
+
   <button id="btn-nuevo" class="btn-nuevo">Hacer pedido</button>
 </div>
 
@@ -95,12 +122,12 @@
     <div class="modal-content">
         <h3>Agregar al carrito</h3>
         <p id="modal-producto-nombre">Producto: [Nombre del Producto]</p>
-        
+
         <div class="cantidad-control">
             <label for="input-cantidad">Cantidad:</label>
             <input type="number" id="input-cantidad" value="1" min="1" max="99" aria-label="Cantidad de producto">
         </div>
-        
+
         <div class="modal-actions">
             <button id="btn-cancelar" class="btn-secundario">Cancelar</button>
             <button id="btn-confirmar-agregar" class="btn-principal">Agregar</button>
@@ -117,67 +144,222 @@
     function toggleSidebar() {
         document.getElementById('sidebar').classList.toggle('active');
     }
-    
+
     // --- Lógica del Diálogo de Cantidad ---
-    
+
     // 1. Elementos del DOM
+
+    // Variable global para guardar el ID del producto que se está agregando
+    let productoIdSeleccionado = null;
+
+
+
+
+
+
+
+//-- Lógica del Carrito de Compras --
+function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('active');
+    }
+
+    // ----------------------------------------------------
+    // INICIO: LÓGICA DE GESTIÓN DEL CARRITO
+    // ----------------------------------------------------
+
+    let carrito = [];
+    // Elementos del DOM del Carrito (Sidebar)
+    const sidebarCarrito = document.getElementById('sidebar-carrito');
+    const listaHtml = document.getElementById('lista-carrito');
+    const totalHtml = document.getElementById('total-carrito');
+    const btnPedido = document.getElementById('btn-hacer-pedido');
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    // Elementos del DOM del Modal de Cantidad
     const modal = document.getElementById('cantidad-modal');
     const btnCancelar = document.getElementById('btn-cancelar');
     const btnConfirmar = document.getElementById('btn-confirmar-agregar');
     const inputCantidad = document.getElementById('input-cantidad');
     const modalNombreProducto = document.getElementById('modal-producto-nombre');
-    
-    // Variable global para guardar el ID del producto que se está agregando
-    let productoIdSeleccionado = null;
-    
-    // 2. Evento para abrir el modal al hacer clic en "Agregar al carrito"
+
+    // Variable global para guardar los datos del producto que se está agregando
+    let productoSeleccionado = { id: null, nombre: null, precio: null };
+
+    // --- A) Función para agregar producto al array 'carrito' ---
+    function agregarProducto(productoId, nombre, precio, cantidad) {
+        productoId = parseInt(productoId);
+        cantidad = parseInt(cantidad);
+        precio = parseFloat(precio);
+
+        if (isNaN(cantidad) || cantidad <= 0) {
+            alert("Por favor, ingresa una cantidad válida.");
+            return;
+        }
+
+        const itemExistente = carrito.find(item => item.id === productoId);
+
+        if (itemExistente) {
+            itemExistente.cantidad += cantidad;
+        } else {
+            carrito.push({
+                id: productoId,
+                nombre: nombre,
+                precio: precio,
+                cantidad: cantidad
+            });
+        }
+
+        // Actualizar la interfaz
+        actualizarSidebar();
+    }
+
+    // --- B) Función para actualizar la interfaz del sidebar ---
+    function actualizarSidebar() {
+        let totalGeneral = 0;
+        listaHtml.innerHTML = '';
+
+        carrito.forEach((item, index) => {
+            const subtotal = item.precio * item.cantidad;
+            totalGeneral += subtotal;
+
+            const li = document.createElement('li');
+            li.style.marginBottom = '8px';
+            li.innerHTML = `
+                ${item.cantidad} x ${item.nombre}
+                <span style="float: right;">$${subtotal.toFixed(2)}
+                <button onclick="eliminarItem(${index})" style="margin-left: 10px; font-size: 0.8em; color: red; border: none; background: none; cursor: pointer;">X</button>
+                </span>
+            `;
+            listaHtml.appendChild(li);
+        });
+
+
+        totalHtml.textContent = `$${totalGeneral.toFixed(2)}`;
+
+        // Mostrar/Ocultar el sidebar y habilitar el botón
+        if (carrito.length > 0) {
+            sidebarCarrito.style.display = 'block';
+            btnPedido.disabled = false;
+        } else {
+            sidebarCarrito.style.display = 'none';
+            btnPedido.disabled = true;
+        }
+    }
+
+    // --- C) Función para eliminar un ítem del carrito ---
+    window.eliminarItem = function(index) {
+        carrito.splice(index, 1);
+        actualizarSidebar();
+    }
+
+    // --- D) Conexión del botón "Hacer Pedido" a la vista de Django (AJAX) ---
+    btnPedido.addEventListener('click', function() {
+        if (carrito.length === 0) {
+            alert("El carrito está vacío.");
+            return;
+        }
+
+        const tipoPedido = document.getElementById('tipo_pedido_select').value;
+        const mesaId = null; // Asume null ya que es vista cliente y el tipo es 'local', 'domicilio', etc.
+
+        const dataToSend = {
+            carrito: carrito,
+            tipo_pedido: tipoPedido,
+            mesa_id: mesaId
+        };
+
+        // Deshabilitar botón para evitar doble click
+        btnPedido.disabled = true;
+
+        fetch('{% url "guardar_carrito_ajax" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify(dataToSend)
+        })
+        .then(response => {
+            btnPedido.disabled = false; // Reactivar botón
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                alert(data.mensaje);
+                carrito = []; // Vaciar el carrito
+                actualizarSidebar(); // Actualizar la UI
+            } else {
+                alert("Error al guardar el pedido: " + data.error);
+                console.error("Error del servidor:", data.error);
+            }
+        })
+        .catch(error => {
+            btnPedido.disabled = false; // Reactivar botón
+            console.error('Error de conexión:', error);
+            alert('Hubo un problema de conexión o servidor al guardar el pedido.');
+        });
+    });
+
+    // ----------------------------------------------------
+    // INICIO: LÓGICA DE CONEXIÓN DEL MODAL
+    // ----------------------------------------------------
+
+    // 1. Evento para abrir el modal al hacer clic en "Agregar al pedido"
     document.addEventListener('DOMContentLoaded', () => {
-        const botonesAgregar = document.querySelectorAll('.btn-modificar'); // Usamos tu clase existente
-        
+        const botonesAgregar = document.querySelectorAll('.btn-modificar');
+
         botonesAgregar.forEach(button => {
             button.addEventListener('click', function() {
-                // Obtener datos del producto desde la tarjeta
                 const card = this.closest('.card-producto');
-                const nombre = card.getAttribute('data-nombre');
-                productoIdSeleccionado = this.getAttribute('data-id');
+
+                // Obtener todos los datos necesarios
+                productoSeleccionado.nombre = card.getAttribute('data-nombre');
+                productoSeleccionado.id = this.getAttribute('data-id');
+                productoSeleccionado.precio = card.getAttribute('data-precio');
 
                 // Llenar el modal
-                modalNombreProducto.textContent = `Producto: ${nombre}`;
+                modalNombreProducto.textContent = `Producto: ${productoSeleccionado.nombre} ($${productoSeleccionado.precio})`;
+
                 inputCantidad.value = 1; // Resetear la cantidad a 1
-                
+
                 // Mostrar el modal
                 modal.classList.add('active');
             });
         });
+
+        // Inicializar el estado del carrito al cargar la página
+        actualizarSidebar();
     });
 
-    // 3. Evento para cerrar el modal
+    // 2. Evento para cerrar el modal
     btnCancelar.addEventListener('click', () => {
         modal.classList.remove('active');
-        productoIdSeleccionado = null; // Limpiar el ID
+        productoSeleccionado = { id: null, nombre: null, precio: null }; // Limpiar datos
     });
 
-    // 4. Evento para confirmar y agregar al carrito
+    // 3. Evento para confirmar y agregar al carrito
     btnConfirmar.addEventListener('click', () => {
         const cantidad = parseInt(inputCantidad.value);
-        
-        if (cantidad > 0 && productoIdSeleccionado) {
-            
-            // --- AQUÍ VA TU LÓGICA DE AGREGAR AL CARRITO ---
-            
-            console.log(`Agregando Producto ID: ${productoIdSeleccionado} con Cantidad: ${cantidad}`);
-            alert(`"${modalNombreProducto.textContent.replace('Producto: ', '')}" agregado x${cantidad} al carrito!`);
-            
-            // Llama a tu función real de Django/AJAX para agregar el producto
-            // Ejemplo: agregarAlCarrito(productoIdSeleccionado, cantidad);
-            
-            // Ocultar el modal
+
+        if (cantidad > 0 && productoSeleccionado.id) {
+
+            // Llamada a la función principal del carrito
+            agregarProducto(
+                productoSeleccionado.id,
+                productoSeleccionado.nombre,
+                productoSeleccionado.precio,
+                cantidad
+            );
+
+            // Ocultar el modal y limpiar
             modal.classList.remove('active');
-            productoIdSeleccionado = null;
+            productoSeleccionado = { id: null, nombre: null, precio: null };
         } else {
             alert('Por favor, ingresa una cantidad válida (mínimo 1).');
         }
     });
+
+
 
 </script>
 
