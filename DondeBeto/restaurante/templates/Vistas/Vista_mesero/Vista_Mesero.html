@@ -25,11 +25,11 @@
                 <a href="{% url 'mesas' %}" class="menu-item">
                     <img src="{% static 'img/icon-mesas.svg' %}" alt=""> Mesas
                 </a>
-                <a href="{% url 'pedidos' %}" class="menu-item">
+                               <a href="{% url 'pedidos_list' %}" class="menu-item">
                     <img src="{% static 'img/icon-pedidos.svg' %}" alt=""> Pedidos
                 </a>
-                 <a href="#" class="menu-item">
-                    <img src="{% static 'img/icon-facturas.svg' %}" alt=""> Facturas
+                 <a href="{% url 'pagos_list' %}" class="menu-item">
+                    <img src="{% static 'img/icon-facturas.svg' %}" alt=""> Pagos/Facturas
                 </a>
 
                 <a href="{% url 'perfil_mesero' %}" class="menu-item">

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Factura #{{ pago.id }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            width: 90%;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Encabezado */
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            margin: 0;
+            color: #4a93e3;
+        }
+        .header p {
+            margin: 2px 0;
+        }
+
+        /* Datos del cliente */
+        .cliente-info, .pedido-info {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        .info-box {
+            border: 1px solid #d1dbe6;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        .info-box h3 {
+            margin: 0 0 5px 0;
+            font-size: 14px;
+            color: #4a93e3;
+        }
+        .info-box p {
+            margin: 2px 0;
+            font-size: 12px;
+        }
+
+        /* Tabla de productos */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        table th, table td {
+            border: 1px solid #d1dbe6;
+            padding: 8px;
+            text-align: center;
+        }
+
+        table th {
+            background-color: #4a93e3;
+            color: white;
+        }
+
+        table td.descripcion {
+            text-align: left;
+        }
+
+        /* Totales */
+        .totales {
+            width: 100%;
+            margin-top: 10px;
+            text-align: right;
+        }
+        .totales table {
+            width: 300px;
+            float: right;
+            border: none;
+        }
+        .totales table td {
+            border: none;
+            padding: 5px 8px;
+            font-weight: bold;
+        }
+        .totales table tr.total td {
+            font-size: 14px;
+            color: #28a745;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            font-size: 10px;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+
+        <!-- Encabezado del Restaurante -->
+        <div class="header">
+            <h1>DondeBeto RestoBar</h1>
+            <p>Dirección: Av. Principal #123, Portoviejo, Ecuador</p>
+            <p>RUC: 1791234567001</p>
+            <p>Teléfono: +593 99 123 4567</p>
+            <p>Factura #: {{ pago.id }} | Fecha: {{ pago.fecha_pago|date:"d/m/Y H:i" }}</p>
+        </div>
+
+        <!-- Datos del cliente -->
+        <div class="cliente-info">
+            <div class="info-box">
+                <h3>Cliente</h3>
+                <p>Nombre: {{ pago.pedido.usuario.nombre }} {{ pago.pedido.usuario.apellido }}</p>
+                <p>Cédula: {{ pago.pedido.usuario.cedula }}</p>
+                <p>Email: {{ pago.pedido.usuario.email }}</p>
+                {% if pago.telefono_contacto %}
+                <p>Teléfono: {{ pago.telefono_contacto }}</p>
+                {% endif %}
+                {% if pago.direccion_entrega %}
+                <p>Dirección de entrega: {{ pago.direccion_entrega }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Detalles del pedido -->
+        <div class="pedido-info">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Descripción</th>
+                        <th>Cantidad</th>
+                        <th>Precio Unitario</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for detalle in pago.pedido.detalles.all %}
+                    <tr>
+                        <td class="descripcion">{{ detalle.producto.nombre }}</td>
+                        <td>{{ detalle.cantidad }}</td>
+                        <td>${{ detalle.producto.precio|floatformat:2 }}</td>
+                        <td>${{ detalle.subtotal|floatformat:2 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Totales -->
+        <div class="totales">
+            <table>
+                <tr>
+                    <td>Subtotal:</td>
+                   <td>${{ subtotal|floatformat:2 }}</td>
+                </tr>
+                <!-- Puedes agregar impuestos si deseas -->
+                <tr>
+                    <td>Total:</td>
+                    <td>${{ pago.monto|floatformat:2 }}</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            Gracias por preferir DondeBeto RestoBar. ¡Vuelva pronto!
+        </div>
+    </div>
+</body>
+</html>

@@ -25,11 +25,11 @@
                 <a href="{% url 'mesas' %}" class="menu-item">
                     <img src="{% static 'img/icon-mesas.svg' %}" alt=""> Mesas
                 </a>
-                <a href="{% url 'pedidos' %}" class="menu-item">
+                <a href="{% url 'pedidos_list' %}" class="menu-item">
                     <img src="{% static 'img/icon-pedidos.svg' %}" alt=""> Pedidos
                 </a>
-                 <a href="#" class="menu-item">
-                    <img src="{% static 'img/icon-facturas.svg' %}" alt=""> Facturas
+                 <a href="{% url 'pagos_list' %}" class="menu-item">
+                    <img src="{% static 'img/icon-facturas.svg' %}" alt=""> Pagos/Facturas
                 </a>
 
                 <a href="{% url 'clientes' %}" class="menu-item">
@@ -67,10 +67,16 @@
             </header>
 
             <section class="content">
-                {% block content %}
-                <h2>Bienvenido al panel de administración</h2>
-                <p>Selecciona una opción del menú lateral para comenzar.</p>
-                {% endblock %}
+                   {% if request.resolver_match.url_name == 'vista_adm' %}
+            <h1>Bienvenido/a,   {{ usuario.nombre }}</h1>
+            <span class="text">
+                <br>
+            Este es el panel de administración, selecciona una opción del menú para comenzar.
+             </span>
+            {% endif %}
+
+            {% block content %}
+            {% endblock %}
             </section>
         </main>
     </div>
