@@ -1,0 +1,259 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="{% static 'css/Vista_cliente/pago.css' %}">
+<title>Pasarela de Pago</title>
+
+<style>
+
+
+</style>
+</head>
+
+<body>
+
+<!-- NAV -->
+<header class="nav">
+    <div class="logo">
+        🦅 BETO
+    </div>
+
+
+</header>
+
+<!-- PAYMENT CARD -->
+<div class="container">
+    <div class="card">
+        <h2>Pasarela de Pago</h2>
+
+        <!-- Resumen -->
+        <p class="section-title">Resumen del Pedido</p>
+        <div class="summary-box">
+            <div class="row">
+                <span>Subtotal</span>
+                <strong>$ {{ subtotal }}</strong>
+            </div>
+
+            <div class="row">
+                <span>Envío</span>
+                <strong>$0,00</strong>
+            </div>
+
+            <div class="row">
+                <span>Total</span>
+                <strong>$ {{ total }}</strong>
+            </div>
+        </div>
+
+        <!-- Métodos de pago -->
+        <p class="section-title">Método de Pago</p>
+        <div class="payment-method">
+    <label class="method">
+        <input type="radio" name="metodo" value="tarjeta">
+        <span>Tarjeta</span>
+    </label>
+
+    <label class="method">
+        <input type="radio" name="metodo" value="efectivo">
+        <span>Efectivo</span>
+    </label>
+
+    <label class="method">
+        <input type="radio" name="metodo" value="transferencia">
+        <span>Transferencia</span>
+    </label>
+</div>
+
+        <!-- Datos -->
+        <p class="section-title">Nombre: </p>
+        <input id="nombre" type="text" placeholder="Ingrese su nombre completo">
+
+          <p class="section-title">Direccion: </p>
+        <input id="direccion"  type="text" placeholder="ingrese su direccion">
+
+          <p class="section-title">Numero de teléfono: </p>
+        <input id="telefono"type="number" placeholder="ingrese su número de telefono">
+
+
+        <!-- Botón -->
+       <form id="payment-form">
+    <!-- TODO tu contenido actual -->
+    <div id="contenedor-form">
+
+    </div>
+
+    <button class="btn-pagar" type="submit">
+        Confirmar y pagar
+    </button>
+</form>
+
+    </div>
+    <div class="mini-carrito">
+        <h3>Tu lista de compras</h3>
+        <ul>
+            {% for item in carrito %}
+
+            <li> 
+
+                -{{item.nombre}}
+                x{{item.cantidad}}
+                ${{item.subtotal}}
+
+            </li>
+            {% endfor %}
+        </ul>
+
+    </div>
+
+</div>
+<!--arlin: scripts para que funciones stripe-->
+<script src="https://js.stripe.com/v3/"></script>
+
+<script>
+const stripe = Stripe("{{ STRIPE_PUBLIC_KEY }}");
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+  let metodoSeleccionado = null;
+  let card = null;
+
+  // ===============================
+  // SELECCIÓN DE MÉTODO DE PAGO
+  // ===============================
+  document.querySelectorAll("input[name='metodo']").forEach(input => {
+    input.addEventListener("change", function () {
+      metodoSeleccionado = this.value;
+      const contenedor = document.getElementById("contenedor-form");
+
+      if (this.value === "tarjeta") {
+        contenedor.innerHTML = `
+          <h4>Pago con Tarjeta</h4>
+          <div id="card-element"></div>
+          <div id="card-errors" style="color:red;"></div>
+        `;
+
+        const elements = stripe.elements();
+        card = elements.create("card");
+        card.mount("#card-element");
+      }
+
+      if (this.value === "efectivo") {
+        contenedor.innerHTML = `
+          <h4>Pago en efectivo</h4>
+          <p>El pago se realizará al momento de la entrega.</p>
+        `;
+      }
+
+      if (this.value === "transferencia") {
+        contenedor.innerHTML = `
+          <h4>Transferencia bancaria</h4>
+          <p>Cuenta: 123456789</p>
+        `;
+      }
+    });
+  });
+
+  // ===============================
+  // ENVÍO DE DATOS AL BACKEND
+  // ===============================
+async function enviarDatosPago(extraData = {}) {
+  const payload = {
+    nombre: document.getElementById("nombre").value.trim(),
+    direccion: document.getElementById("direccion").value.trim(),
+    telefono: document.getElementById("telefono").value.trim(),
+    metodo: metodoSeleccionado,
+    ...extraData
+  };
+
+  const response = await fetch("{% url 'confirmar_pago' pedido.id %}", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRFToken": "{{ csrf_token }}"
+    },
+    body: JSON.stringify(payload)
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    alert("ERROR BACKEND:\n" + (data.error || JSON.stringify(data)));
+  } else {
+    alert("RESPUESTA BACKEND:\n" + JSON.stringify(data));
+  }
+
+  return data;
+}
+  // ===============================
+  // PAGO CON TARJETA (STRIPE)
+  // ===============================
+  async function procesarPagoTarjeta() {
+    const { paymentIntent, error } = await stripe.confirmCardPayment(
+      "{{ client_secret }}",
+      { payment_method: { card: card } }
+    );
+
+    if (error) {
+      document.getElementById("card-errors").textContent = error.message;
+      return;
+    }
+
+    const res = await enviarDatosPago({
+      stripe_intent: paymentIntent.id
+    });
+
+    if (!res.success) {
+      alert(res.error);
+      return;
+    }
+
+    window.location.href = "/home-Vista_cliente/";
+  }
+
+  // ===============================
+  // PAGO OFFLINE (EFECTIVO / TRANSFERENCIA)
+  // ===============================
+  async function procesarPagoOffline() {
+    const res = await enviarDatosPago();
+
+    if (!res.success) {
+      alert(res.error);
+      return;
+    }
+
+    window.location.href = "/home-Vista_cliente/";
+  }
+
+  // ===============================
+  // SUBMIT DEL FORMULARIO
+  // ===============================
+  document.getElementById("payment-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    if (!metodoSeleccionado) {
+      alert("Selecciona un método de pago");
+      return;
+    }
+
+    if (metodoSeleccionado === "tarjeta") {
+      await procesarPagoTarjeta();
+    }
+
+    if (metodoSeleccionado === "efectivo" || metodoSeleccionado === "transferencia") {
+      await procesarPagoOffline();
+    }
+  });
+
+});
+</script>
+
+
+
+</body>
+</html>

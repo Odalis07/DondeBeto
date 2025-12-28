@@ -4,3 +4,4 @@ python-decouple==3.8
 psycopg2-binary==2.9.9 
 xhtml2pdf
 factory_boy
+stripe

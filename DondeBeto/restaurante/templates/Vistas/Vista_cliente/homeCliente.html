@@ -49,7 +49,6 @@
     <div style="margin-bottom: 10px;">
         <label for="tipo_pedido_select">Tipo de Pedido:</label>
         <select id="tipo_pedido_select" class="form-control" style="width: 100%; padding: 5px;">
-            <option value="local">En el local</option>
             <option value="domicilio">Domicilio</option>
             <option value="para_llevar">Para llevar</option>
         </select>
@@ -62,9 +61,12 @@
         <strong>Total: <span id="total-carrito">$0.00</span></strong>
     </p>
 
-    <button id="btn-hacer-pedido" class="btn-principal" disabled style="width: 100%; padding: 10px;">
-        Hacer Pedido
-    </button>
+   <button type="button" 
+        id="btn-hacer-pedido" 
+        class="btn-principal" 
+        style="width:100%; padding:10px;">
+    Hacer Pedido
+</button>
 </div>
 
   <!-- Contenido principal -->
@@ -215,6 +217,7 @@ function toggleSidebar() {
 
     // --- B) Función para actualizar la interfaz del sidebar ---
     function actualizarSidebar() {
+        console.log("deberia ser el carrito activado")
         let totalGeneral = 0;
         listaHtml.innerHTML = '';
 
@@ -288,6 +291,10 @@ function toggleSidebar() {
                 alert(data.mensaje);
                 carrito = []; // Vaciar el carrito
                 actualizarSidebar(); // Actualizar la UI
+
+                //arlin modifico esto para que redirija a la nueva vista de pago
+                //window.location.href = "{% url 'pagos' %}";
+                window.location.href = `/home-Vista_cliente/pago/${data.pedido_id}/`;
             } else {
                 alert("Error al guardar el pedido: " + data.error);
                 console.error("Error del servidor:", data.error);
@@ -298,6 +305,8 @@ function toggleSidebar() {
             console.error('Error de conexión:', error);
             alert('Hubo un problema de conexión o servidor al guardar el pedido.');
         });
+
+        //ola
     });
 
     // ----------------------------------------------------

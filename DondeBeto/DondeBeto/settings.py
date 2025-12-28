@@ -124,4 +124,9 @@ STATIC_URL = 'static/'
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
+#parte de stripe:
+STRIPE_SECRET_KEY = "sk_test_51Sj50JLo9HfNea21tdcLzWt3u2weoPRA1MFDjKAOdQEmxHKSJJ3TTDsKYkbo1mH9ZKlEmnw5tVbgkeJ1MogaDq8V00m4QACS4l"
+STRIPE_PUBLIC_KEY = "pk_test_51Sj50JLo9HfNea21zN1EaHTVaNnsuXcMWJLYgHWPb0P02JctD3XAWOodpCXlozfxBS6oJxdI0NWtGtQv3mSVoXxE00TAE5JQpo"
+STRIPE_WEBHOOK_SECRET = ""
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

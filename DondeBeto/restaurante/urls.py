@@ -43,6 +43,12 @@ urlpatterns = [
     path('pedidos/<int:id>/detalles/guardar/', views.guardar_detalles_pedido, name='guardar_detalles_pedido'),
     path('pedidos/<int:pedido_id>/pdf/', views.generar_pdf, name='pdf_pedido'),
     path('pedidos/<int:pedido_id>/detalles/modificar/', views.modificar_detalle_pedido, name='modificar_detalle_pedido'),
-path('pedido/guardar-ajax/', views.guardar_carrito_ajax, name='guardar_carrito_ajax'),
+    path('pedido/guardar-ajax/', views.guardar_carrito_ajax, name='guardar_carrito_ajax'),
+    path('home-Vista_cliente/pago', views.vistaPagos, name='pagos'),
+    path('home-Vista_cliente/pago/<int:pedido_id>/', views.vistaPagos, name='pagos'),
+    #endpoint de la confirmacion del pago 
+    path("pago/confirmar/<int:pedido_id>/", views.confirmar_pago, name="confirmar_pago")
+    
+
 
 ]
