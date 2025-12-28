@@ -57,5 +57,10 @@ urlpatterns = [
     path('pagos/<int:pago_id>/editar/', views.editar_pago, name='editar_pago'),
     path('pagos/<int:pago_id>/eliminar/', views.eliminar_pago, name='eliminar_pago'),
     path('pagos/imprimir/<int:pago_id>/', views.imprimir_factura, name='imprimir_factura'),
+    # Módulo pagos - cliente
+    path('home-Vista_cliente/pago', views.vistaPagos, name='pagos'),
+    path('home-Vista_cliente/pago/<int:pedido_id>/', views.vistaPagos, name='pagos'),
+    # endpoint de la confirmacion del pago
+    path("pago/confirmar/<int:pedido_id>/", views.confirmar_pago, name="confirmar_pago")
 
 ]

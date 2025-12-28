@@ -17,8 +17,12 @@ from .factory import PedidoFactory
 from .models import Usuario, Producto, Categoria, Mesa, Pedido, DetallePedido, Pago
 from restaurante.repositories.producto_repository import ProductoRepository
 from restaurante.models import Categoria
+#para stripe
+import stripe
+from django.conf import settings
+from django.shortcuts import get_object_or_404, render
 
-
+stripe.api_key = settings.STRIPE_SECRET_KEY
 
 # ---------------------------
 # COMPONENTE 1 - Usuario
@@ -338,14 +342,15 @@ def lista_clientes(request):
 def home_cliente(request):
     categoria_seleccionada = request.GET.get('categoria', 'Todos')
     productos = Producto.objects.all()
-
+    usuario_id = request.session.get('usuario_id')
+    usuario = Usuario.objects.get(id=usuario_id)
     if categoria_seleccionada != 'Todos':
         productos = productos.filter(categoria__nombre=categoria_seleccionada)
 
     context = {
         'productos': productos,
         'categoria_seleccionada': categoria_seleccionada,
-        'usuario': request.user,
+        'usuario': usuario,
     }
 
     return render(request, 'Vistas/Vista_cliente/homeCliente.html', context)
@@ -1046,6 +1051,92 @@ def guardar_carrito_ajax(request):
     except Exception as e:
         # Capturar errores del Factory (ej. Producto no encontrado)
         return JsonResponse({'success': False, 'error': f'Error interno al procesar el pedido: {str(e)}'}, status=500)
+
+
+def vistaPagos(request, pedido_id):
+    pedido = get_object_or_404(Pedido, id=pedido_id)
+
+    detalles = DetallePedido.objects.filter(pedido=pedido).select_related("producto")
+    total = sum(d.subtotal for d in detalles)
+
+    # 🔐 Stripe PaymentIntent
+    intent = stripe.PaymentIntent.create(
+        amount=int(total * 100),  # Stripe usa centavos
+        currency="usd",
+        metadata={
+            "pedido_id": pedido.id
+        }
+    )
+
+    carrito = [
+        {
+            "nombre": d.producto.nombre,
+            "cantidad": d.cantidad,
+            "subtotal": float(d.subtotal)
+
+        }
+        for d in detalles
+    ]
+
+    contexto = {
+        "pedido": pedido,
+        "detalles": detalles,
+        "subtotal": sum(d.subtotal for d in detalles),
+        "total": pedido.total if hasattr(pedido, "total") else sum(d.subtotal for d in detalles),
+        "carrito": carrito,
+        "client_secret": intent.client_secret,
+        "STRIPE_PUBLIC_KEY": settings.STRIPE_PUBLIC_KEY,
+    }
+
+    return render(request, "Vistas/Vista_cliente/pago.html", contexto)
+
+
+@csrf_exempt
+def confirmar_pago(request, pedido_id):
+    if request.method != "POST":
+        return JsonResponse({"error": "Método no permitido"}, status=405)
+
+    pedido = get_object_or_404(Pedido, id=pedido_id)
+    try:
+        data = json.loads(request.body)
+    except Exception as e:
+        return JsonResponse({"error": "JSON inválido"}, status=400)
+
+    try:
+        detalles = DetallePedido.objects.filter(pedido=pedido)
+        total = 0
+        for d in detalles:
+            total += d.subtotal
+
+
+    except Exception as e:
+
+        return JsonResponse({
+            "error": f"Error calculando total: {str(e)}"
+        }, status=500)
+
+    try:
+        Pago.objects.create(
+            pedido=pedido,
+            metodo=data.get("metodo"),
+            monto=total,
+            direccion_entrega=data.get("direccion"),
+            telefono_contacto=data.get("telefono"),
+            estado="completado"
+        )
+    except Exception as e:
+
+        return JsonResponse({
+            "error": f"Error guardando pago: {str(e)}"
+        }, status=500)
+
+    return JsonResponse({"success": True})
+
+
+
+
+
+
 #ESTO ES NUEVO EL MODULO DE PEDIDO SE HA MODIFICADO POR LO DE PAGO
 
 
