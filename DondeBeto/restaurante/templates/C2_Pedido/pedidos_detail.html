@@ -86,50 +86,62 @@
     </div>
 
     <!-- Productos del Pedido -->
-    <div class="detail-card" style="margin-top: 20px;">
-        <h3 class="card-header"> Productos del Pedido</h3>
-        <div class="table-container">
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Producto</th>
-                        <th>Precio Unitario</th>
-                        <th>Cantidad</th>
-                        <th>Subtotal</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for detalle in detalles %}
-                    <tr>
-                        <td>
-                            <strong>{{ detalle.producto.nombre }}</strong>
-                            {% if detalle.producto.descripcion %}
-                                <br><small style="color: #666;">{{ detalle.producto.descripcion|truncatewords:10 }}</small>
-                            {% endif %}
-                        </td>
-                        <td>${{ detalle.producto.precio|floatformat:2 }}</td>
-                        <td><span class="cantidad-badge">{{ detalle.cantidad }}</span></td>
-                        <td><strong>${{ detalle.subtotal|floatformat:2 }}</strong></td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="4" style="text-align: center; padding: 20px;">No hay productos en este pedido</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-                <tfoot>
-                    <tr style="background-color: #fdd843;">
-                        <td colspan="3" style="text-align: right; padding: 15px; font-weight: bold; font-size: 18px;">
-                            TOTAL:
-                        </td>
-                        <td style="padding: 15px;">
-                            <strong style="font-size: 20px; color: #ff5722;">${{ total|floatformat:2 }}</strong>
-                        </td>
-                    </tr>
-                </tfoot>
-            </table>
+   <!-- Productos del Pedido -->
+<div class="detail-card" style="margin-top: 20px;">
+    <h3 class="card-header"> Productos del Pedido</h3>
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Precio Unitario</th>
+                    <th>Cantidad</th>
+                    <th>Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for detalle in detalles %}
+                <tr>
+                    <td>
+                        <strong>{{ detalle.producto.nombre }}</strong>
+                        {% if detalle.producto.descripcion %}
+                            <br><small style="color: #666;">{{ detalle.producto.descripcion|truncatewords:10 }}</small>
+                        {% endif %}
+                    </td>
+                    <td>${{ detalle.producto.precio|floatformat:2 }}</td>
+                    <td><span class="cantidad-badge">{{ detalle.cantidad }}</span></td>
+                    <td><strong>${{ detalle.subtotal|floatformat:2 }}</strong></td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" style="text-align: center; padding: 20px;">No hay productos en este pedido</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Totales del Pedido -->
+    <div class="totales-container" style="margin-top: 20px; max-width: 400px;">
+        <div class="info-row">
+            <span class="info-label">Subtotal:</span>
+            <span class="info-value">${{ subtotal|floatformat:2 }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Descuento:</span>
+            <span class="info-value">-${{ descuento_total|floatformat:2 }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">IVA:</span>
+            <span class="info-value">${{ iva_total|floatformat:2 }}</span>
+        </div>
+        <div class="info-row" style="font-weight: bold; font-size: 18px; margin-top: 8px;">
+            <span class="info-label">TOTAL:</span>
+            <span class="info-value" style="color: #ff5722;">${{ total|floatformat:2 }}</span>
         </div>
     </div>
+</div>
+
 
     <!-- Información de Pago si existe -->
     {% if pago %}

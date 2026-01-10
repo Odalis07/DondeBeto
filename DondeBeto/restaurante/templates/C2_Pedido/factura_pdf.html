@@ -140,18 +140,25 @@
                         <th>Descripción</th>
                         <th>Cantidad</th>
                         <th>Precio Unitario</th>
+                        <th>Subtotal</th>
+                        <th>Descuento</th>
+                        <th>IVA</th>
                         <th>Total</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for detalle in pago.pedido.detalles.all %}
+                    {% for item in detalles %}
                     <tr>
-                        <td class="descripcion">{{ detalle.producto.nombre }}</td>
-                        <td>{{ detalle.cantidad }}</td>
-                        <td>${{ detalle.producto.precio|floatformat:2 }}</td>
-                        <td>${{ detalle.subtotal|floatformat:2 }}</td>
+                        <td class="descripcion">{{ item.detalle.producto.nombre }}</td>
+                        <td>{{ item.detalle.cantidad }}</td>
+                        <td>${{ item.detalle.producto.precio|floatformat:2 }}</td>
+                        <td>${{ item.subtotal_det|floatformat:2 }}</td>
+                        <td>${{ item.descuento_det|floatformat:2 }}</td>
+                        <td>${{ item.iva_det|floatformat:2 }}</td>
+                        <td>${{ item.total_det|floatformat:2 }}</td>
                     </tr>
                     {% endfor %}
+
                 </tbody>
             </table>
         </div>
@@ -161,12 +168,19 @@
             <table>
                 <tr>
                     <td>Subtotal:</td>
-                   <td>${{ subtotal|floatformat:2 }}</td>
+                    <td>${{ subtotal|floatformat:2 }}</td>
                 </tr>
-                <!-- Puedes agregar impuestos si deseas -->
                 <tr>
+                    <td>Descuento:</td>
+                    <td>-${{ descuento_total|floatformat:2 }}</td>
+                </tr>
+                <tr>
+                    <td>IVA:</td>
+                    <td>${{ iva_total|floatformat:2 }}</td>
+                </tr>
+                <tr class="total">
                     <td>Total:</td>
-                    <td>${{ pago.monto|floatformat:2 }}</td>
+                    <td>${{ total|floatformat:2 }}</td>
                 </tr>
             </table>
         </div>

@@ -123,6 +123,7 @@ html, body {
 8. CARD
 --------------------------------------------------- */
 .card-producto {
+  position: relative;
   background: var(--color-white);
   border-radius: var(--card-radius);
   padding: 18px;
@@ -976,6 +977,55 @@ margin-right: 250px;
 
 #modal-descuentos #form-quitar-descuento button.btn-quitar:hover {
   background-color: #c82333;
+}
+
+/* Contenedor de los botones */
+.modal-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+/* Estilo general para todos los botones de los modales */
+.modal-buttons button {
+    padding: 8px 16px;
+    border-radius: 4px;
+    border: none;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* Botones de Cancelar / Cerrar (Gris) */
+.modal-buttons button[type="button"],
+.btn-cancelar {
+    background-color: #e0e0e0;
+    color: #333;
+}
+
+/* Botones de Guardar / Aceptar (Verde o Azul) */
+.modal-buttons button[type="submit"] {
+    background-color: #28a745; /* Verde */
+    color: white;
+}
+
+/* Botón específico de Eliminar (Rojo) */
+#confirmar-eliminar-producto {
+    background-color: #dc3545; /* Rojo */
+    color: white;
+}
+
+/* Estado cuando el botón de guardar está bloqueado */
+.modal-buttons button:disabled {
+    background-color: #cccccc;
+    color: #666666;
+    cursor: not-allowed;
+}
+
+/* Efecto simple al pasar el mouse (oscurecer un poco) */
+.modal-buttons button:hover:not(:disabled) {
+    filter: brightness(0.9);
 }
 
 /* Ajuste responsive */

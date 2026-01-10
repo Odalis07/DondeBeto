@@ -91,15 +91,19 @@
                     {% for detalle in detalles_actuales %}
                     <div class="producto-row">
                         <div class="form-group" style="flex: 2;">
-                            <label>Producto</label>
-                            <select class="form-control producto-select" name="producto_id[]" required>
-                                <option value="">Seleccione un producto</option>
-                                {% for producto in productos %}
-                                <option value="{{ producto.id }}" data-precio="{{ producto.precio }}" {% if producto.id == detalle.producto.id %}selected{% endif %}>
-                                    {{ producto.nombre }} - ${{ producto.precio }}
-                                </option>
-                                {% endfor %}
-                            </select>
+                            <label>Producto</label><select class="form-control producto-select" name="producto_id[]" required>
+                            <option value="">Seleccione un producto</option>
+                            {% for producto in productos %}
+                            <option value="{{ producto.id }}"
+                                    data-precio="{{ producto.precio }}"
+                                    data-descuento="{{ producto.descuento|default:'0' }}"
+                                    data-iva="{{ producto.iva|default:'0' }}"
+                                    {% if detalle.producto.id == producto.id %}selected{% endif %}>
+                                {{ producto.nombre }} - ${{ producto.precio }}
+                            </option>
+                            {% endfor %}
+                        </select>
+
                         </div>
                         <div class="form-group">
                             <label>Cantidad</label>
@@ -119,7 +123,9 @@
                             <select class="form-control producto-select" name="producto_id[]" required>
                                 <option value="">Seleccione un producto</option>
                                 {% for producto in productos %}
-                                <option value="{{ producto.id }}" data-precio="{{ producto.precio }}">
+                                <option value="{{ producto.id }}" data-precio="{{ producto.precio }}"
+data-descuento="{{ producto.descuento|default:'0' }}"
+data-iva="{{ producto.iva|default:'0' }}">
                                     {{ producto.nombre }} - ${{ producto.precio }}
                                 </option>
                                 {% endfor %}
@@ -140,10 +146,29 @@
 
             <button type="button" class="btn-add-producto" onclick="addProducto()">+ Agregar Producto</button>
 
-            <div class="total-section">
-                <strong>TOTAL DEL PEDIDO:</strong>
-                <span id="total-pedido" class="total-amount">$0.00</span>
-            </div>
+            <div class="total-section" style="flex-direction: column; align-items: flex-start; gap: 10px;">
+    <div>
+        <strong>Subtotal:</strong>
+        <span id="subtotal-pedido">$0.00</span>
+    </div>
+
+    <div>
+        <strong>Descuento:</strong>
+        <span id="descuento-pedido">$0.00</span>
+    </div>
+
+    <div>
+        <strong>IVA:</strong>
+        <span id="iva-pedido">$0.00</span>
+    </div>
+
+    <hr style="width:100%;">
+
+    <div style="font-size: 22px;">
+        <strong>TOTAL DEL PEDIDO:</strong>
+        <span id="total-pedido" class="total-amount">$0.00</span>
+    </div>
+</div>
         </div>
 
         <div class="form-actions">
@@ -386,9 +411,10 @@
 
 </style>
 
+
 <script>
-// Control de visibilidad de mesa según tipo
-document.getElementById('tipo_pedido').addEventListener('change', function() {
+// ================== VISIBILIDAD DE MESA ==================
+document.getElementById('tipo_pedido').addEventListener('change', function () {
     const mesaGroup = document.getElementById('mesa-group');
     const mesaSelect = document.getElementById('mesa_id');
 
@@ -400,8 +426,7 @@ document.getElementById('tipo_pedido').addEventListener('change', function() {
     }
 });
 
-// Inicializar visibilidad
-window.addEventListener('load', function() {
+window.addEventListener('load', function () {
     const tipoPedido = document.getElementById('tipo_pedido').value;
     const mesaGroup = document.getElementById('mesa-group');
 
@@ -410,85 +435,135 @@ window.addEventListener('load', function() {
     }
 });
 
-// Calcular subtotal al cambiar producto o cantidad
-document.addEventListener('change', function(e) {
-    if (e.target.classList.contains('producto-select') || e.target.classList.contains('cantidad-input')) {
-        calcularSubtotal(e.target.closest('.producto-row'));
-        calcularTotal();
+// ================== EVENTOS DE CÁLCULO ==================
+document.addEventListener('change', function (e) {
+    if (
+        e.target.classList.contains('producto-select') ||
+        e.target.classList.contains('cantidad-input')
+    ) {
+        const row = e.target.closest('.producto-row');
+        calcularFila(row);
+        calcularTotales();
     }
 });
 
-function calcularSubtotal(row) {
+// ================== CÁLCULO POR FILA ==================
+function calcularFila(row) {
     const select = row.querySelector('.producto-select');
-    const cantidad = row.querySelector('.cantidad-input').value;
+    const cantidad = parseInt(row.querySelector('.cantidad-input').value || 0);
     const subtotalInput = row.querySelector('.subtotal-input');
 
-    const precio = select.options[select.selectedIndex].dataset.precio || 0;
-    const subtotal = parseFloat(precio) * parseInt(cantidad || 0);
+    if (!select.value || cantidad === 0) {
+        subtotalInput.value = '$0.00';
+        row.dataset.subtotal = 0;
+        row.dataset.descuento = 0;
+        row.dataset.iva = 0;
+        return;
+    }
 
-    subtotalInput.value = '$' + subtotal.toFixed(2);
+    const option = select.selectedOptions[0];
+
+    const precio = parseFloat(option.dataset.precio || 0);
+    const descuentoPct = parseFloat(option.dataset.descuento || 0);
+    const ivaPct = parseFloat(option.dataset.iva || 0);
+
+    // Base
+    const base = precio * cantidad;
+
+    // Descuento
+    const descuento = base * (descuentoPct / 100);
+    const baseConDescuento = base - descuento;
+
+    // IVA (sobre base con descuento)
+    const iva = baseConDescuento * (ivaPct / 100);
+
+    // Total producto
+    const totalProducto = baseConDescuento + iva;
+
+    // Mostrar subtotal por fila
+    subtotalInput.value = '$' + totalProducto.toFixed(2);
+
+    // Guardar valores para el total general
+    row.dataset.subtotal = base;
+    row.dataset.descuento = descuento;
+    row.dataset.iva = iva;
 }
 
-function calcularTotal() {
-    let total = 0;
-    document.querySelectorAll('.subtotal-input').forEach(function(input) {
-        const valor = input.value.replace('$', '');
-        total += parseFloat(valor) || 0;
+// ================== TOTALES GENERALES ==================
+function calcularTotales() {
+    let subtotal = 0;
+    let descuentoTotal = 0;
+    let ivaTotal = 0;
+
+    document.querySelectorAll('.producto-row').forEach(row => {
+        subtotal += parseFloat(row.dataset.subtotal || 0);
+        descuentoTotal += parseFloat(row.dataset.descuento || 0);
+        ivaTotal += parseFloat(row.dataset.iva || 0);
     });
 
-    document.getElementById('total-pedido').textContent = '$' + total.toFixed(2);
+    const totalFinal = subtotal - descuentoTotal + ivaTotal;
+
+    document.getElementById('subtotal-pedido').textContent = '$' + subtotal.toFixed(2);
+    document.getElementById('descuento-pedido').textContent = '-$' + descuentoTotal.toFixed(2);
+    document.getElementById('iva-pedido').textContent = '$' + ivaTotal.toFixed(2);
+    document.getElementById('total-pedido').textContent = '$' + totalFinal.toFixed(2);
 }
 
+// ================== AGREGAR PRODUCTO ==================
 function addProducto() {
     const container = document.getElementById('productos-container');
     const newRow = document.querySelector('.producto-row').cloneNode(true);
 
-    // Resetear valores
     newRow.querySelector('.producto-select').selectedIndex = 0;
     newRow.querySelector('.cantidad-input').value = 1;
     newRow.querySelector('.subtotal-input').value = '$0.00';
 
+    newRow.dataset.subtotal = 0;
+    newRow.dataset.descuento = 0;
+    newRow.dataset.iva = 0;
+
     container.appendChild(newRow);
-    calcularTotal();
+    calcularTotales();
 }
 
+// ================== ELIMINAR PRODUCTO ==================
 function removeProducto(button) {
     const container = document.getElementById('productos-container');
     const rows = container.querySelectorAll('.producto-row');
 
     if (rows.length > 1) {
         button.closest('.producto-row').remove();
-        calcularTotal();
+        calcularTotales();
     } else {
         alert('Debe haber al menos un producto en el pedido');
     }
 }
 
-// Calcular totales al cargar
-window.addEventListener('load', function() {
-    document.querySelectorAll('.producto-row').forEach(calcularSubtotal);
-    calcularTotal();
+// ================== INICIALIZAR AL CARGAR ==================
+window.addEventListener('load', function () {
+    document.querySelectorAll('.producto-row').forEach(calcularFila);
+    calcularTotales();
 });
 
-// Validación antes de enviar
-document.getElementById('pedidoForm').addEventListener('submit', function(e) {
+// ================== VALIDACIÓN FINAL ==================
+document.getElementById('pedidoForm').addEventListener('submit', function (e) {
     const productos = document.querySelectorAll('.producto-select');
     let hayProductos = false;
 
-    productos.forEach(function(select) {
-        if (select.value) {
-            hayProductos = true;
-        }
+    productos.forEach(select => {
+        if (select.value) hayProductos = true;
     });
 
     if (!hayProductos) {
         e.preventDefault();
-        alert(' Debe agregar al menos un producto al pedido');
+        alert('Debe agregar al menos un producto al pedido');
         return false;
     }
 
     const accion = {% if pedido %}'actualizar'{% else %}'crear'{% endif %};
-return confirm(`¿Está seguro de ${accion} este pedido?`);
+    return confirm(`¿Está seguro de ${accion} este pedido?`);
 });
 </script>
+
+
 {% endblock %}

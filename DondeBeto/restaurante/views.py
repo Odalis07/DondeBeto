@@ -1253,10 +1253,26 @@ def pedidos_list(request):
 
     # Calcular total de cada pedido
     pedidos_con_total = []
+
     for pedido in pedidos:
-        total = sum(detalle.subtotal for detalle in pedido.detalles.all())
+        subtotal = 0
+        descuento_total = 0
+        iva_total = 0
+
+        for detalle in pedido.detalles.all():
+            precio_total = detalle.producto.precio * detalle.cantidad
+            descuento = precio_total * (detalle.producto.descuento or 0) / 100
+            subtotal += precio_total
+            descuento_total += descuento
+            iva_total += (precio_total - descuento) * (detalle.producto.iva or 0) / 100
+
+        total = subtotal - descuento_total + iva_total
+
         pedidos_con_total.append({
             'pedido': pedido,
+            'subtotal': subtotal,
+            'descuento_total': descuento_total,
+            'iva_total': iva_total,
             'total': total
         })
 
@@ -1359,7 +1375,6 @@ def pedidos_create(request):
     })
 
 def pedidos_detail(request, id):
-
     usuario_id = request.session.get('usuario_id')
     if not usuario_id:
         return redirect('login')
@@ -1371,8 +1386,19 @@ def pedidos_detail(request, id):
     pedido = get_object_or_404(Pedido.objects.select_related('usuario', 'mesa'), id=id)
     detalles = pedido.detalles.select_related('producto').all()
 
-    # Calcular total
-    total = sum(detalle.subtotal for detalle in detalles)
+    # Calcular subtotal, descuento, IVA y total
+    subtotal = 0
+    descuento_total = 0
+    iva_total = 0
+
+    for detalle in detalles:
+        precio_total = detalle.producto.precio * detalle.cantidad
+        descuento = precio_total * (detalle.producto.descuento or 0) / 100
+        subtotal += precio_total
+        descuento_total += descuento
+        iva_total += (precio_total - descuento) * (detalle.producto.iva or 0) / 100
+
+    total = subtotal - descuento_total + iva_total
 
     # Verificar si tiene pago
     try:
@@ -1384,9 +1410,13 @@ def pedidos_detail(request, id):
         'usuario': usuario,
         'pedido': pedido,
         'detalles': detalles,
+        'subtotal': subtotal,
+        'descuento_total': descuento_total,
+        'iva_total': iva_total,
         'total': total,
         'pago': pago
     })
+
 
 
 def pedidos_edit(request, id):
@@ -1477,17 +1507,15 @@ def pedidos_delete(request, id):
     if usuario.rol.strip().lower() != 'administrador':
         return redirect('login')
 
-    # Obtener el pedido (antes de intentar eliminarlo)
     pedido = get_object_or_404(Pedido, id=id)
 
-    # RESTRICCIÓN: Verificar si el pedido tiene un pago registrado antes de eliminar
-    if hasattr(pedido, 'pago'):
+    # RESTRICCIÓN: Verificar si el pedido tiene un pago registrado
+    if Pago.objects.filter(pedido=pedido).exists():
         messages.error(request, 'No se puede eliminar este pedido porque ya tiene un pago registrado.')
         return redirect('pedidos_list')
 
     if request.method == 'POST':
         try:
-            # Liberar mesa si está ocupada
             if pedido.mesa:
                 mesa = pedido.mesa
                 mesa.estado = 'disponible'
@@ -1569,7 +1597,19 @@ def registrar_pago(request, pedido_id):
         messages.warning(request, 'Este pedido ya tiene un pago registrado.')
         return redirect('pagos_list')
 
-    total = sum(d.subtotal for d in pedido.detalles.all())
+    # Calcular subtotal, descuento, IVA y total
+    subtotal = 0
+    descuento_total = 0
+    iva_total = 0
+
+    for detalle in pedido.detalles.all():
+        precio_total = detalle.producto.precio * detalle.cantidad
+        descuento = precio_total * (detalle.producto.descuento or 0) / 100
+        subtotal += precio_total
+        descuento_total += descuento
+        iva_total += (precio_total - descuento) * (detalle.producto.iva or 0) / 100
+
+    total = subtotal - descuento_total + iva_total
 
     if request.method == 'POST':
         Pago.objects.create(
@@ -1587,8 +1627,11 @@ def registrar_pago(request, pedido_id):
         return redirect('pagos_list')
 
     return render(request, 'C2_Pedido/pago_form.html', {
-        'pedido': pedido,
-        'total': total
+         'pedido': pedido,
+    'subtotal': subtotal,
+    'descuento_total': descuento_total,
+    'iva_total': iva_total,
+    'total': total
     })
 
 
@@ -1616,51 +1659,71 @@ def eliminar_pago(request, pago_id):
     pedido = pago.pedido
 
     if request.method == 'POST':
-        if hasattr(pedido, 'pago'):
-            messages.error(request, 'No se puede eliminar este pedido porque ya tiene un pago registrado.')
-            return redirect('pedidos_list')
+        # Eliminar el pago y dejar el pedido como pendiente
         pago.delete()
         pedido.estado = 'pendiente'
         pedido.save()
-
         messages.success(request, 'Pago eliminado correctamente.')
         return redirect('pagos_list')
 
-    return render(request, 'C2_Pedido/pago_delete.html', {
-        'pago': pago
-    })
+    return render(request, 'C2_Pedido/pago_delete.html', {'pago': pago})
 
 
 def imprimir_factura(request, pago_id):
     pago = get_object_or_404(Pago, id=pago_id)
+    detalles = pago.pedido.detalles.select_related('producto').all()
 
-    # Calcular subtotal sumando los detalles
-    subtotal = sum(detalle.subtotal for detalle in pago.pedido.detalles.all())
+    # Calcular subtotal, descuento, IVA y total
+    subtotal = Decimal(0)
+    descuento_total = Decimal(0)
+    iva_total = Decimal(0)
 
-    # Contexto para el template
+    detalles_calculados = []
+
+    for detalle in detalles:
+        precio_total = detalle.producto.precio * detalle.cantidad
+        descuento = precio_total * (detalle.producto.descuento or 0) / 100
+        iva = (precio_total - descuento) * (detalle.producto.iva or 0) / 100
+        total = precio_total - descuento + iva
+
+        subtotal += precio_total
+        descuento_total += descuento
+        iva_total += iva
+
+        detalles_calculados.append({
+            'detalle': detalle,
+            'subtotal_det': precio_total,
+            'descuento_det': descuento,
+            'iva_det': iva,
+            'total_det': total
+        })
+
+    total = subtotal - descuento_total + iva_total
+
+    # Contexto
     context = {
         'pago': pago,
+        'detalles': detalles_calculados,
         'subtotal': subtotal,
+        'descuento_total': descuento_total,
+        'iva_total': iva_total,
+        'total': total
     }
 
-    # Cargar el template como string
+    # Generar PDF
     template = get_template('C2_Pedido/factura_pdf.html')
     html = template.render(context)
 
-    # Crear respuesta PDF
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'filename="Factura_{pago.id}.pdf"'
 
-    # Generar PDF
-    pisa_status = pisa.CreatePDF(
-        src=html,
-        dest=response
-    )
+    pisa_status = pisa.CreatePDF(src=html, dest=response)
 
     if pisa_status.err:
         return HttpResponse('Error al generar el PDF: %s' % pisa_status.err)
 
     return response
+
 
 def vista_inventario(request):
 

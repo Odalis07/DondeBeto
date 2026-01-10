@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.hashers import make_password, check_password
+from decimal import Decimal
 
 # ------------------------------
 # Modelo Usuario
@@ -63,7 +64,6 @@ class Producto(models.Model):
     descripcion = models.TextField(blank=True)
     precio = models.DecimalField(max_digits=8, decimal_places=2)
 
-    # Campo NUEVO (solo almacenamiento)
     iva = models.DecimalField(
         max_digits=5,
         decimal_places=2,
@@ -83,6 +83,7 @@ class Producto(models.Model):
     stock = models.PositiveIntegerField(null=True, blank=True)
 
     imagen = models.ImageField(upload_to='productos/', null=True, blank=True)
+
     categoria = models.ForeignKey(
         Categoria,
         on_delete=models.SET_NULL,
@@ -96,6 +97,39 @@ class Producto(models.Model):
     def __str__(self):
         return self.nombre
 
+    # ==========================
+    # 🔥 CÁLCULOS CORRECTOS
+    # ==========================
+
+    @property
+    def precio_con_descuento(self):
+        """
+        Precio final aplicando descuento (sin IVA)
+        """
+        if self.descuento:
+            return self.precio - (self.precio * self.descuento / Decimal('100'))
+        return self.precio
+
+    @property
+    def precio_con_iva(self):
+        """
+        Precio con IVA aplicado (sin descuento)
+        """
+        if self.iva:
+            return self.precio + (self.precio * self.iva / Decimal('100'))
+        return self.precio
+
+    @property
+    def precio_final(self):
+        """
+        Precio final con descuento + IVA
+        """
+        precio = self.precio_con_descuento
+
+        if self.iva:
+            precio += precio * self.iva / Decimal('100')
+
+        return precio
 
 # ------------------------------
 # Modelo Pedido
