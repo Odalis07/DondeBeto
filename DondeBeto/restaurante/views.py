@@ -581,6 +581,7 @@ def registrar_producto(request):
         nombre = request.POST['nombre']
         descripcion = request.POST['descripcion']
         precio = request.POST['precio']
+        iva = request.POST.get('iva')
         categoria = Categoria.objects.get(id=request.POST['categoria'])
         imagen = request.FILES.get('imagen')
 
@@ -588,8 +589,10 @@ def registrar_producto(request):
             nombre=nombre,
             descripcion=descripcion,
             precio=precio,
+            iva=iva,
             categoria=categoria,
-            imagen=imagen
+            imagen=imagen,
+            descuento=0
         )
         return redirect('productos')
 
@@ -599,43 +602,115 @@ def registrar_producto(request):
 #SE USA REPOSITORY AQUI:
 
 def actualizar_producto(request, id):
-    """Recibe datos JSON y actualiza un producto"""
     if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            producto = get_object_or_404(Producto, id=id)
+        data = json.loads(request.body)
+        producto = Producto.objects.get(id=id)
 
-            producto.nombre = data.get('nombre', producto.nombre)
-            producto.descripcion = data.get('descripcion', producto.descripcion)
-            producto.precio = data.get('precio', producto.precio)
-            producto.categoria_id = data.get('categoria_id', producto.categoria_id)
+        producto.nombre = data.get('nombre')
+        producto.descripcion = data.get('descripcion')
+        producto.precio = data.get('precio')
+        producto.iva = data.get('iva')
+        producto.categoria_id = data.get('categoria')
 
-            # Si manejas imagenes via MEDIA
-            if 'imagen' in data and data['imagen']:
-                producto.imagen = data['imagen']  # Asegúrate de que sea la ruta correcta
+        producto.save()
 
-            producto.save()
-            return JsonResponse({'success': True, 'message': 'Producto actualizado correctamente'})
-        except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)})
+        return JsonResponse({'success': True})
 
     return JsonResponse({'success': False, 'error': 'Método no permitido'})
 
 @csrf_exempt
 def eliminar_producto(request, id):
-    """Elimina un producto por ID"""
     if request.method == 'POST':
-        tiene_pedidos = DetallePedido.objects.filter(producto=id).exists()
-        if tiene_pedidos:
-            return JsonResponse({
-                'success': False,
-                'error': 'No se puede eliminar el producto porque está relacionado con uno o más pedidos'
-            })
-
         try:
-            producto = get_object_or_404(Producto, id=id)
-            producto.delete()
-            return JsonResponse({'success': True, 'message': 'Producto eliminado correctamente'})
+            Producto.objects.get(id=id).delete()
+            return JsonResponse({'success': True})
+        except Producto.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'No existe'})
+
+    return JsonResponse({'success': False})
+
+
+@csrf_exempt
+def aplicar_descuento(request):
+    """Aplica descuento a productos según el tipo seleccionado"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            tipo = data.get('tipo')
+            descuento = data.get('descuento')
+
+            if not descuento:
+                return JsonResponse({'success': False, 'error': 'Descuento no especificado'})
+
+            # Convertir a Decimal
+            descuento_decimal = Decimal(str(descuento))
+
+            if tipo == 'todos':
+                # Aplicar a todos los productos
+                productos = Producto.objects.all()
+                productos.update(descuento=descuento_decimal)
+                mensaje = f'Descuento del {descuento}% aplicado a todos los productos'
+
+            elif tipo == 'categoria':
+                # Aplicar a productos de una categoría
+                categoria_nombre = data.get('categoria')
+                productos = Producto.objects.filter(categoria__nombre=categoria_nombre)
+                productos.update(descuento=descuento_decimal)
+                mensaje = f'Descuento del {descuento}% aplicado a la categoría {categoria_nombre}'
+
+            elif tipo == 'producto':
+                # Aplicar a un producto específico
+                producto_id = data.get('producto_id')
+                producto = get_object_or_404(Producto, id=producto_id)
+                producto.descuento = descuento_decimal
+                producto.save()
+                mensaje = f'Descuento del {descuento}% aplicado a {producto.nombre}'
+
+            else:
+                return JsonResponse({'success': False, 'error': 'Tipo de aplicación no válido'})
+
+            return JsonResponse({'success': True, 'message': mensaje})
+
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+
+    return JsonResponse({'success': False, 'error': 'Método no permitido'})
+
+
+@csrf_exempt
+def quitar_descuento(request):
+    """Quita el descuento de productos según el tipo seleccionado"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            tipo = data.get('tipo')
+
+            if tipo == 'todos':
+                # Quitar de todos los productos
+                productos = Producto.objects.all()
+                productos.update(descuento=None)
+                mensaje = 'Descuento eliminado de todos los productos'
+
+            elif tipo == 'categoria':
+                # Quitar de productos de una categoría
+                categoria_nombre = data.get('categoria')
+                productos = Producto.objects.filter(categoria__nombre=categoria_nombre)
+                productos.update(descuento=None)
+                mensaje = f'Descuento eliminado de la categoría {categoria_nombre}'
+
+            elif tipo == 'producto':
+                # Quitar de un producto específico
+                producto_id = data.get('producto_id')
+                producto = get_object_or_404(Producto, id=producto_id)
+                producto.descuento = None
+                producto.save()
+                mensaje = f'Descuento eliminado de {producto.nombre}'
+
+            else:
+                return JsonResponse({'success': False, 'error': 'Tipo no válido'})
+
+            return JsonResponse({'success': True, 'message': mensaje})
+
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)})
 
@@ -1586,3 +1661,7 @@ def imprimir_factura(request, pago_id):
         return HttpResponse('Error al generar el PDF: %s' % pisa_status.err)
 
     return response
+
+def vista_inventario(request):
+
+    return render(request, "Vistas/Vista_adm/inventario.html")

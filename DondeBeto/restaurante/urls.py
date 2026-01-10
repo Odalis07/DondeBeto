@@ -30,6 +30,9 @@ urlpatterns = [
     path('productos/eliminar/<int:id>/', views.eliminar_producto, name='eliminar_producto'),
     path('productos/actualizar/<int:id>/', views.actualizar_producto, name='actualizar_producto'),
     path('productos/eliminar/<int:id>/', views.eliminar_producto, name='eliminar_producto'),
+    path('productos/aplicar-descuento/', views.aplicar_descuento, name='aplicar_descuento'),
+    path('productos/quitar-descuento/', views.quitar_descuento, name='quitar_descuento'),
+
     path('mesas/', views.mesas_view, name='mesas'),
     path('mesas/registrar/', views.registrar_mesa_view, name='registrar_mesa'),
     path('mesa/actualizar/<int:id>/', views.actualizar_mesa, name='actualizar_mesa'),
@@ -61,6 +64,8 @@ urlpatterns = [
     path('home-Vista_cliente/pago', views.vistaPagos, name='pagos'),
     path('home-Vista_cliente/pago/<int:pedido_id>/', views.vistaPagos, name='pagos'),
     # endpoint de la confirmacion del pago
-    path("pago/confirmar/<int:pedido_id>/", views.confirmar_pago, name="confirmar_pago")
+    path("pago/confirmar/<int:pedido_id>/", views.confirmar_pago, name="confirmar_pago"),
+
+    path("admin/inventario/", views.vista_inventario, name="vista_inventario"),
 
 ]

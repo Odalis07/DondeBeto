@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Administrador - Donde Beto</title>
+    <link rel="stylesheet" href="{% static 'css/Vista_adm/admi.css' %}">
+    <link rel="icon" href="{% static 'img/logoOficial.svg' %}" type="image/x-icon">
+    <link rel="stylesheet" href="{% static 'css/Vista_adm/inventario.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Menú lateral -->
+        <aside class="sidebar">
+           <div class="logo">
+                <img src="{% static 'img/logoOficial.svg' %}" alt="Logo Beto" class="logo-icon">
+                <span class="logo-text">Beto</span>
+           </div>
+
+            <nav class="menu">
+                <a href="{% url 'vista_inventario' %}" class="menu-item">
+                    <img src="{% static 'img/icon-productos.svg' %}" alt=""> Inventarios
+                </a>
+
+                  <a href="{% url 'productos' %}" class="menu-item">
+                    <img src="{% static 'img/icon-productos.svg' %}" alt=""> Productos
+                </a>
+                <a href="{% url 'mesas' %}" class="menu-item">
+                    <img src="{% static 'img/icon-mesas.svg' %}" alt=""> Mesas
+                </a>
+                <a href="{% url 'pedidos_list' %}" class="menu-item">
+                    <img src="{% static 'img/icon-pedidos.svg' %}" alt=""> Pedidos
+                </a>
+                 <a href="{% url 'pagos_list' %}" class="menu-item">
+                    <img src="{% static 'img/icon-facturas.svg' %}" alt=""> Pagos/Facturas
+                </a>
+
+                <a href="{% url 'clientes' %}" class="menu-item">
+                    <img src="{% static 'img/icon-clientes.svg' %}" alt=""> Clientes
+                </a>
+
+                <a href="{% url 'usuarios' %}" class="menu-item">
+                    <img src="{% static 'img/icon-clientes.svg' %}" alt=""> Trabajadores
+                </a>
+
+                <a href="{% url 'login' %}" class="menu-item logout">
+                    <img src="{% static 'img/icon-cerrar.svg' %}" alt=""> Cerrar
+                </a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="topbar">
+                <div class="caja">
+    {% if rol %}
+        Rol: {{ rol }}
+    {% else %}
+        No disponible.
+    {% endif %}
+</div>
+                <div class="titulo">DONDE BETO RESTO BAR</div>
+                <div class="usuario">
+    {% if usuario %}
+        ¡Hola, {{ usuario.nombre }} {{ usuario.apellido }}!
+    {% else %}
+        No has iniciado sesión.
+    {% endif %}
+</div>
+
+            </header>
+
+            <section class="content">
+                     <div class="inventory-container">
+
+            <!-- Header -->
+            <div class="inventory-header">
+                <div class="inventory-title">
+                    <h2>
+                        <span class="icon-package"></span>
+                        Control de Inventario
+                    </h2>
+                    <a href="{% url 'registrar_producto' %}" class="btn-primary">
+                        <span class="icon-plus"></span>
+                        Agregar Producto
+                    </a>
+                </div>
+                <p class="subtitle">
+                    Gestiona el stock de productos del restaurante
+                </p>
+            </div>
+
+            <!-- Estadísticas -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Productos</div>
+                    <div class="stat-value">{{ stats.total }}</div>
+                </div>
+                <div class="stat-card disponible">
+                    <div class="stat-label">Disponibles</div>
+                    <div class="stat-value">{{ stats.disponibles }}</div>
+                </div>
+                <div class="stat-card bajo">
+                    <div class="stat-label">Stock Bajo</div>
+                    <div class="stat-value">{{ stats.bajo_stock }}</div>
+                </div>
+                <div class="stat-card agotado">
+                    <div class="stat-label">Agotados</div>
+                    <div class="stat-value">{{ stats.agotados }}</div>
+                </div>
+            </div>
+
+            <!-- Buscador -->
+            <form method="GET" class="search-filter-bar">
+                <input
+                    type="text"
+                    name="search"
+                    placeholder="Buscar producto..."
+                    value="{{ request.GET.search }}"
+                >
+                <select name="status" onchange="this.form.submit()">
+                    <option value="">Todos</option>
+                    <option value="disponible" {% if request.GET.status == 'disponible' %}selected{% endif %}>
+                        Disponibles
+                    </option>
+                    <option value="bajo" {% if request.GET.status == 'bajo' %}selected{% endif %}>
+                        Stock Bajo
+                    </option>
+                    <option value="agotado" {% if request.GET.status == 'agotado' %}selected{% endif %}>
+                        Agotados
+                    </option>
+                </select>
+            </form>
+
+            <!-- Tabla -->
+            <div class="inventory-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Categoría</th>
+                            <th class="center">Stock</th>
+                            <th class="center">Mínimo</th>
+                            <th class="center">Estado</th>
+                            <th class="center">Precio</th>
+                            <th class="center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if productos %}
+                            {% for producto in productos %}
+                            <tr>
+                                <td>{{ producto.nombre }}</td>
+                                <td>{{ producto.categoria.nombre }}</td>
+                                <td class="center">{{ producto.stock }}</td>
+                                <td class="center">{{ producto.stock_minimo }}</td>
+                                <td class="center">
+                                    {{ producto.get_status_display }}
+                                </td>
+                                <td class="center">${{ producto.precio }}</td>
+                                <td class="center">
+                                    <a href="{% url 'producto_editar' producto.id %}" class="btn-icon edit">✏️</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="7" class="empty-state">
+                                    No hay productos
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="footer-info">
+                Mostrando {{ productos|length }} productos
+            </div>
+
+        </div>
+
+
+
+
+            </section>
+        </main>
+    </div>
+</body>
+</html>
