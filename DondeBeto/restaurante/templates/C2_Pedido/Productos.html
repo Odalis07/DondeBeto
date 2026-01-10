@@ -9,6 +9,7 @@
     <title>Gestión de Productos</title>
   </head>
 
+
   <body>
     <div class="admin-container">
       <!-- Sidebar -->
@@ -27,12 +28,12 @@
       <a href="{% url 'mesas' %}" class="menu-item">
           <img src="{% static 'img/icon-mesas.svg' %}" alt=""> Mesas
       </a>
-      <a href="{% url 'pedidos' %}" class="menu-item">
-          <img src="{% static 'img/icon-pedidos.svg' %}" alt=""> Pedidos
-      </a>
-      <a href="#" class="menu-item">
-          <img src="{% static 'img/icon-facturas.svg' %}" alt=""> Facturas
-      </a>
+               <a href="{% url 'pedidos_list' %}" class="menu-item">
+                    <img src="{% static 'img/icon-pedidos.svg' %}" alt=""> Pedidos
+                </a>
+                 <a href="{% url 'pagos_list' %}" class="menu-item">
+                    <img src="{% static 'img/icon-facturas.svg' %}" alt=""> Pagos/Facturas
+                </a>
       <a href="{% url 'clientes' %}" class="menu-item">
           <img src="{% static 'img/icon-clientes.svg' %}" alt=""> Clientes
       </a>
@@ -58,12 +59,12 @@
       </a>
 
   {% elif rol == "cajero" %}
-      <a href="{% url 'pedidos' %}" class="menu-item">
-          <img src="{% static 'img/icon-pedidos.svg' %}" alt=""> Pedidos
-      </a>
-      <a href="#" class="menu-item">
-          <img src="{% static 'img/icon-facturas.svg' %}" alt=""> Facturas
-      </a>
+               <a href="{% url 'pedidos_list' %}" class="menu-item">
+                    <img src="{% static 'img/icon-pedidos.svg' %}" alt=""> Pedidos
+                </a>
+                 <a href="{% url 'pagos_list' %}" class="menu-item">
+                    <img src="{% static 'img/icon-facturas.svg' %}" alt=""> Pagos/Facturas
+                </a>
       <a href="{% url 'perfil_cajero' %}" class="menu-item">
           <img src="{% static 'img/icon-clientes.svg' %}" alt=""> Perfil
       </a>

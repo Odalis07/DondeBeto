@@ -32,41 +32,44 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 # ---------------------------
 
 #Vista del login
+from django.contrib import messages
+from django.shortcuts import render, redirect
+
 def login_view(request):
     if request.method == "POST":
         email = request.POST.get("email")
         contraseña = request.POST.get("contraseña")
 
         try:
-            # Buscar usuario por correo
             usuario = Usuario.objects.get(email=email)
 
-            # Verificar contraseña
             if usuario.checkpassword(contraseña):
-                # Guardar el ID en sesión
                 request.session['usuario_id'] = usuario.id
                 request.session['rol'] = usuario.rol
-                # Redirección según el rol
+
                 rol = usuario.rol.strip().lower()
 
-                if rol == "administrador":
-                    return redirect('vista_adm')
-                elif rol == "cliente":
-                    return redirect('home_cliente')
-                elif rol == "cajero":
-                    return redirect('vista_cajero')
-                elif rol == "mesero":
-                    return redirect('vista_mesero')
-                elif rol == "repartidor":
-                    return redirect('vista_repartidor')
-                else:
-                    messages.error(request, "Rol de usuario no reconocido.")
-            else:
-                messages.error(request, "Contraseña incorrecta.")
-        except Usuario.DoesNotExist:
-            messages.error(request, "El correo no está registrado.")
+                return render(request, 'C1_Usuario/login.html', {
+                    'login_exitoso': True,
+                    'redirect_url': {
+                        'administrador': 'vista_adm',
+                        'cliente': 'home_cliente',
+                        'cajero': 'vista_cajero',
+                        'mesero': 'vista_mesero',
+                        'repartidor': 'vista_repartidor',
+                    }.get(rol)
+                })
 
-    # Si no es POST o hay error, mostrar login
+            else:
+                return render(request, 'C1_Usuario/login.html', {
+                    'error': 'No se pudo iniciar sesión, correo o contraseña incorrecta'
+                })
+
+        except Usuario.DoesNotExist:
+            return render(request, 'C1_Usuario/login.html', {
+                'error': 'No se pudo iniciar sesión, correo o contraseña incorrecta'
+            })
+
     return render(request, 'C1_Usuario/login.html')
 
 # Vista registro de usuario
