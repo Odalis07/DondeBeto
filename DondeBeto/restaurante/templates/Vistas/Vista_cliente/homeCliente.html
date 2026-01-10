@@ -5,6 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>BETO - Cliente</title>
+
   <link rel="stylesheet" href="{% static 'css/Vista_cliente/homeCliente.css' %}">
      <link rel="icon" href="{% static 'img/logoOficial.svg' %}" type="image/x-icon" />
   <link rel="stylesheet" href="{% static 'css/Vista_adm/Productos.css' %}" />
@@ -15,13 +16,12 @@
   <!-- Panel lateral oculto -->
   <aside id="sidebar" class="sidebar">
     <div class="sidebar-header">
-  <img src="{% static 'img/usuario.png' %}" alt="Foto usuario">
-  <h2>{{ usuario.nombre }} {{ usuario.apellido }}</h2>
-  <p>{{ usuario.email }}</p>
-</div>
+      <img src="{% static 'img/usuario.png' %}" alt="Foto usuario" class="perfil-img">
+      <h2>{{ usuario.nombre }} {{ usuario.apellido }}</h2>
+      <p>{{ usuario.email }}</p>
+    </div>
     <div class="sidebar-links">
       <a href="{% url 'mi_perfil' %}">Mi perfil</a>
-      <a href="#">Mis pedidos</a>
       <a href="{% url 'login' %}" class="logout">Cerrar sesión</a>
     </div>
   </aside>
@@ -29,7 +29,10 @@
   <!-- Encabezado -->
   <header class="navbar">
     <div class="menu-icon" onclick="toggleSidebar()">☰</div>
-    <div class="logo"> <img src="{% static 'img/logoOficial.svg' %}" alt="Logo Beto" class="logo-icon"> BETO</div>
+
+    <div class="logo">
+      <img src="{% static 'img/logoOficial.svg' %}" alt="Logo Beto" class="logo-icon"> BETO
+    </div>
     <a href="{% url 'login' %}" class="btn-login">Salir</a>
   </header>
 
@@ -43,38 +46,136 @@
 
   {% csrf_token %}
 
-<div id="sidebar-carrito" style="position: fixed; right: 0; top: 0; width: 300px; height: 100%; background: white; box-shadow: -2px 0 5px rgba(0,0,0,0.2); padding: 15px; z-index: 1000; display: none; overflow-y: auto;">
-    <h3>🛒 Tu Pedido</h3>
+<div id="sidebar-carrito"
+     style="
+        position: fixed;
+        right: 0;
+        top: 0;
+        width: 320px;
+        height: 100%;
+        background: linear-gradient(180deg, #ffffff, #f7f9fc);
+        box-shadow: -6px 0 18px rgba(0,0,0,0.35);
+        padding: 22px;
+        z-index: 1000;
+        display: none;
+        overflow-y: auto;
+        box-sizing: border-box;
+        border-left: 4px solid #4a93e3;
+     ">
 
+<<<<<<< HEAD
     <div style="margin-bottom: 10px;">
         <label for="tipo_pedido_select">Tipo de Pedido:</label>
         <select id="tipo_pedido_select" class="form-control" style="width: 100%; padding: 5px;">
             <option value="domicilio">Domicilio</option>
             <option value="para_llevar">Para llevar</option>
+=======
+    <h3 style="
+        text-align:center;
+        margin-bottom:18px;
+        font-size:22px;
+        font-weight:700;
+        color:#001b44;
+        letter-spacing:0.5px;
+    ">
+        🛒 Tu Pedido
+    </h3>
+
+    <div style="
+        margin-bottom:18px;
+        padding:12px;
+        background:#eef4ff;
+        border-radius:10px;
+    ">
+        <label for="tipo_pedido_select"
+               style="
+                   display:block;
+                   margin-bottom:6px;
+                   font-weight:600;
+                   color:#001b44;
+               ">
+            Tipo de Pedido
+        </label>
+
+        <select id="tipo_pedido_select"
+                style="
+                    width:100%;
+                    padding:10px;
+                    border-radius:8px;
+                    border:1px solid #c5d6f2;
+                    font-size:14px;
+                ">
+            <option value="domicilio">🏠 Domicilio</option>
+            <option value="para_llevar">🥡 Para llevar</option>
+>>>>>>> ff3edfd494b0423c2f31751de34246827d08e287
         </select>
     </div>
 
-    <ul id="lista-carrito" style="list-style: none; padding: 0;">
-        </ul>
+    <ul id="lista-carrito"
+        style="
+            list-style:none;
+            padding:0;
+            margin:0 0 18px 0;
+        ">
+    </ul>
 
-    <p style="border-top: 1px solid #ccc; padding-top: 10px;">
-        <strong>Total: <span id="total-carrito">$0.00</span></strong>
+    <p style="
+        border-top:2px dashed #c5d6f2;
+        padding-top:12px;
+        font-size:17px;
+        font-weight:700;
+        text-align:right;
+        color:#001b44;
+    ">
+        Total: <span id="total-carrito">$0.00</span>
     </p>
 
+<<<<<<< HEAD
    <button type="button" 
         id="btn-hacer-pedido" 
         class="btn-principal" 
         style="width:100%; padding:10px;">
     Hacer Pedido
 </button>
+=======
+    <button type="button"
+            id="btn-hacer-pedido"
+            class="btn-principal"
+            style="
+                width:100%;
+                padding:14px;
+                margin-top:14px;
+                border-radius:10px;
+                font-size:16px;
+                font-weight:700;
+                letter-spacing:0.4px;
+                cursor:pointer;
+                background:linear-gradient(135deg,#001b44,#4a93e3);
+                box-shadow:0 6px 14px rgba(0,0,0,0.35);
+                transition:transform .2s ease, box-shadow .2s ease;
+            "
+            onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 10px 20px rgba(0,0,0,0.45)'"
+            onmouseout="this.style.transform='none';this.style.boxShadow='0 6px 14px rgba(0,0,0,0.35)'"
+    >
+        🚀 Hacer Pedido
+    </button>
+
+>>>>>>> ff3edfd494b0423c2f31751de34246827d08e287
 </div>
 
   <!-- Contenido principal -->
   <main class="main-content">
 
      <section class="content">
+
+        <h1>¡Bienvenidos a nuestro restaurante!</h1>
+        <br>
+         <p>Descubre nuestro menú y elige el platillo que más te guste</p>
+         <br>
+         <br>
+              <!-- s
           <div class="tabs">
-          <!-- s
+
   <a href="{% url 'productos' %}?categoria=Todos" class="tab {% if categoria_seleccionada == 'Todos' %}active{% endif %}">Todos</a>
   <a href="{% url 'productos' %}?categoria=Bebidas" class="tab {% if categoria_seleccionada == 'Bebidas' %}active{% endif %}">Bebidas</a>
   <a href="{% url 'productos' %}?categoria=Almuerzos" class="tab {% if categoria_seleccionada == 'Almuerzos' %}active{% endif %}">Almuerzos</a>
@@ -82,9 +183,9 @@
   <a href="{% url 'productos' %}?categoria=Comida rápida" class="tab {% if categoria_seleccionada == 'Comida rápida' %}active{% endif %}">Comida rápida</a>
   <a href="{% url 'productos' %}?categoria=Especiales" class="tab {% if categoria_seleccionada == 'Especiales' %}active{% endif %}">Especiales</a>
   <a href="{% url 'productos' %}?categoria=Acompañantes" class="tab {% if categoria_seleccionada == 'Acompañantes' %}active{% endif %}">Acompañantes</a>
-  -->
 
 </div>
+  -->
 
           <!-- GRID PRODUCTOS -->
          <div class="productos-grid">
@@ -113,10 +214,7 @@
   {% endfor %}
 </div>
 
-<div class="acciones">
 
-  <button id="btn-nuevo" class="btn-nuevo">Hacer pedido</button>
-</div>
 
         </section>
 
@@ -143,8 +241,8 @@
   <script>
 
     // ... tu función toggleSidebar() va aquí ...
-    function toggleSidebar() {
-        document.getElementById('sidebar').classList.toggle('active');
+     function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('active');
     }
 
     // --- Lógica del Diálogo de Cantidad ---

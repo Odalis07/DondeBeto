@@ -1,0 +1,98 @@
+{% extends 'Vistas/Vista_adm/Vista_Adm.html' %}
+
+{% block title %}Eliminar Pago{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <h2>Eliminar Pago</h2>
+</div>
+
+<div class="alert-delete">
+    <p>
+        ¿Seguro que deseas eliminar el pago del pedido #{{ pago.pedido.id }}
+        por <strong>${{ pago.monto }}</strong>?
+    </p>
+</div>
+
+<form method="POST" class="delete-form">
+    {% csrf_token %}
+    <button type="submit" class="btn-danger">Sí, eliminar</button>
+    <a href="{% url 'pedidos_list' %}" class="btn-secondary">Cancelar</a>
+</form>
+
+<style>
+.content-header {
+    margin-bottom: 20px;
+    font-family: Arial, sans-serif;
+}
+
+.alert-delete {
+    background-color: #f8d7da;
+    color: #000000;
+    border: 1px solid #f5c6cb;
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    font-size: 1rem;
+}
+
+/* FORMULARIO */
+.delete-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    margin-top: 15px;
+}
+
+.delete-form button,
+.delete-form a {
+    padding: 10px 18px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: all 0.25s ease;
+    display: inline-block;
+}
+
+/* BOTONES */
+.btn-danger {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-danger:hover {
+    background-color: #b02a37;
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
+    transform: translateY(-1px);
+}
+
+/* RESPONSIVE */
+@media (max-width: 480px) {
+    .delete-form {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .delete-form button,
+    .delete-form a {
+        width: 100%;
+        text-align: center;
+    }
+}
+</style>
+{% endblock %}

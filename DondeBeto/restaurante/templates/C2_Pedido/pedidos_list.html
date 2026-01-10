@@ -1,0 +1,493 @@
+{% extends 'Vistas/Vista_adm/Vista_Adm.html' %}
+
+{% block title %}Gestión de Pedidos{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <h2 class="content-title">Gestión de Pedidos</h2>
+    <a href="{% url 'pedidos_create' %}" class="btn-primary">+ Nuevo Pedido</a>
+</div>
+
+<!-- Filtros y Búsqueda -->
+<div class="filters-container">
+    <form method="GET" class="filters-form">
+        <div class="filter-group">
+            <label for="estado">Estado:</label>
+            <select name="estado" id="estado" class="filter-select">
+                <option value="">Todos</option>
+                <option value="pendiente" {% if estado_filtro == 'pendiente' %}selected{% endif %}>Pendiente</option>
+                <option value="en preparación" {% if estado_filtro == 'en preparación' %}selected{% endif %}>En Preparación</option>
+                <option value="entregado" {% if estado_filtro == 'entregado' %}selected{% endif %}>Entregado</option>
+                <option value="pagado" {% if estado_filtro == 'pagado' %}selected{% endif %}>Pagado</option>
+            </select>
+        </div>
+        
+        <div class="filter-group">
+            <label for="tipo">Tipo:</label>
+            <select name="tipo" id="tipo" class="filter-select">
+                <option value="">Todos</option>
+                <option value="local" {% if tipo_filtro == 'local' %}selected{% endif %}>En el local</option>
+                <option value="domicilio" {% if tipo_filtro == 'domicilio' %}selected{% endif %}>Domicilio</option>
+                <option value="para_llevar" {% if tipo_filtro == 'para_llevar' %}selected{% endif %}>Para llevar</option>
+            </select>
+        </div>
+        
+        <div class="filter-group" style="flex: 2;">
+            <label for="buscar">Buscar:</label>
+            <input 
+                type="text" 
+                name="buscar" 
+                id="buscar"
+                class="filter-input" 
+                placeholder="Buscar por ID o cliente..." 
+                value="{{ buscar }}"
+            >
+        </div>
+        
+        <button type="submit" class="btn-filter"> Filtrar</button>
+        <a href="{% url 'pedidos_list' %}" class="btn-clear-filter"> Limpiar</a>
+    </form>
+</div>
+
+<!-- Tabla de Pedidos -->
+<div class="table-container">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Cliente</th>
+                <th>Tipo</th>
+                <th>Mesa</th>
+                <th>Estado</th>
+                <th>Fecha</th>
+                <th>Total</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in pedidos_con_total %}
+            <tr>
+                <td><strong>#{{ item.pedido.id }}</strong></td>
+                <td>{{ item.pedido.usuario.nombre }} {{ item.pedido.usuario.apellido }}</td>
+                <td>
+                    <span class="badge badge-tipo-{{ item.pedido.tipo_pedido }}">
+                        {{ item.pedido.get_tipo_pedido_display }}
+                    </span>
+                </td>
+                <td>
+                    {% if item.pedido.mesa %}
+                        Mesa {{ item.pedido.mesa.numero }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td>
+                    <span class="badge badge-estado-{{ item.pedido.estado|slugify }}">
+                        {{ item.pedido.estado|title }}
+                    </span>
+                </td>
+                <td>{{ item.pedido.fecha|date:"d/m/Y H:i" }}</td>
+                <td><strong>${{ item.total|floatformat:2 }}</strong></td>
+                <td>
+                    <div class="action-buttons">
+                        <a href="{% url 'pedidos_detail' item.pedido.id %}" class="btn-view" title="Ver detalle">Ver detalle</a>
+                        <a href="{% url 'pedidos_edit' item.pedido.id %}" class="btn-edit" title="Editar">Editar pedido</a>
+                        <form method="POST" action="{% url 'pedidos_delete' item.pedido.id %}" style="display: inline;" onsubmit="return confirm('¿Está seguro de eliminar el pedido #{{ item.pedido.id }}?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-delete" title="Eliminar">Eliminar pedido</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8" style="text-align: center; padding: 40px; color: #999;">
+                    {% if buscar or estado_filtro or tipo_filtro %}
+                        No se encontraron pedidos con los filtros aplicados
+                    {% else %}
+                        No hay pedidos registrados
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<style>
+
+.content-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.content-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: #28394c;
+}
+
+.btn-primary {
+    background-color: #4a93e3;
+    color: white;
+    padding: 12px 18px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background-color: #3a7dc4;
+    transform: translateY(-2px);
+}
+
+/* =========================
+   FILTROS
+========================= */
+.filters-container {
+    background-color: #ffffff;
+    padding: 25px;
+    border-radius: 12px;
+    margin-bottom: 30px;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+}
+
+.filters-form {
+    display: flex;
+    gap: 20px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 180px;
+}
+
+.filter-group label {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #28394c;
+}
+
+.filter-select,
+.filter-input {
+    padding: 12px;
+    border-radius: 8px;
+    border: 1.8px solid #d0d7e2;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    transition: border 0.3s ease, box-shadow 0.3s ease;
+}
+
+.filter-select:focus,
+.filter-input:focus {
+    outline: none;
+    border-color: #4a93e3;
+    box-shadow: 0 0 0 3px rgba(74, 147, 227, 0.2);
+}
+
+.btn-filter {
+    background-color: #4a93e3;
+    color: white;
+    padding: 12px 22px;
+    border-radius: 8px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-filter:hover {
+    background-color: #3a7dc4;
+}
+
+.btn-clear-filter {
+    background-color: #6c757d;
+    color: white;
+    padding: 12px 22px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-clear-filter:hover {
+    background-color: #5a6268;
+}
+
+/* =========================
+   TABLA
+========================= */
+.table-container {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+    overflow-x: auto;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 15px;
+}
+
+.data-table thead {
+    background-color: #f1f4f8;
+}
+
+.data-table th {
+    padding: 16px;
+    text-align: left;
+    font-weight: 700;
+    color: #28394c;
+    border-bottom: 2px solid #e1e6ef;
+}
+
+.data-table td {
+    padding: 15px;
+    border-bottom: 1px solid #edf0f5;
+    color: #333;
+}
+
+.data-table tbody tr:hover {
+    background-color: #f7faff;
+}
+
+/* =========================
+   BADGES
+========================= */
+.badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.badge-tipo-local {
+    background-color: #28a745;
+    color: white;
+}
+
+.badge-tipo-domicilio {
+    background-color: #17a2b8;
+    color: white;
+}
+
+.badge-tipo-para_llevar {
+    background-color: #ffc107;
+    color: #333;
+}
+
+.badge-estado-pendiente {
+    background-color: #ffc107;
+    color: #333;
+}
+
+.badge-estado-en-preparacion {
+    background-color: #17a2b8;
+    color: white;
+}
+
+.badge-estado-entregado {
+    background-color: #28a745;
+    color: white;
+}
+
+.badge-estado-pagado {
+    background-color: #6c757d;
+    color: white;
+}
+
+/* =========================
+   ACCIONES
+========================= */
+.action-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.btn-view,
+.btn-edit,
+.btn-delete {
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-view {
+    background-color: #17a2b8;
+    color: white;
+}
+
+.btn-view:hover {
+    background-color: #138496;
+}
+
+.btn-edit {
+    background-color: #4a93e3;
+    color: white;
+}
+
+.btn-edit:hover {
+    background-color: #3a7dc4;
+}
+
+.btn-delete {
+    background-color: #dc3545;
+    color: white;
+}
+
+.btn-delete:hover {
+    background-color: #b02a37;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+/* Tablets y pantallas medianas */
+@media (max-width: 1024px) {
+
+    .content {
+        padding: 25px;
+    }
+
+    .content-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .btn-primary {
+        width: 100%;
+        text-align: center;
+    }
+
+    .filters-form {
+        gap: 15px;
+    }
+}
+
+/* MÓVILES */
+@media (max-width: 768px) {
+
+    /* Contenedor principal */
+    .content {
+        padding: 20px 15px;
+    }
+
+    /* Título */
+    .content-title {
+        font-size: 22px;
+    }
+
+    /* Filtros */
+    .filters-container {
+        padding: 18px;
+    }
+
+    .filters-form {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .filter-group {
+        width: 100%;
+    }
+
+    .btn-filter,
+    .btn-clear-filter {
+        width: 100%;
+        text-align: center;
+    }
+
+    /* Tabla → formato tarjetas */
+    .table-container {
+        box-shadow: none;
+        background: transparent;
+    }
+
+    .data-table thead {
+        display: none;
+    }
+
+    .data-table,
+    .data-table tbody,
+    .data-table tr,
+    .data-table td {
+        display: block;
+        width: 100%;
+    }
+
+    .data-table tr {
+        background-color: white;
+        margin-bottom: 18px;
+        border-radius: 12px;
+        padding: 15px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    }
+
+    .data-table td {
+        border: none;
+        padding: 8px 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 14px;
+    }
+
+    .data-table td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #28394c;
+    }
+
+    /* Acciones */
+    .action-buttons {
+        flex-direction: column;
+        gap: 8px;
+        margin-top: 10px;
+    }
+
+    .btn-view,
+    .btn-edit,
+    .btn-delete {
+        width: 100%;
+        text-align: center;
+    }
+}
+
+/* TELÉFONOS MUY PEQUEÑOS */
+@media (max-width: 480px) {
+
+    .content-title {
+        font-size: 20px;
+    }
+
+    .filters-container {
+        padding: 15px;
+    }
+
+    .data-table tr {
+        padding: 12px;
+    }
+
+    .data-table td {
+        font-size: 13px;
+    }
+}
+</style>
+{% endblock %}

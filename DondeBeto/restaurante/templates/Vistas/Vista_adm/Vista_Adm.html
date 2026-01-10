@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel Administrador - Donde Beto</title>
+    
     <link rel="stylesheet" href="{% static 'css/Vista_adm/admi.css' %}">
     <link rel="icon" href="{% static 'img/logoOficial.svg' %}" type="image/x-icon">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
@@ -25,11 +26,11 @@
                 <a href="{% url 'mesas' %}" class="menu-item">
                     <img src="{% static 'img/icon-mesas.svg' %}" alt=""> Mesas
                 </a>
-                <a href="{% url 'pedidos' %}" class="menu-item">
+                <a href="{% url 'pedidos_list' %}" class="menu-item">
                     <img src="{% static 'img/icon-pedidos.svg' %}" alt=""> Pedidos
                 </a>
-                 <a href="#" class="menu-item">
-                    <img src="{% static 'img/icon-facturas.svg' %}" alt=""> Facturas
+                 <a href="{% url 'pagos_list' %}" class="menu-item">
+                    <img src="{% static 'img/icon-facturas.svg' %}" alt=""> Pagos/Facturas
                 </a>
 
                 <a href="{% url 'clientes' %}" class="menu-item">
@@ -38,6 +39,10 @@
 
                 <a href="{% url 'usuarios' %}" class="menu-item">
                     <img src="{% static 'img/icon-clientes.svg' %}" alt=""> Trabajadores
+                </a>
+
+                 <a href="{% url 'vista_inventario' %}" class="menu-item">
+                    <img src="{% static 'img/inventario.svg' %}" alt=""> Inventario
                 </a>
 
                 <a href="{% url 'login' %}" class="menu-item logout">
@@ -67,10 +72,16 @@
             </header>
 
             <section class="content">
-                {% block content %}
-                <h2>Bienvenido al panel de administración</h2>
-                <p>Selecciona una opción del menú lateral para comenzar.</p>
-                {% endblock %}
+                   {% if request.resolver_match.url_name == 'vista_adm' %}
+            <h1>Bienvenido/a,   {{ usuario.nombre }}</h1>
+            <span class="text">
+                <br>
+            Este es el panel de administración, selecciona una opción del menú para comenzar.
+             </span>
+            {% endif %}
+
+            {% block content %}
+            {% endblock %}
             </section>
         </main>
     </div>

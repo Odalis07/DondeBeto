@@ -1,0 +1,138 @@
+{% extends 'Vistas/Vista_adm/Vista_Adm.html' %}
+
+{% block title %}Editar Pago{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <h2 class="content-title">Editar Pago - Pedido #{{ pedido.id }}</h2>
+</div>
+
+<div class="form-container-large">
+    <form method="POST">
+        {% csrf_token %}
+
+        <div class="form-section">
+            <h3 class="section-title">Datos del Pago</h3>
+
+            <div class="form-group">
+                <label>Método de Pago *</label>
+                <select name="metodo" class="form-control" required>
+                    <option value="">Seleccione un método</option>
+                    <option value="efectivo" {% if pago.metodo == 'efectivo' %}selected{% endif %}>Efectivo</option>
+                    <option value="tarjeta" {% if pago.metodo == 'tarjeta' %}selected{% endif %}>Tarjeta</option>
+                    <option value="transferencia" {% if pago.metodo == 'transferencia' %}selected{% endif %}>Transferencia</option>
+                </select>
+            </div>
+
+            {% if pedido.tipo_pedido == 'domicilio' %}
+            <div class="form-group">
+                <label>Dirección de Entrega *</label>
+                <input type="text" name="direccion_entrega" class="form-control"
+                       value="{{ pago.direccion_entrega }}" required>
+            </div>
+            {% endif %}
+
+            <div class="form-group">
+                <label>Teléfono de Contacto</label>
+                <input type="text" name="telefono_contacto" class="form-control"
+                       value="{{ pago.telefono_contacto }}">
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn-primary">Actualizar Pago</button>
+            <a href="{% url 'pedidos_list' %}" class="btn-secondary">Cancelar</a>
+        </div>
+    </form>
+</div>
+
+<style>
+.form-container-large {
+    background-color: white;
+    border-radius: 10px;
+    padding: 30px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    max-width: 600px;
+    margin: 0 auto 40px auto;
+}
+
+.form-section {
+    margin-bottom: 30px;
+    padding: 20px;
+    border: 2px solid #30465c;
+    border-radius: 10px;
+}
+
+.section-title {
+    font-size: 20px;
+    color: #333;
+    margin-bottom: 20px;
+    padding-bottom: 5px;
+    border-bottom: 2px solid #38516e;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.form-control {
+    padding: 12px;
+    border-radius: 6px;
+    border: 1.5px solid #ccc;
+    font-size: 14px;
+}
+
+.form-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: flex-start;
+    margin-top: 20px;
+}
+
+.btn-primary {
+    background-color: #4a93e3;
+    color: white;
+    padding: 12px 25px;
+    border-radius: 6px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background-color: #357fce;
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+    padding: 12px 25px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    border: none;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
+    transform: translateY(-1px);
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+    .form-container-large { padding: 20px; }
+    .btn-primary, .btn-secondary { width: 100%; text-align: center; }
+}
+</style>
+{% endblock %}

@@ -44,11 +44,32 @@ urlpatterns = [
     path('pedidos/<int:pedido_id>/pdf/', views.generar_pdf, name='pdf_pedido'),
     path('pedidos/<int:pedido_id>/detalles/modificar/', views.modificar_detalle_pedido, name='modificar_detalle_pedido'),
     path('pedido/guardar-ajax/', views.guardar_carrito_ajax, name='guardar_carrito_ajax'),
+
     path('home-Vista_cliente/pago', views.vistaPagos, name='pagos'),
     path('home-Vista_cliente/pago/<int:pedido_id>/', views.vistaPagos, name='pagos'),
     #endpoint de la confirmacion del pago 
-    path("pago/confirmar/<int:pedido_id>/", views.confirmar_pago, name="confirmar_pago")
+    path("pago/confirmar/<int:pedido_id>/", views.confirmar_pago, name="confirmar_pago"),
     
+
+    # Módulo pedidos
+    path('panel/pedidos/', views.pedidos_list, name='pedidos_list'),
+    path('panel/pedidos/nuevo/', views.pedidos_create, name='pedidos_create'),
+    path('panel/pedidos/ver/<int:id>/', views.pedidos_detail, name='pedidos_detail'),
+    path('panel/pedidos/editar/<int:id>/', views.pedidos_edit, name='pedidos_edit'),
+    path('panel/pedidos/eliminar/<int:id>/', views.pedidos_delete, name='pedidos_delete'),
+    path('panel/pedidos/cambiar-estado/<int:id>/', views.pedidos_cambiar_estado, name='pedidos_cambiar_estado'),
+    # Módulo pagos
+    path('pagos/', views.pagos_list, name='pagos_list'),
+    path('pedidos/<int:pedido_id>/pagar/', views.registrar_pago, name='registrar_pago'),
+    path('pagos/<int:pago_id>/editar/', views.editar_pago, name='editar_pago'),
+    path('pagos/<int:pago_id>/eliminar/', views.eliminar_pago, name='eliminar_pago'),
+    path('pagos/imprimir/<int:pago_id>/', views.imprimir_factura, name='imprimir_factura'),
+    # Módulo pagos - cliente
+    path('home-Vista_cliente/pago', views.vistaPagos, name='pagos'),
+    path('home-Vista_cliente/pago/<int:pedido_id>/', views.vistaPagos, name='pagos'),
+    # endpoint de la confirmacion del pago
+    path("pago/confirmar/<int:pedido_id>/", views.confirmar_pago, name="confirmar_pago"),
+    path("admin/inventario/", views.vista_inventario, name="vista_inventario"),
 
 
 ]

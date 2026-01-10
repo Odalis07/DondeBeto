@@ -1,6 +1,9 @@
+from decimal import Decimal
+
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
+from django.db.models import Q
 from django.http import JsonResponse, HttpResponseRedirect, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
@@ -9,8 +12,13 @@ from django.template.loader import get_template
 from xhtml2pdf import pisa
 from django.views.decorators.csrf import csrf_exempt
 import json
+from io import BytesIO
 from .factory import PedidoFactory
+
 from .models import Usuario, Producto, Categoria, Mesa, Pedido, Pago, DetallePedido
+
+from .models import Usuario, Producto, Categoria, Mesa, Pedido, DetallePedido, Pago
+
 from restaurante.repositories.producto_repository import ProductoRepository
 from restaurante.models import Categoria
 #para stripe
@@ -18,10 +26,12 @@ import stripe
 from django.conf import settings
 from django.shortcuts import get_object_or_404, render
 
+
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
 
+stripe.api_key = settings.STRIPE_SECRET_KEY
 
 # ---------------------------
 # COMPONENTE 1 - Usuario
@@ -341,14 +351,15 @@ def lista_clientes(request):
 def home_cliente(request):
     categoria_seleccionada = request.GET.get('categoria', 'Todos')
     productos = Producto.objects.all()
-
+    usuario_id = request.session.get('usuario_id')
+    usuario = Usuario.objects.get(id=usuario_id)
     if categoria_seleccionada != 'Todos':
         productos = productos.filter(categoria__nombre=categoria_seleccionada)
 
     context = {
         'productos': productos,
         'categoria_seleccionada': categoria_seleccionada,
-        'usuario': request.user,
+        'usuario': usuario,
     }
 
     return render(request, 'Vistas/Vista_cliente/homeCliente.html', context)
@@ -519,6 +530,12 @@ def actualizar_cliente(request, id):
 def eliminar_cliente(request, id):
     """Elimina un cliente por ID"""
     if request.method == 'POST':
+        tiene_pedidos = Pedido.objects.filter(usuario_id=id).exists()
+        if tiene_pedidos:
+            return JsonResponse({
+                'success': False,
+                'error': 'No se puede eliminar el usuario porque está relacionado con uno o más pedidos'
+            })
         try:
             cliente = get_object_or_404(Usuario, id=id)
             cliente.delete()
@@ -588,28 +605,39 @@ def registrar_producto(request):
 #SE USA REPOSITORY AQUI:
 
 def actualizar_producto(request, id):
-    repo = ProductoRepository()
-    producto = repo.obtener(id)
-    if not producto:
-        return JsonResponse({"error": "Producto no encontrado"}, status=404)
+    """Recibe datos JSON y actualiza un producto"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            producto = get_object_or_404(Producto, id=id)
 
-    if request.method == "POST":
-        data = json.loads(request.body.decode('utf-8'))
-        categoria = Categoria.objects.filter(nombre=data.get("categoria")).first()
+            producto.nombre = data.get('nombre', producto.nombre)
+            producto.descripcion = data.get('descripcion', producto.descripcion)
+            producto.precio = data.get('precio', producto.precio)
+            producto.categoria_id = data.get('categoria_id', producto.categoria_id)
 
-        repo.actualizar(producto, {
-            "nombre": data.get("nombre"),
-            "descripcion": data.get("descripcion"),
-            "precio": data.get("precio"),
-            "categoria": categoria,
-        })
+            # Si manejas imagenes via MEDIA
+            if 'imagen' in data and data['imagen']:
+                producto.imagen = data['imagen']  # Asegúrate de que sea la ruta correcta
 
-        return JsonResponse({"success": True})
+            producto.save()
+            return JsonResponse({'success': True, 'message': 'Producto actualizado correctamente'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+
+    return JsonResponse({'success': False, 'error': 'Método no permitido'})
 
 @csrf_exempt
 def eliminar_producto(request, id):
     """Elimina un producto por ID"""
     if request.method == 'POST':
+        tiene_pedidos = DetallePedido.objects.filter(producto=id).exists()
+        if tiene_pedidos:
+            return JsonResponse({
+                'success': False,
+                'error': 'No se puede eliminar el producto porque está relacionado con uno o más pedidos'
+            })
+
         try:
             producto = get_object_or_404(Producto, id=id)
             producto.delete()
@@ -762,7 +790,7 @@ def pedidos(request):
 # ---- REGISTRAR PEDIDO ----
 
 
-#AQUI SE USA EL FACTORY 
+#AQUI SE USA EL FACTORY
 
 def registrar_pedido(request):
     if request.method == 'POST':
@@ -1033,6 +1061,7 @@ def guardar_carrito_ajax(request):
         # Capturar errores del Factory (ej. Producto no encontrado)
         return JsonResponse({'success': False, 'error': f'Error interno al procesar el pedido: {str(e)}'}, status=500)
 
+
    
 def vistaPagos(request, pedido_id):
     pedido = get_object_or_404(Pedido, id=pedido_id)
@@ -1041,6 +1070,16 @@ def vistaPagos(request, pedido_id):
     total = sum(d.subtotal for d in detalles)
 
      # 🔐 Stripe PaymentIntent
+
+
+def vistaPagos(request, pedido_id):
+    pedido = get_object_or_404(Pedido, id=pedido_id)
+
+    detalles = DetallePedido.objects.filter(pedido=pedido).select_related("producto")
+    total = sum(d.subtotal for d in detalles)
+
+    # 🔐 Stripe PaymentIntent
+
     intent = stripe.PaymentIntent.create(
         amount=int(total * 100),  # Stripe usa centavos
         currency="usd",
@@ -1048,6 +1087,7 @@ def vistaPagos(request, pedido_id):
             "pedido_id": pedido.id
         }
     )
+
 
 
     carrito= [ 
@@ -1060,6 +1100,17 @@ def vistaPagos(request, pedido_id):
     for d in detalles
       ]
 
+    carrito = [
+        {
+            "nombre": d.producto.nombre,
+            "cantidad": d.cantidad,
+            "subtotal": float(d.subtotal)
+
+        }
+        for d in detalles
+    ]
+
+
     contexto = {
         "pedido": pedido,
         "detalles": detalles,
@@ -1069,18 +1120,21 @@ def vistaPagos(request, pedido_id):
         "client_secret": intent.client_secret,
         "STRIPE_PUBLIC_KEY": settings.STRIPE_PUBLIC_KEY,
     }
+
     
+
 
     return render(request, "Vistas/Vista_cliente/pago.html", contexto)
 
 
 
+
+
+
 @csrf_exempt
 def confirmar_pago(request, pedido_id):
-   
-
     if request.method != "POST":
-       
+
         return JsonResponse({"error": "Método no permitido"}, status=405)
 
     pedido = get_object_or_404(Pedido, id=pedido_id)
@@ -1093,11 +1147,18 @@ def confirmar_pago(request, pedido_id):
         detalles = DetallePedido.objects.filter(pedido=pedido)
         total = 0
         for d in detalles:
+
           total += d.subtotal
 
       
     except Exception as e:
       
+
+            total += d.subtotal
+
+
+    except Exception as e:
+
 
         return JsonResponse({
             "error": f"Error calculando total: {str(e)}"
@@ -1113,10 +1174,468 @@ def confirmar_pago(request, pedido_id):
             estado="completado"
         )
     except Exception as e:
+
         
+
+
+
         return JsonResponse({
             "error": f"Error guardando pago: {str(e)}"
         }, status=500)
 
     return JsonResponse({"success": True})
 
+
+
+
+
+
+#ESTO ES NUEVO EL MODULO DE PEDIDO SE HA MODIFICADO POR LO DE PAGO
+
+
+
+
+def pedidos_list(request):
+
+    # Verificar sesión
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id:
+        return redirect('login')
+
+    usuario = Usuario.objects.get(id=usuario_id)
+    if usuario.rol.strip().lower() != 'administrador':
+        return redirect('login')
+
+    # Filtros
+    estado_filtro = request.GET.get('estado', '')
+    tipo_filtro = request.GET.get('tipo', '')
+    buscar = request.GET.get('buscar', '')
+
+    pedidos = Pedido.objects.select_related('usuario', 'mesa').prefetch_related('detalles__producto').order_by('-fecha')
+
+    if estado_filtro:
+        pedidos = pedidos.filter(estado=estado_filtro)
+
+    if tipo_filtro:
+        pedidos = pedidos.filter(tipo_pedido=tipo_filtro)
+
+    if buscar:
+        pedidos = pedidos.filter(
+            Q(usuario__nombre__icontains=buscar) |
+            Q(usuario__apellido__icontains=buscar) |
+            Q(id__icontains=buscar)
+        )
+
+    # Calcular total de cada pedido
+    pedidos_con_total = []
+    for pedido in pedidos:
+        total = sum(detalle.subtotal for detalle in pedido.detalles.all())
+        pedidos_con_total.append({
+            'pedido': pedido,
+            'total': total
+        })
+
+    return render(request, 'C2_Pedido/pedidos_list.html', {
+        'pedidos_con_total': pedidos_con_total,
+        'usuario': usuario,
+        'estado_filtro': estado_filtro,
+        'tipo_filtro': tipo_filtro,
+        'buscar': buscar
+    })
+
+
+def pedidos_create(request):
+    """Crear nuevo pedido"""
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id:
+        return redirect('login')
+
+    usuario = Usuario.objects.get(id=usuario_id)
+    if usuario.rol.strip().lower() != 'administrador':
+        return redirect('login')
+
+    if request.method == 'POST':
+        cliente_id = request.POST.get('cliente_id')
+
+        # RESTRICCIÓN: el usuario no puede tener pedidos pendientes
+        pedidos_pendientes = Pedido.objects.filter(usuario_id=cliente_id, estado='pendiente')
+        if pedidos_pendientes.exists():
+            alert_message = 'Este cliente ya tiene un pedido pendiente. No puede crear otro hasta que se pague.'
+            return render(request, 'C2_Pedido/pedidos_form.html', {
+                'usuario': usuario,
+                'clientes': Usuario.objects.all(),
+                'productos': Producto.objects.all(),
+                'mesas_disponibles': Mesa.objects.filter(estado='disponible'),
+                'alert_message': alert_message
+            })
+
+        try:
+            # Datos del pedido
+            tipo_pedido = request.POST.get('tipo_pedido')
+            mesa_id = request.POST.get('mesa_id')
+            estado = request.POST.get('estado', 'pendiente')
+
+            # Validar cliente
+            if not Usuario.objects.filter(id=cliente_id).exists():
+                messages.error(request, 'Cliente no encontrado')
+                return redirect('pedidos_create')
+
+            # Crear pedido
+            pedido = Pedido(
+                usuario_id=cliente_id,
+                tipo_pedido=tipo_pedido,
+                estado=estado
+            )
+
+            # Asignar mesa si es tipo local
+            if tipo_pedido == 'local' and mesa_id:
+                pedido.mesa_id = mesa_id
+                # Cambiar estado de la mesa a ocupada
+                mesa = Mesa.objects.get(id=mesa_id)
+                mesa.estado = 'ocupada'
+                mesa.save()
+
+            pedido.save()
+
+            # Agregar productos (detalles del pedido)
+            productos_ids = request.POST.getlist('producto_id[]')
+            cantidades = request.POST.getlist('cantidad[]')
+
+            if not productos_ids:
+                messages.error(request, 'Debe agregar al menos un producto al pedido')
+                pedido.delete()
+                return redirect('pedidos_create')
+
+            for producto_id, cantidad in zip(productos_ids, cantidades):
+                if producto_id and cantidad:
+                    producto = Producto.objects.get(id=producto_id)
+                    DetallePedido.objects.create(
+                        pedido=pedido,
+                        producto=producto,
+                        cantidad=int(cantidad),
+                        subtotal=producto.precio * int(cantidad)
+                    )
+
+            messages.success(request, f'Pedido #{pedido.id} creado exitosamente')
+            return redirect('pedidos_detail', id=pedido.id)
+
+        except Exception as e:
+            messages.error(request, f'Error al crear pedido: {str(e)}')
+
+    clientes = Usuario.objects.all()
+    productos = Producto.objects.all()
+    mesas_disponibles = Mesa.objects.filter(estado='disponible')
+
+    return render(request, 'C2_Pedido/pedidos_form.html', {
+        'usuario': usuario,
+        'clientes': clientes,
+        'productos': productos,
+        'mesas_disponibles': mesas_disponibles
+    })
+
+def pedidos_detail(request, id):
+
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id:
+        return redirect('login')
+
+    usuario = Usuario.objects.get(id=usuario_id)
+    if usuario.rol.strip().lower() != 'administrador':
+        return redirect('login')
+
+    pedido = get_object_or_404(Pedido.objects.select_related('usuario', 'mesa'), id=id)
+    detalles = pedido.detalles.select_related('producto').all()
+
+    # Calcular total
+    total = sum(detalle.subtotal for detalle in detalles)
+
+    # Verificar si tiene pago
+    try:
+        pago = Pago.objects.get(pedido=pedido)
+    except Pago.DoesNotExist:
+        pago = None
+
+    return render(request, 'C2_Pedido/pedidos_detail.html', {
+        'usuario': usuario,
+        'pedido': pedido,
+        'detalles': detalles,
+        'total': total,
+        'pago': pago
+    })
+
+
+def pedidos_edit(request, id):
+    """Editar pedido existente"""
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id:
+        return redirect('login')
+
+    usuario = Usuario.objects.get(id=usuario_id)
+    if usuario.rol.strip().lower() != 'administrador':
+        return redirect('login')
+
+    pedido = get_object_or_404(Pedido, id=id)
+    detalles_actuales = pedido.detalles.all()
+
+    if request.method == 'POST':
+        try:
+            # Actualizar datos básicos
+            tipo_pedido = request.POST.get('tipo_pedido')
+            mesa_id = request.POST.get('mesa_id')
+            estado = request.POST.get('estado')
+
+            # Liberar mesa anterior si existía
+            if pedido.mesa:
+                mesa_anterior = pedido.mesa
+                mesa_anterior.estado = 'disponible'
+                mesa_anterior.save()
+
+            pedido.tipo_pedido = tipo_pedido
+            pedido.estado = estado
+
+            # Asignar nueva mesa si es necesario
+            if tipo_pedido == 'local' and mesa_id:
+                pedido.mesa_id = mesa_id
+                mesa = Mesa.objects.get(id=mesa_id)
+                mesa.estado = 'ocupada'
+                mesa.save()
+            else:
+                pedido.mesa = None
+
+            pedido.save()
+
+            # Eliminar detalles antiguos
+            pedido.detalles.all().delete()
+
+            # Agregar nuevos productos
+            productos_ids = request.POST.getlist('producto_id[]')
+            cantidades = request.POST.getlist('cantidad[]')
+
+            for producto_id, cantidad in zip(productos_ids, cantidades):
+                if producto_id and cantidad:
+                    producto = Producto.objects.get(id=producto_id)
+                    DetallePedido.objects.create(
+                        pedido=pedido,
+                        producto=producto,
+                        cantidad=int(cantidad),
+                        subtotal=producto.precio * int(cantidad)
+                    )
+
+            messages.success(request, f'Pedido #{pedido.id} actualizado exitosamente')
+            return redirect('pedidos_detail', id=pedido.id)
+
+        except Exception as e:
+            messages.error(request, f'Error al actualizar pedido: {str(e)}')
+
+    clientes = Usuario.objects.all()
+    productos = Producto.objects.all()
+    mesas_disponibles = Mesa.objects.filter(estado='disponible')
+
+    return render(request, 'C2_Pedido/pedidos_form.html', {
+        'usuario': usuario,
+        'pedido': pedido,
+        'detalles_actuales': detalles_actuales,
+        'clientes': clientes,
+        'productos': productos,
+        'mesas_disponibles': mesas_disponibles
+    })
+
+
+def pedidos_delete(request, id):
+    """Eliminar pedido"""
+    usuario_id = request.session.get('usuario_id')
+
+    if not usuario_id:
+        return redirect('login')
+
+    usuario = Usuario.objects.get(id=usuario_id)
+    if usuario.rol.strip().lower() != 'administrador':
+        return redirect('login')
+
+    # Obtener el pedido (antes de intentar eliminarlo)
+    pedido = get_object_or_404(Pedido, id=id)
+
+    # RESTRICCIÓN: Verificar si el pedido tiene un pago registrado antes de eliminar
+    if hasattr(pedido, 'pago'):
+        messages.error(request, 'No se puede eliminar este pedido porque ya tiene un pago registrado.')
+        return redirect('pedidos_list')
+
+    if request.method == 'POST':
+        try:
+            # Liberar mesa si está ocupada
+            if pedido.mesa:
+                mesa = pedido.mesa
+                mesa.estado = 'disponible'
+                mesa.save()
+
+            pedido_id = pedido.id
+            pedido.delete()
+            messages.success(request, f'Pedido #{pedido_id} eliminado exitosamente')
+        except Exception as e:
+            messages.error(request, f'Error al eliminar pedido: {str(e)}')
+
+    return redirect('pedidos_list')
+
+
+def pedidos_cambiar_estado(request, id):
+    """Cambiar estado del pedido (AJAX)"""
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id:
+        return redirect('login')
+
+    if request.method == 'POST':
+        try:
+            pedido = get_object_or_404(Pedido, id=id)
+            nuevo_estado = request.POST.get('estado')
+
+            pedido.estado = nuevo_estado
+            pedido.save()
+
+            # Si el estado es "entregado" y la mesa está ocupada, liberarla
+            if nuevo_estado == 'entregado' and pedido.mesa:
+                mesa = pedido.mesa
+                mesa.estado = 'disponible'
+                mesa.save()
+
+            messages.success(request, f'Estado del pedido #{pedido.id} cambiado a "{nuevo_estado}"')
+        except Exception as e:
+            messages.error(request, f'Error al cambiar estado: {str(e)}')
+
+    return redirect('pedidos_detail', id=id)
+# ---------------------------
+# PAGO - VISTA
+# ---------------------------
+def pagos_list(request):
+    # Query inicial: todos los pagos ordenados por fecha descendente
+    pagos = Pago.objects.select_related('pedido', 'pedido__usuario').order_by('-fecha_pago')
+
+    # FILTROS desde GET
+    cliente = request.GET.get('cliente', '').strip()
+    metodo = request.GET.get('metodo', '').strip()
+    fecha_inicio = request.GET.get('fecha_inicio', '').strip()
+    fecha_fin = request.GET.get('fecha_fin', '').strip()
+
+    # Filtrar por nombre o apellido del cliente
+    if cliente:
+        pagos = pagos.filter(
+            pedido__usuario__nombre__icontains=cliente
+        ) | pagos.filter(
+            pedido__usuario__apellido__icontains=cliente
+        )
+
+    # Filtrar por método de pago
+    if metodo:
+        pagos = pagos.filter(metodo=metodo)
+
+    # Filtrar por rango de fechas
+    if fecha_inicio:
+        pagos = pagos.filter(fecha_pago__gte=fecha_inicio)
+    if fecha_fin:
+        pagos = pagos.filter(fecha_pago__lte=fecha_fin)
+
+    return render(request, 'C2_Pedido/pagos_list.html', {
+        'pagos': pagos
+    })
+
+def registrar_pago(request, pedido_id):
+    pedido = get_object_or_404(Pedido, id=pedido_id)
+
+    if hasattr(pedido, 'pago'):
+        messages.warning(request, 'Este pedido ya tiene un pago registrado.')
+        return redirect('pagos_list')
+
+    total = sum(d.subtotal for d in pedido.detalles.all())
+
+    if request.method == 'POST':
+        Pago.objects.create(
+            pedido=pedido,
+            metodo=request.POST['metodo'],
+            monto=Decimal(total),
+            direccion_entrega=request.POST.get('direccion_entrega'),
+            telefono_contacto=request.POST.get('telefono_contacto')
+        )
+
+        pedido.estado = 'pagado'
+        pedido.save()
+
+        messages.success(request, 'Pago registrado correctamente.')
+        return redirect('pagos_list')
+
+    return render(request, 'C2_Pedido/pago_form.html', {
+        'pedido': pedido,
+        'total': total
+    })
+
+
+def editar_pago(request, pago_id):
+    pago = get_object_or_404(Pago, id=pago_id)
+    pedido = pago.pedido
+
+    if request.method == 'POST':
+        pago.metodo = request.POST['metodo']
+        pago.direccion_entrega = request.POST.get('direccion_entrega')
+        pago.telefono_contacto = request.POST.get('telefono_contacto')
+        pago.save()
+
+        messages.success(request, 'Pago actualizado correctamente.')
+        return redirect('pagos_list')
+
+    return render(request, 'C2_Pedido/pago_edit.html', {
+        'pago': pago,
+        'pedido': pedido
+    })
+
+
+def eliminar_pago(request, pago_id):
+    pago = get_object_or_404(Pago, id=pago_id)
+    pedido = pago.pedido
+
+    if request.method == 'POST':
+        if hasattr(pedido, 'pago'):
+            messages.error(request, 'No se puede eliminar este pedido porque ya tiene un pago registrado.')
+            return redirect('pedidos_list')
+        pago.delete()
+        pedido.estado = 'pendiente'
+        pedido.save()
+
+        messages.success(request, 'Pago eliminado correctamente.')
+        return redirect('pagos_list')
+
+    return render(request, 'C2_Pedido/pago_delete.html', {
+        'pago': pago
+    })
+
+
+def imprimir_factura(request, pago_id):
+    pago = get_object_or_404(Pago, id=pago_id)
+
+    # Calcular subtotal sumando los detalles
+    subtotal = sum(detalle.subtotal for detalle in pago.pedido.detalles.all())
+
+    # Contexto para el template
+    context = {
+        'pago': pago,
+        'subtotal': subtotal,
+    }
+
+    # Cargar el template como string
+    template = get_template('C2_Pedido/factura_pdf.html')
+    html = template.render(context)
+
+    # Crear respuesta PDF
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'filename="Factura_{pago.id}.pdf"'
+
+    # Generar PDF
+    pisa_status = pisa.CreatePDF(
+        src=html,
+        dest=response
+    )
+
+    if pisa_status.err:
+        return HttpResponse('Error al generar el PDF: %s' % pisa_status.err)
+
+    return response
+def vista_inventario(request):
+
+    return render(request, "Vistas/Vista_adm/inventario.html")

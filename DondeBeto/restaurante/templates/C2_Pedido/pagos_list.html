@@ -1,0 +1,188 @@
+{% extends 'Vistas/Vista_adm/Vista_Adm.html' %}
+
+{% block title %}Pagos{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <h2 class="content-title">Pagos / Facturas</h2>
+</div>
+
+<div class="info-text">
+    Para registrar un pago, primero debes ir a un pedido pendiente.
+</div>
+
+<!-- FORMULARIO DE FILTROS -->
+<form method="GET" class="filter-form">
+    <input type="text" name="cliente" placeholder="Cliente" value="{{ request.GET.cliente }}">
+    <select name="metodo">
+        <option value="">Todos los métodos</option>
+        <option value="efectivo" {% if request.GET.metodo == 'efectivo' %}selected{% endif %}>Efectivo</option>
+        <option value="tarjeta" {% if request.GET.metodo == 'tarjeta' %}selected{% endif %}>Tarjeta</option>
+        <option value="transferencia" {% if request.GET.metodo == 'transferencia' %}selected{% endif %}>Transferencia</option>
+    </select>
+    <input type="date" name="fecha_inicio" value="{{ request.GET.fecha_inicio }}">
+    <input type="date" name="fecha_fin" value="{{ request.GET.fecha_fin }}">
+    <button type="submit" class="btn-filtrar">Filtrar</button>
+    <a href="{% url 'pagos_list' %}" class="btn-limpiar">Limpiar</a>
+</form>
+
+<table class="pagos-table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Pedido</th>
+            <th>Cliente</th>
+            <th>Tipo de Pedido</th>
+            <th>Método</th>
+            <th>Monto</th>
+            <th>Fecha</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for pago in pagos %}
+        <tr>
+            <td data-label="ID">{{ pago.id }}</td>
+            <td data-label="Pedido">#{{ pago.pedido.id }}</td>
+            <td data-label="Cliente">{{ pago.pedido.usuario.nombre }} {{ pago.pedido.usuario.apellido }}</td>
+            <td data-label="Tipo de Pedido">{{ pago.pedido.get_tipo_pedido_display }}</td>
+            <td data-label="Método" class="metodo">{{ pago.metodo|capfirst }}</td>
+            <td data-label="Monto" class="monto">${{ pago.monto|floatformat:2 }}</td>
+            <td data-label="Fecha">{{ pago.fecha_pago|date:"d/m/Y H:i" }}</td>
+            <td data-label="Acciones" class="acciones">
+                <a href="{% url 'editar_pago' pago.id %}" class="btn-editar">Editar</a>
+                <a href="{% url 'eliminar_pago' pago.id %}" class="btn-eliminar">Eliminar</a>
+                <a href="{% url 'imprimir_factura' pago.id %}" class="btn-imprimir" target="_blank">Imprimir Factura</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="7" class="no-registros">No hay pagos registrados.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<style>
+    .btn-imprimir {
+    background-color: #28a745;
+    color: white;
+}
+
+.btn-imprimir:hover {
+    background-color: #218838;
+    transform: translateY(-1px);
+}
+/* HEADER */
+.content-header { margin-bottom: 20px; }
+.content-title { font-size: 22px; color: #28394c; font-weight: 700; margin: 0; }
+
+/* INFO TEXT */
+.info-text {
+    font-size: 0.95rem;
+    margin-bottom: 20px;
+    color: #31708f;
+    background-color: #e3f2fd;
+    padding: 12px 15px;
+    border-radius: 6px;
+    border: 1px solid #90caf9;
+}
+
+/* FILTROS */
+.filter-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 15px;
+    align-items: center;
+}
+
+.filter-form input,
+.filter-form select {
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #90caf9;
+    font-size: 0.95rem;
+    min-width: 150px;
+}
+
+.btn-filtrar {
+    background-color: #4a93e3;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.btn-filtrar:hover {
+    background-color: #357fce;
+    transform: translateY(-1px);
+}
+
+.btn-limpiar {
+    background-color: #e3efff;
+    color: #4a93e3;
+    padding: 8px 16px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    border: 1px solid #4a93e3;
+    transition: all 0.25s ease;
+}
+
+.btn-limpiar:hover {
+    background-color: #d0e5ff;
+}
+
+/* TABLA */
+.pagos-table { width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; }
+.pagos-table th, .pagos-table td { border: 1px solid #d1dbe6; padding: 10px 12px; text-align: center; font-size: 0.95rem; }
+.pagos-table th { background-color: #4a93e3; color: white; font-weight: 600; }
+.pagos-table tr:nth-child(even) { background-color: #f5f9ff; }
+.pagos-table tr:hover { background-color: #e1efff; transition: background-color 0.3s ease; }
+
+.metodo { font-weight: 600; color: #0d6efd; text-transform: capitalize; }
+.monto { font-weight: 600; color: #28a745; }
+
+/* ACCIONES */
+.acciones a {
+    text-decoration: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    margin: 2px;
+    font-size: 0.85rem;
+    display: inline-block;
+    font-weight: 600;
+    transition: all 0.25s ease;
+    color: white;
+}
+
+.btn-editar { background-color: #4a93e3; }
+.btn-eliminar { background-color: #dc3545; }
+
+.btn-editar:hover { background-color: #357fce; transform: translateY(-1px); }
+.btn-eliminar:hover { background-color: #b02a37; transform: translateY(-1px); }
+
+/* SIN REGISTROS */
+.no-registros { text-align: center; color: #888; font-style: italic; padding: 15px 0; }
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+    .pagos-table th, .pagos-table td { font-size: 0.85rem; padding: 8px 10px; }
+    .acciones a { padding: 5px 8px; font-size: 0.8rem; }
+    .filter-form { flex-direction: column; align-items: flex-start; gap: 10px; }
+}
+
+@media (max-width: 480px) {
+    .pagos-table, .pagos-table tbody, .pagos-table tr, .pagos-table td, .pagos-table th { display: block; width: 100%; }
+    .pagos-table thead { display: none; }
+    .pagos-table tr { margin-bottom: 15px; background-color: #fff; border-radius: 8px; box-shadow: 0 4px 10px rgba(40, 57, 76, 0.08); padding: 12px; }
+    .pagos-table td { text-align: right; padding: 6px 12px; position: relative; }
+    .pagos-table td::before { content: attr(data-label); position: absolute; left: 12px; font-weight: 600; color: #4a93e3; text-transform: capitalize; }
+    .acciones a { display: block; margin: 5px 0; }
+}
+</style>
+{% endblock %}

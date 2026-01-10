@@ -39,6 +39,9 @@
       <a href="{% url 'usuarios' %}" class="menu-item">
           <img src="{% static 'img/icon-clientes.svg' %}" alt=""> Trabajadores
       </a>
+      <a href="{% url 'vista_inventario' %}" class="menu-item">
+                    <img src="{% static 'img/inventario.svg' %}" alt=""> Inventario
+                </a>
 
   {% elif rol == "mesero" %}
       <a href="{% url 'productos' %}" class="menu-item">
@@ -47,12 +50,12 @@
       <a href="{% url 'mesas' %}" class="menu-item">
           <img src="{% static 'img/icon-mesas.svg' %}" alt=""> Mesas
       </a>
-      <a href="{% url 'pedidos' %}" class="menu-item">
-          <img src="{% static 'img/icon-pedidos.svg' %}" alt=""> Pedidos
-      </a>
-      <a href="#" class="menu-item">
-          <img src="{% static 'img/icon-facturas.svg' %}" alt=""> Facturas
-      </a>
+                <a href="{% url 'pedidos_list' %}" class="menu-item">
+                    <img src="{% static 'img/icon-pedidos.svg' %}" alt=""> Pedidos
+                </a>
+                 <a href="{% url 'pagos_list' %}" class="menu-item">
+                    <img src="{% static 'img/icon-facturas.svg' %}" alt=""> Pagos/Facturas
+                </a>
       <a href="{% url 'perfil_mesero' %}" class="menu-item">
           <img src="{% static 'img/icon-clientes.svg' %}" alt=""> Perfil
       </a>
@@ -122,6 +125,7 @@
        data-nombre="{{ producto.nombre }}"
        data-descripcion="{{ producto.descripcion }}"
        data-precio="{{ producto.precio }}"
+       data-categoria-id="{{ producto.categoria.id }}"
        data-categoria="{{ producto.categoria.nombre }}"
        data-imagen="{% if producto.imagen %}{{ producto.imagen.url }}{% endif %}">
     <img src="{% if producto.imagen %}{{ producto.imagen.url }}{% else %}{% static 'img/default-product.svg' %}{% endif %}" alt="Imagen producto">
