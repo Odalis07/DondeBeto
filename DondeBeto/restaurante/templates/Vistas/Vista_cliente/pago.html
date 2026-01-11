@@ -1,10 +1,5 @@
-<<<<<<< HEAD
 {% load static %}
 <!DOCTYPE html>
-=======
-<!DOCTYPE html>
-{% load static %}
->>>>>>> ff3edfd494b0423c2f31751de34246827d08e287
 <html lang="es">
 
 <head>
@@ -13,21 +8,16 @@
 <link rel="stylesheet" href="{% static 'css/Vista_cliente/pago.css' %}">
 <title>Pasarela de Pago</title>
 
-<style>
 
-
-</style>
 </head>
 
 <body>
 
 <!-- NAV -->
 <header class="nav">
-    <div class="logo">
-        🦅 BETO
-    </div>
-
-
+  <div class="logo">
+    🦅 BETO
+  </div>
 </header>
 
 <!-- PAYMENT CARD -->
@@ -57,65 +47,80 @@
         <!-- Métodos de pago -->
         <p class="section-title">Método de Pago</p>
         <div class="payment-method">
-    <label class="method">
-        <input type="radio" name="metodo" value="tarjeta">
-        <span>Tarjeta</span>
-    </label>
+            <label class="method">
+                <input type="radio" name="metodo" value="tarjeta">
+                <span>Tarjeta</span>
+            </label>
 
-    <label class="method">
-        <input type="radio" name="metodo" value="efectivo">
-        <span>Efectivo</span>
-    </label>
+            <label class="method">
+                <input type="radio" name="metodo" value="efectivo">
+                <span>Efectivo</span>
+            </label>
 
-    <label class="method">
-        <input type="radio" name="metodo" value="transferencia">
-        <span>Transferencia</span>
-    </label>
-</div>
+            <label class="method">
+                <input type="radio" name="metodo" value="transferencia">
+                <span>Transferencia</span>
+            </label>
+        </div>
 
         <!-- Datos -->
         <p class="section-title">Nombre: </p>
         <input id="nombre" type="text" placeholder="Ingrese su nombre completo">
 
-          <p class="section-title">Direccion: </p>
-        <input id="direccion"  type="text" placeholder="ingrese su direccion">
+        <p class="section-title">Direccion: </p>
+        <input id="direccion" type="text" placeholder="ingrese su direccion">
 
-          <p class="section-title">Numero de teléfono: </p>
-        <input id="telefono"type="number" placeholder="ingrese su número de telefono">
+        <p class="section-title">Numero de teléfono: </p>
+        <input id="telefono" type="number" placeholder="ingrese su número de telefono">
 
+        <!-- Botones -->
+        <form id="payment-form">
+            <div id="contenedor-form"></div>
 
-        <!-- Botón -->
-       <form id="payment-form">
-    <!-- TODO tu contenido actual -->
-    <div id="contenedor-form">
+            <button class="btn-pagar" type="submit">
+                Confirmar y pagar
+            </button>
+        </form>
 
+        <!-- Botón de cancelar pedido -->
+        <button class="btn-cancelar-pedido" type="button" id="btn-cancelar-pedido">
+            ✕ Cancelar Pedido
+        </button>
     </div>
 
-    <button class="btn-pagar" type="submit">
-        Confirmar y pagar
-    </button>
-</form>
-
-    </div>
     <div class="mini-carrito">
         <h3>Tu lista de compras</h3>
         <ul>
             {% for item in carrito %}
-
             <li> 
-
-                -{{item.nombre}}
+                - {{item.nombre}}
                 x{{item.cantidad}}
                 ${{item.subtotal}}
-
             </li>
             {% endfor %}
         </ul>
-
     </div>
-
 </div>
-<!--arlin: scripts para que funciones stripe-->
+
+<!-- Modal de Confirmación de Cancelación -->
+<dialog id="modal-cancelar">
+    <div class="modal-content-cancel">
+        <div class="modal-icon">⚠️</div>
+        <h2>¿Cancelar Pedido?</h2>
+        <p>¿Estás seguro de que deseas cancelar este pedido? Esta acción no se puede deshacer.</p>
+        
+        <div class="modal-buttons-cancel">
+            <button type="button" class="btn-volver" id="btn-volver-modal">
+                No, volver
+            </button>
+            <button type="button" class="btn-confirmar-cancelar" id="btn-confirmar-cancelar">
+                Sí, cancelar pedido
+            </button>
+        </div>
+    </div>
+</dialog>
+
+<!-- Scripts para Stripe -->
 <script src="https://js.stripe.com/v3/"></script>
 
 <script>
@@ -127,6 +132,40 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let metodoSeleccionado = null;
   let card = null;
+
+  // ===============================
+  // MODAL DE CANCELACIÓN
+  // ===============================
+  const modalCancelar = document.getElementById('modal-cancelar');
+  const btnCancelarPedido = document.getElementById('btn-cancelar-pedido');
+  const btnVolverModal = document.getElementById('btn-volver-modal');
+  const btnConfirmarCancelar = document.getElementById('btn-confirmar-cancelar');
+
+  // Abrir modal al hacer clic en "Cancelar Pedido"
+  btnCancelarPedido.addEventListener('click', () => {
+    modalCancelar.showModal();
+  });
+
+  // Cerrar modal al hacer clic en "No, volver"
+  btnVolverModal.addEventListener('click', () => {
+    modalCancelar.close();
+  });
+
+  // Confirmar cancelación y redirigir
+  btnConfirmarCancelar.addEventListener('click', () => {
+    // Aquí puedes agregar tu URL de redirección
+    window.location.href = "{% url 'home_cliente' %}"; // Cambia 'home_cliente' por el nombre de tu URL
+    
+    // O si prefieres una URL hardcodeada:
+    // window.location.href = "/home-Vista_cliente/";
+  });
+
+  // Cerrar modal al hacer clic fuera de él
+  modalCancelar.addEventListener('click', (e) => {
+    if (e.target === modalCancelar) {
+      modalCancelar.close();
+    }
+  });
 
   // ===============================
   // SELECCIÓN DE MÉTODO DE PAGO
@@ -167,34 +206,35 @@ document.addEventListener("DOMContentLoaded", () => {
   // ===============================
   // ENVÍO DE DATOS AL BACKEND
   // ===============================
-async function enviarDatosPago(extraData = {}) {
-  const payload = {
-    nombre: document.getElementById("nombre").value.trim(),
-    direccion: document.getElementById("direccion").value.trim(),
-    telefono: document.getElementById("telefono").value.trim(),
-    metodo: metodoSeleccionado,
-    ...extraData
-  };
+  async function enviarDatosPago(extraData = {}) {
+    const payload = {
+      nombre: document.getElementById("nombre").value.trim(),
+      direccion: document.getElementById("direccion").value.trim(),
+      telefono: document.getElementById("telefono").value.trim(),
+      metodo: metodoSeleccionado,
+      ...extraData
+    };
 
-  const response = await fetch("{% url 'confirmar_pago' pedido.id %}", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-CSRFToken": "{{ csrf_token }}"
-    },
-    body: JSON.stringify(payload)
-  });
+    const response = await fetch("{% url 'confirmar_pago' pedido.id %}", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": "{{ csrf_token }}"
+      },
+      body: JSON.stringify(payload)
+    });
 
-  const data = await response.json();
+    const data = await response.json();
 
-  if (!response.ok) {
-    alert("ERROR BACKEND:\n" + (data.error || JSON.stringify(data)));
-  } else {
-    alert("RESPUESTA BACKEND:\n" + JSON.stringify(data));
+    if (!response.ok) {
+      alert("ERROR BACKEND:\n" + (data.error || JSON.stringify(data)));
+    } else {
+      alert("RESPUESTA BACKEND:\n" + JSON.stringify(data));
+    }
+
+    return data;
   }
 
-  return data;
-}
   // ===============================
   // PAGO CON TARJETA (STRIPE)
   // ===============================
@@ -257,8 +297,6 @@ async function enviarDatosPago(extraData = {}) {
 
 });
 </script>
-
-
 
 </body>
 </html>

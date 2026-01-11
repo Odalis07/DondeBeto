@@ -20,6 +20,10 @@
            </div>
 
             <nav class="menu">
+                <a href="{% url 'vista_inventario' %}" class="menu-item">
+                    <img src="{% static 'img/icon-productos.svg' %}" alt=""> Inventarios
+                </a>
+
                   <a href="{% url 'productos' %}" class="menu-item">
                     <img src="{% static 'img/icon-productos.svg' %}" alt=""> Productos
                 </a>
@@ -41,9 +45,7 @@
                     <img src="{% static 'img/icon-clientes.svg' %}" alt=""> Trabajadores
                 </a>
 
-                 <a href="{% url 'vista_inventario' %}" class="menu-item">
-                    <img src="{% static 'img/inventario.svg' %}" alt=""> Inventario
-                </a>
+                
 
                 <a href="{% url 'login' %}" class="menu-item logout">
                     <img src="{% static 'img/icon-cerrar.svg' %}" alt=""> Cerrar

@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="{% static 'css/Login/login.css' %}" />
   <link rel="icon" href="{% static 'img/logoOficial.svg' %}" type="image/x-icon" />
 </head>
+
 <body>
   <div class="login-container">
     <div class="container">
@@ -62,5 +63,19 @@
 
   </div>
  </div>
+{% if error %}
+<script>
+  alert("{{ error|escapejs }}");
+</script>
+{% endif %}
+
+{% if login_exitoso %}
+<script>
+  alert("Inicio de sesión exitoso");
+  window.location.href = "{% url redirect_url %}";
+</script>
+{% endif %}
+
+
 </body>
 </html>

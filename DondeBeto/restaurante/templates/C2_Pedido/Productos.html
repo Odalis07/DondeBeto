@@ -1,203 +1,239 @@
 <!DOCTYPE html>
 {% load static %}
 <html lang="es">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" href="{% static 'css/Vista_adm/Productos.css' %}" />
-    <link rel="icon" href="{% static 'img/logoOficial.svg' %}" type="image/x-icon" />
-    <title>Gestión de Productos</title>
-  </head>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="{% static 'css/Vista_adm/Productos.css' %}" />
+  <link rel="icon" href="{% static 'img/logoOficial.svg' %}" type="image/x-icon" />
+  <title>Gestión de Productos</title>
+</head>
 
-  <body>
-    <div class="admin-container">
-      <!-- Sidebar -->
-      <aside class="sidebar">
-        <div class="logo">
-          <img src="{% static 'img/logoOficial.svg' %}" alt="Logo Beto" class="logo-icon">
-          <span class="logo-text">Beto</span>
+<body>
+   <div class="admin-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="logo">
+        <img src="{% static 'img/logoOficial.svg' %}" alt="Logo Beto" class="logo-icon">
+        <span class="logo-text">Beto</span>
+      </div>
+
+      <nav class="menu">
+        {% if rol == "administrador" %}
+          <a href="{% url 'vista_inventario' %}" class="menu-item">
+            <img src="{% static 'img/icon-productos.svg' %}" alt=""> Inventarios
+          </a>
+          <a href="{% url 'productos' %}" class="menu-item">
+            <img src="{% static 'img/icon-productos.svg' %}" alt=""> Productos
+          </a>
+          <a href="{% url 'mesas' %}" class="menu-item">
+            <img src="{% static 'img/icon-mesas.svg' %}" alt=""> Mesas
+          </a>
+          <a href="{% url 'pedidos_list' %}" class="menu-item">
+            <img src="{% static 'img/icon-pedidos.svg' %}" alt=""> Pedidos
+          </a>
+          <a href="{% url 'pagos_list' %}" class="menu-item">
+            <img src="{% static 'img/icon-facturas.svg' %}" alt=""> Pagos/Facturas
+          </a>
+          <a href="{% url 'clientes' %}" class="menu-item">
+            <img src="{% static 'img/icon-clientes.svg' %}" alt=""> Clientes
+          </a>
+          <a href="{% url 'usuarios' %}" class="menu-item">
+            <img src="{% static 'img/icon-clientes.svg' %}" alt=""> Trabajadores
+          </a>
+        {% elif rol == "mesero" %}
+          <a href="{% url 'productos' %}" class="menu-item">
+            <img src="{% static 'img/icon-productos.svg' %}" alt=""> Productos
+          </a>
+          <a href="{% url 'mesas' %}" class="menu-item">
+            <img src="{% static 'img/icon-mesas.svg' %}" alt=""> Mesas
+          </a>
+          <a href="{% url 'pedidos_list' %}" class="menu-item">
+            <img src="{% static 'img/icon-pedidos.svg' %}" alt=""> Pedidos
+          </a>
+          <a href="{% url 'pagos_list' %}" class="menu-item">
+            <img src="{% static 'img/icon-facturas.svg' %}" alt=""> Pagos/Facturas
+          </a>
+          <a href="{% url 'perfil_mesero' %}" class="menu-item">
+            <img src="{% static 'img/icon-clientes.svg' %}" alt=""> Perfil
+          </a>
+        {% elif rol == "cajero" %}
+          <a href="{% url 'pedidos_list' %}" class="menu-item">
+            <img src="{% static 'img/icon-pedidos.svg' %}" alt=""> Pedidos
+          </a>
+          <a href="{% url 'pagos_list' %}" class="menu-item">
+            <img src="{% static 'img/icon-facturas.svg' %}" alt=""> Pagos/Facturas
+          </a>
+          <a href="{% url 'perfil_cajero' %}" class="menu-item">
+            <img src="{% static 'img/icon-clientes.svg' %}" alt=""> Perfil
+          </a>
+        {% elif rol == "repartidor" %}
+          <a href="{% url 'pedidos' %}" class="menu-item">
+            <img src="{% static 'img/icon-pedidos.svg' %}" alt=""> Pedidos
+          </a>
+          <a href="#" class="menu-item">
+            <img src="{% static 'img/icon-facturas.svg' %}" alt=""> Facturas
+          </a>
+          <a href="{% url 'perfil_repartidor' %}" class="menu-item">
+            <img src="{% static 'img/icon-clientes.svg' %}" alt=""> Perfil
+          </a>
+        {% endif %}
+
+        <a href="{% url 'login' %}" class="menu-item logout">
+          <img src="{% static 'img/icon-cerrar.svg' %}" alt=""> Cerrar
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <header class="topbar">
+        <div class="caja">Rol: {{ rol|default:"No disponible" }}</div>
+        <div class="titulo">DONDE BETO RESTO BAR</div>
+        <div class="usuario">
+          {% if usuario %}
+            ¡Hola, {{ usuario.nombre }} {{ usuario.apellido }}!
+          {% else %}
+            No has iniciado sesión.
+          {% endif %}
+        </div>
+      </header>
+
+      <!-- Contenido Principal -->
+      <section class="content">
+        <!-- Barra de búsqueda -->
+        <div class="search-bar">
+          <div class="search-container">
+            <input type="text" id="search-input" placeholder="🔍 Buscar productos por nombre, descripción o precio..." />
+          </div>
         </div>
 
- <nav class="menu">
+        <!-- Tabs de categorías -->
+        <div class="tabs">
+          <a href="{% url 'productos' %}?categoria=Todos" class="tab {% if categoria_seleccionada == 'Todos' %}active{% endif %}">Todos</a>
+          <a href="{% url 'productos' %}?categoria=Bebidas" class="tab {% if categoria_seleccionada == 'Bebidas' %}active{% endif %}">Bebidas</a>
+          <a href="{% url 'productos' %}?categoria=Almuerzos" class="tab {% if categoria_seleccionada == 'Almuerzos' %}active{% endif %}">Almuerzos</a>
+          <a href="{% url 'productos' %}?categoria=Desayunos" class="tab {% if categoria_seleccionada == 'Desayunos' %}active{% endif %}">Desayunos</a>
+          <a href="{% url 'productos' %}?categoria=Comida rápida" class="tab {% if categoria_seleccionada == 'Comida rápida' %}active{% endif %}">Comida rápida</a>
+          <a href="{% url 'productos' %}?categoria=Especiales" class="tab {% if categoria_seleccionada == 'Especiales' %}active{% endif %}">Especiales</a>
+          <a href="{% url 'productos' %}?categoria=Acompañantes" class="tab {% if categoria_seleccionada == 'Acompañantes' %}active{% endif %}">Acompañantes</a>
+        </div>
 
-  {% if rol == "administrador" %}
-      <a href="{% url 'productos' %}" class="menu-item">
-          <img src="{% static 'img/icon-productos.svg' %}" alt=""> Productos
-      </a>
-      <a href="{% url 'mesas' %}" class="menu-item">
-          <img src="{% static 'img/icon-mesas.svg' %}" alt=""> Mesas
-      </a>
-      <a href="{% url 'pedidos' %}" class="menu-item">
-          <img src="{% static 'img/icon-pedidos.svg' %}" alt=""> Pedidos
-      </a>
-      <a href="#" class="menu-item">
-          <img src="{% static 'img/icon-facturas.svg' %}" alt=""> Facturas
-      </a>
-      <a href="{% url 'clientes' %}" class="menu-item">
-          <img src="{% static 'img/icon-clientes.svg' %}" alt=""> Clientes
-      </a>
-      <a href="{% url 'usuarios' %}" class="menu-item">
-          <img src="{% static 'img/icon-clientes.svg' %}" alt=""> Trabajadores
-      </a>
-      <a href="{% url 'vista_inventario' %}" class="menu-item">
-                    <img src="{% static 'img/inventario.svg' %}" alt=""> Inventario
-                </a>
+        <!-- Grid de Productos -->
+        <div class="productos-grid" id="productos-grid">
+          {% for producto in productos %}
+          <div class="card-producto"
+               data-id="{{ producto.id }}"
+               data-nombre="{{ producto.nombre }}"
+               data-descripcion="{{ producto.descripcion }}"
+               data-precio="{{ producto.precio }}"
+               data-iva="{{ producto.iva|default:'0' }}"
+               data-descuento="{{ producto.descuento|default:'0' }}"
+               data-stock="{{ producto.stock }}"
+               data-categoria-id="{{ producto.categoria.id }}"
+               data-imagen="{% if producto.imagen %}{{ producto.imagen.url }}{% endif %}">
 
-  {% elif rol == "mesero" %}
-      <a href="{% url 'productos' %}" class="menu-item">
-          <img src="{% static 'img/icon-productos.svg' %}" alt=""> Productos
-      </a>
-      <a href="{% url 'mesas' %}" class="menu-item">
-          <img src="{% static 'img/icon-mesas.svg' %}" alt=""> Mesas
-      </a>
-                <a href="{% url 'pedidos_list' %}" class="menu-item">
-                    <img src="{% static 'img/icon-pedidos.svg' %}" alt=""> Pedidos
-                </a>
-                 <a href="{% url 'pagos_list' %}" class="menu-item">
-                    <img src="{% static 'img/icon-facturas.svg' %}" alt=""> Pagos/Facturas
-                </a>
-      <a href="{% url 'perfil_mesero' %}" class="menu-item">
-          <img src="{% static 'img/icon-clientes.svg' %}" alt=""> Perfil
-      </a>
-
-  {% elif rol == "cajero" %}
-      <a href="{% url 'pedidos' %}" class="menu-item">
-          <img src="{% static 'img/icon-pedidos.svg' %}" alt=""> Pedidos
-      </a>
-      <a href="#" class="menu-item">
-          <img src="{% static 'img/icon-facturas.svg' %}" alt=""> Facturas
-      </a>
-      <a href="{% url 'perfil_cajero' %}" class="menu-item">
-          <img src="{% static 'img/icon-clientes.svg' %}" alt=""> Perfil
-      </a>
-
-  {% elif rol == "repartidor" %}
-      <a href="{% url 'pedidos' %}" class="menu-item">
-          <img src="{% static 'img/icon-pedidos.svg' %}" alt=""> Pedidos
-      </a>
-      <a href="#" class="menu-item">
-          <img src="{% static 'img/icon-facturas.svg' %}" alt=""> Facturas
-      </a>
-      <a href="{% url 'perfil_repartidor' %}" class="menu-item">
-          <img src="{% static 'img/icon-clientes.svg' %}" alt=""> Perfil
-      </a>
-  {% endif %}
-
-  <a href="{% url 'login' %}" class="menu-item logout">
-      <img src="{% static 'img/icon-cerrar.svg' %}" alt=""> Cerrar
-  </a>
-</nav>
-
-      </aside>
-
-      <!-- Main -->
-      <main class="main-content">
-        <header class="topbar">
-          <div class="caja">
-            Rol: {{ rol|default:"No disponible" }}
-          </div>
-          <div class="titulo">DONDE BETO RESTO BAR</div>
-          <div class="usuario">
-            {% if usuario %}
-              ¡Hola, {{ usuario.nombre }} {{ usuario.apellido }}!
-            {% else %}
-              No has iniciado sesión.
+            {% if producto.descuento and producto.descuento > 0 %}
+              <div class="badge-descuento">-{{ producto.descuento|floatformat:0 }}%</div>
             {% endif %}
+
+            <img src="{% if producto.imagen %}{{ producto.imagen.url }}{% else %}{% static 'img/default-product.svg' %}{% endif %}" alt="Imagen producto">
+
+            <div class="name">{{ producto.nombre }}</div>
+
+            <div class="detail">
+              <strong>Descripción:</strong> {{ producto.descripcion }}<br>
+
+              {% if producto.descuento and producto.descuento > 0 %}
+                {% widthratio producto.precio 1 producto.descuento as descuento_monto %}
+                {% widthratio descuento_monto 100 1 as monto_descontado %}
+                <strong>Precio:</strong>
+                <span class="precio-original">${{ producto.precio }}</span>
+                <span class="precio-descuento">${{ producto.precio|add:"-"|add:monto_descontado }}</span><br>
+                <strong>Descuento:</strong> <span style="color: red;">{{ producto.descuento|floatformat:0 }}% aplicado</span><br>
+              {% else %}
+                <strong>Precio:</strong> ${{ producto.precio }}<br>
+                <strong>Descuento:</strong> <span style="color: gray; font-style: italic;">Sin descuento</span><br>
+              {% endif %}
+
+              <strong>IVA:</strong> {{ producto.iva|floatformat:0 }}% <br>
+              <strong>Categoría:</strong> {{ producto.categoria.nombre }}<br>
+              <strong>Stock:</strong> {{ producto.stock }} unidades <br>
+            </div>
+
+            <div class="acciones">
+              <button class="btn-modificar" data-id="{{ producto.id }}">MODIFICAR</button>
+              <button class="btn-eliminar" data-id="{{ producto.id }}">ELIMINAR</button>
+            </div>
           </div>
-        </header>
+          {% empty %}
+          <p class="no-productos">No hay productos registrados.</p>
+          {% endfor %}
+        </div>
 
-        <!-- CONTENIDO -->
-        <section class="content">
-          <div class="tabs">
-  <a href="{% url 'productos' %}?categoria=Todos" class="tab {% if categoria_seleccionada == 'Todos' %}active{% endif %}">Todos</a>
-  <a href="{% url 'productos' %}?categoria=Bebidas" class="tab {% if categoria_seleccionada == 'Bebidas' %}active{% endif %}">Bebidas</a>
-  <a href="{% url 'productos' %}?categoria=Almuerzos" class="tab {% if categoria_seleccionada == 'Almuerzos' %}active{% endif %}">Almuerzos</a>
-  <a href="{% url 'productos' %}?categoria=Desayunos" class="tab {% if categoria_seleccionada == 'Desayunos' %}active{% endif %}">Desayunos</a>
-  <a href="{% url 'productos' %}?categoria=Comida rápida" class="tab {% if categoria_seleccionada == 'Comida rápida' %}active{% endif %}">Comida rápida</a>
-  <a href="{% url 'productos' %}?categoria=Especiales" class="tab {% if categoria_seleccionada == 'Especiales' %}active{% endif %}">Especiales</a>
-  <a href="{% url 'productos' %}?categoria=Acompañantes" class="tab {% if categoria_seleccionada == 'Acompañantes' %}active{% endif %}">Acompañantes</a>
-</div>
-
-          <!-- GRID PRODUCTOS -->
-         <div class="productos-grid">
-  {% for producto in productos %}
-  <div class="card-producto"
-       data-nombre="{{ producto.nombre }}"
-       data-descripcion="{{ producto.descripcion }}"
-       data-precio="{{ producto.precio }}"
-       data-categoria-id="{{ producto.categoria.id }}"
-       data-categoria="{{ producto.categoria.nombre }}"
-       data-imagen="{% if producto.imagen %}{{ producto.imagen.url }}{% endif %}">
-    <img src="{% if producto.imagen %}{{ producto.imagen.url }}{% else %}{% static 'img/default-product.svg' %}{% endif %}" alt="Imagen producto">
-    <div class="name">{{ producto.nombre }}</div>
-    <div class="detail">
-      <strong>Descripción:</strong> {{ producto.descripcion }} <br>
-      <strong>Precio:</strong> ${{ producto.precio }} <br>
-      <strong>Categoría:</strong> {{ producto.categoria.nombre }} <br>
-    </div>
-    <div class="acciones">
-      <button class="btn-modificar" data-id="{{ producto.id }}">MODIFICAR</button>
-      <button class="btn-eliminar" data-id="{{ producto.id }}">ELIMINAR</button>
-    </div>
+        <!-- Botones de acción principales -->
+        <div class="acciones-principales">
+          <button id="btn-nuevo" class="btn-nuevo">+ NUEVO PRODUCTO</button>
+          <button id="btn-descuentos" class="btn-descuentos">🏷️ GESTIONAR DESCUENTOS</button>
+        </div>
+      </section>
+    </main>
   </div>
-  {% empty %}
-  <p>No hay productos registrados.</p>
-  {% endfor %}
-</div>
 
-<div class="acciones">
-  <button id="btn-nuevo" class="btn-nuevo">NUEVO PRODUCTO</button>
-</div>
-
-        </section>
-      </main>
-    </div>
-
-    <!-- MODAL NUEVO -->
-<dialog id="modal-nuevo">
-  <div class="modal-content">
-    <span class="close" onclick="document.getElementById('modal-nuevo').close()">&times;</span>
-    <h2>Registrar Producto</h2>
-    <form action="{% url 'registrar_producto' %}" method="POST" enctype="multipart/form-data">
-      {% csrf_token %}
-
-      <label>Nombre:</label>
-      <input type="text" name="nombre" required>
-
-      <label>Descripción:</label>
-      <textarea name="descripcion" rows="3" required></textarea>
-
-      <label>Precio ($):</label>
-      <input type="number" name="precio" step="0.01" min="0" required>
-
-      <label>Categoría:</label>
-      <select name="categoria" required>
-        {% for categoria in categorias %}
-          <option value="{{ categoria.id }}">{{ categoria.nombre }}</option>
-        {% endfor %}
-      </select>
-
-      <label>Imagen:</label>
-      <input type="file" name="imagen" accept="image/*">
-
-      <div class="modal-buttons">
-        <button type="button" id="cancelar-nuevo" onclick="document.getElementById('modal-nuevo').close()">Cancelar</button>
-        <button type="submit" id="guardar-nuevo">Guardar</button>
-      </div>
-    </form>
-  </div>
-</dialog>
-
-<!-- MODAL MODIFICAR PRODUCTO -->
-<dialog id="modal-modificar-producto">
-  <div id="modal-modificar-producto-content" class="modal">
+  <!-- MODAL NUEVO PRODUCTO -->
+  <dialog id="modal-nuevo">
     <div class="modal-content">
-      <span class="close">&times;</span>
+      <span class="close" onclick="document.getElementById('modal-nuevo').close()">&times;</span>
+      <h2>Registrar Producto</h2>
+      <form action="{% url 'registrar_producto' %}" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
 
+        <label>Nombre:</label>
+        <input type="text" name="nombre" required>
+
+        <label>Descripción:</label>
+        <textarea name="descripcion" rows="3" required></textarea>
+
+        <div style="display: flex; gap: 20px;">
+          <div style="flex: 1;">
+            <label>Precio ($):</label>
+            <input type="number" name="precio" step="0.01" min="0" required style="width: 100%;">
+          </div>
+
+          <div style="flex: 1;">
+            <label>IVA:</label>
+            <select name="iva" required style="width: 100%;">
+              <option value="15.00">Aplica IVA (15%)</option>
+              <option value="0.00">No aplica (0%)</option>
+            </select>
+          </div>
+        </div>
+
+        <label>Categoría:</label>
+        <select name="categoria" required>
+          {% for cat in categorias %}
+            <option value="{{ cat.id }}">{{ cat.nombre }}</option>
+          {% endfor %}
+        </select>
+
+        <label>Imagen:</label>
+        <input type="file" name="imagen" accept="image/*">
+
+        <div class="modal-buttons">
+          <button type="button" onclick="document.getElementById('modal-nuevo').close()">Cancelar</button>
+          <button type="submit">Guardar Producto</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <!-- MODAL MODIFICAR PRODUCTO -->
+  <dialog id="modal-modificar-producto">
+    <div class="modal-content">
+      <span class="close" onclick="this.closest('dialog').close()">&times;</span>
       <h2>Modificar Producto</h2>
 
       <form id="form-modificar-producto" enctype="multipart/form-data">
-        <!-- Nombre -->
         <div class="campo-con-lapiz">
           <label for="nombre_producto">Nombre:</label>
           <input type="text" id="nombre_producto" name="nombre" readonly>
@@ -206,93 +242,202 @@
           </button>
         </div>
 
-        <!-- Descripción -->
         <div class="campo-con-lapiz">
           <label for="descripcion_producto">Descripción:</label>
-          <textarea id="descripcion_producto" name="descripcion" readonly></textarea>
+          <textarea id="descripcion_producto" name="descripcion" readonly rows="2"></textarea>
           <button type="button" class="editar-campo" data-campo="descripcion_producto">
             <img src="{% static 'img/lapiz.svg' %}" alt="Editar" class="icono-editar">
           </button>
         </div>
 
-        <!-- Precio -->
         <div class="campo-con-lapiz">
-          <label for="precio_producto">Precio:</label>
+          <label for="precio_producto">Precio ($):</label>
           <input type="number" step="0.01" id="precio_producto" name="precio" readonly>
           <button type="button" class="editar-campo" data-campo="precio_producto">
             <img src="{% static 'img/lapiz.svg' %}" alt="Editar" class="icono-editar">
           </button>
         </div>
 
-        <!-- Categoría -->
+        <div class="campo-con-lapiz">
+          <label for="iva_producto">IVA:</label>
+          <select id="iva_producto" name="iva" disabled>
+            <option value="15.00">Aplica IVA (15%)</option>
+            <option value="0.00">No aplica (0%)</option>
+          </select>
+          <button type="button" class="editar-campo" data-campo="iva_producto">
+            <img src="{% static 'img/lapiz.svg' %}" alt="Editar" class="icono-editar">
+          </button>
+        </div>
+
         <div class="campo-con-lapiz">
           <label for="categoria_producto">Categoría:</label>
           <select id="categoria_producto" name="categoria" disabled>
-  {% for cat in categorias %}
-    <option value="{{ cat.nombre }}">{{ cat.nombre }}</option>
-  {% endfor %}
-</select>
+            {% for cat in categorias %}
+              <option value="{{ cat.id }}">{{ cat.nombre }}</option>
+            {% endfor %}
+          </select>
           <button type="button" class="editar-campo" data-campo="categoria_producto">
             <img src="{% static 'img/lapiz.svg' %}" alt="Editar" class="icono-editar">
           </button>
         </div>
 
-        <!-- Imagen -->
-<div class="campo-con-lapiz-imagen">
-  <label for="imagen_producto">Imagen:</label>
-
-  <div class="imagen-wrapper">
-    <!-- Imagen de vista previa -->
-    <img id="preview_imagen_producto" src="" alt="Imagen actual">
-
-    <!-- Botón de edición sobre la imagen -->
-    <button type="button" class="editar-campo" data-campo="imagen_producto">
-      <img src="{% static 'img/lapiz.svg' %}" alt="Editar" class="icono-editar">
-    </button>
-  </div>
-
-  <!-- Input file debajo de la imagen -->
-  <input type="file" id="imagen_producto" name="imagen" accept="image/*" disabled>
-</div>
-
+        <div style="text-align: center; margin-top: 10px;">
+          <img id="preview_imagen_producto" src="" alt="Vista previa" style="max-width: 100px; border-radius: 8px;">
+        </div>
 
         <div class="modal-buttons">
-          <button type="button" id="cancelar-modificar-producto" onclick="document.getElementById('modal-modificar-producto').close()">Cerrar</button>
+          <button type="button" onclick="document.getElementById('modal-modificar-producto').close()">Cerrar</button>
           <button type="submit" id="guardar-modificar-producto" disabled>Guardar Cambios</button>
         </div>
       </form>
     </div>
-  </div>
-</dialog>
-   <!-- MODAL ELIMINAR PRODUCTO -->
-<dialog id="modal-eliminar-producto">
-  <div id="modal-eliminar-producto-content" class="modal">
+  </dialog>
+
+  <!-- MODAL ELIMINAR PRODUCTO -->
+  <dialog id="modal-eliminar-producto">
     <div class="modal-content">
       <span class="close">&times;</span>
       <h2>Eliminar Producto</h2>
       <p>¿Estás seguro de que deseas eliminar este producto?</p>
 
       <div class="modal-buttons">
-        <button type="button" id="cancelar-eliminar-producto" onclick="document.getElementById('modal-eliminar-producto').close()">Cancelar</button>
+        <button type="button" onclick="document.getElementById('modal-eliminar-producto').close()">Cancelar</button>
         <button type="button" id="confirmar-eliminar-producto">Eliminar</button>
       </div>
     </div>
-  </div>
-</dialog>
-<script>
-// ----- MODALES -----
+  </dialog>
+
+  <!-- MODAL GESTIONAR DESCUENTOS -->
+  <dialog id="modal-descuentos">
+    <div class="modal-content modal-descuentos-content">
+      <span class="close">&times;</span>
+      <h2>🏷️ Gestionar Descuentos</h2>
+
+      <div class="tabs-descuentos">
+        <button class="tab-descuento active" data-tab="aplicar">Aplicar Descuento</button>
+        <button class="tab-descuento" data-tab="quitar">Quitar Descuento</button>
+      </div>
+
+      <!-- TAB APLICAR DESCUENTO -->
+      <div class="tab-content-descuento active" id="tab-aplicar">
+        <form id="form-aplicar-descuento">
+          <label>Aplicar descuento a:</label>
+          <select id="aplicar-tipo" name="tipo">
+            <option value="todos">Todos los productos</option>
+            <option value="categoria">Por categoría</option>
+            <option value="producto">Producto específico</option>
+          </select>
+
+          <div id="selector-categoria" style="display: none;">
+            <label>Seleccionar categoría:</label>
+            <select id="categoria-descuento" name="categoria">
+              {% for cat in categorias %}
+                <option value="{{ cat.nombre }}">{{ cat.nombre }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div id="selector-producto" style="display: none;">
+            <label>Buscar producto:</label>
+            <input type="text" id="buscar-producto-descuento" placeholder="Escribe el nombre del producto...">
+            <select id="producto-descuento" name="producto" size="5">
+              {% for producto in productos %}
+                <option value="{{ producto.id }}">{{ producto.nombre }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <label>Porcentaje de descuento:</label>
+          <div class="porcentajes-grid">
+            <button type="button" class="btn-porcentaje" data-valor="10">10%</button>
+            <button type="button" class="btn-porcentaje" data-valor="20">20%</button>
+            <button type="button" class="btn-porcentaje" data-valor="30">30%</button>
+            <button type="button" class="btn-porcentaje" data-valor="40">40%</button>
+            <button type="button" class="btn-porcentaje" data-valor="50">50%</button>
+            <button type="button" class="btn-porcentaje" data-valor="60">60%</button>
+            <button type="button" class="btn-porcentaje" data-valor="70">70%</button>
+            <button type="button" class="btn-porcentaje" data-valor="80">80%</button>
+            <button type="button" class="btn-porcentaje" data-valor="90">90%</button>
+            <button type="button" class="btn-porcentaje" data-valor="100">100%</button>
+          </div>
+
+          <input type="hidden" id="descuento-seleccionado" name="descuento" value="">
+
+          <div class="preview-descuento">
+            <p>Descuento seleccionado: <strong id="descuento-preview">0%</strong></p>
+          </div>
+
+          <div class="modal-buttons">
+            <button type="button" onclick="document.getElementById('modal-descuentos').close()">Cancelar</button>
+            <button type="submit">Aplicar Descuento</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- TAB QUITAR DESCUENTO -->
+      <div class="tab-content-descuento" id="tab-quitar">
+        <form id="form-quitar-descuento">
+          <label>Quitar descuento de:</label>
+          <select id="quitar-tipo" name="tipo">
+            <option value="todos">Todos los productos</option>
+            <option value="categoria">Por categoría</option>
+            <option value="producto">Producto específico</option>
+          </select>
+
+          <div id="selector-categoria-quitar" style="display: none;">
+            <label>Seleccionar categoría:</label>
+            <select id="categoria-quitar" name="categoria">
+              {% for cat in categorias %}
+                <option value="{{ cat.nombre }}">{{ cat.nombre }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div id="selector-producto-quitar" style="display: none;">
+            <label>Buscar producto:</label>
+            <input type="text" id="buscar-producto-quitar" placeholder="Escribe el nombre del producto...">
+            <select id="producto-quitar" name="producto" size="5">
+              {% for producto in productos %}
+                <option value="{{ producto.id }}">{{ producto.nombre }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="modal-buttons">
+            <button type="button" onclick="document.getElementById('modal-descuentos').close()">Cancelar</button>
+            <button type="submit" class="btn-quitar">Quitar Descuento</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </dialog>
+
+  <script>
+// ----- VARIABLES GLOBALES -----
+// ----- VARIABLES GLOBALES -----
 const modalNuevo = document.getElementById('modal-nuevo');
 const modalModificar = document.getElementById('modal-modificar-producto');
 const modalEliminar = document.getElementById('modal-eliminar-producto');
-
-// Botones de cerrar
-const closeBtns = document.querySelectorAll('.close');
-
-// Formulario de modificar
+const modalDescuentos = document.getElementById('modal-descuentos');
 const formModificar = document.getElementById('form-modificar-producto');
 const btnGuardar = document.getElementById('guardar-modificar-producto');
-
 let productoSeleccionado = null;
+let productoEliminarId = null;
+
+// ----- BÚSQUEDA DE PRODUCTOS -----
+const searchInput = document.getElementById('search-input');
+const productosGrid = document.getElementById('productos-grid');
+const todasLasCards = document.querySelectorAll('.card-producto');
+
+searchInput.addEventListener('input', (e) => {
+  const searchTerm = e.target.value.toLowerCase().trim();
+  todasLasCards.forEach(card => {
+    const nombre = card.dataset.nombre.toLowerCase();
+    const descripcion = card.dataset.descripcion.toLowerCase();
+    const coincide = nombre.includes(searchTerm) || descripcion.includes(searchTerm);
+    card.style.display = coincide ? 'flex' : 'none';
+  });
+});
 
 // ----- MODAL NUEVO -----
 document.getElementById('btn-nuevo').addEventListener('click', () => modalNuevo.showModal());
@@ -303,17 +448,14 @@ document.querySelectorAll('.btn-modificar').forEach(boton => {
     productoSeleccionado = boton.dataset.id;
     const card = boton.closest('.card-producto');
 
-    // Llenar formulario usando data-*
     document.getElementById('nombre_producto').value = card.dataset.nombre;
     document.getElementById('descripcion_producto').value = card.dataset.descripcion;
     document.getElementById('precio_producto').value = card.dataset.precio;
-    document.getElementById('categoria_producto').value = card.dataset.categoria;
+    document.getElementById('iva_producto').value = parseFloat(card.dataset.iva).toFixed(2);
+    document.getElementById('categoria_producto').value = card.dataset.categoriaId;
+    document.getElementById('preview_imagen_producto').src = card.dataset.imagen || '/static/img/default-product.svg';
 
-    const previewImagen = document.getElementById('preview_imagen_producto');
-    previewImagen.src = card.dataset.imagen || "{% static 'img/default-product.svg' %}";
-    // Bloquear todos los campos al inicio
     bloquearCamposTodos();
-
     modalModificar.showModal();
   });
 });
@@ -328,91 +470,251 @@ document.querySelectorAll('.editar-campo').forEach(btn => {
       input.readOnly = false;
       input.disabled = false;
       input.focus();
-      btn.innerHTML = `<img src="{% static 'img/candado.svg' %}" alt="Candado" />`;
+      btn.innerHTML = '<img src="/static/img/candado.svg" alt="Activo" class="icono-editar" />';
       btnGuardar.disabled = false;
     } else {
       input.readOnly = true;
-      if (input.tagName === 'SELECT' || input.type === 'file') input.disabled = true;
-      btn.innerHTML = `<img src="{% static 'img/lapiz.svg' %}" alt="Editar" />`;
+      if (input.tagName === 'SELECT') input.disabled = true;
+      btn.innerHTML = '<img src="/static/img/lapiz.svg" alt="Editar" class="icono-editar" />';
     }
   });
 });
 
-// ----- BLOQUEAR TODOS LOS CAMPOS -----
 function bloquearCamposTodos() {
   formModificar.querySelectorAll('input, textarea, select').forEach(input => {
     input.readOnly = true;
-    if (input.tagName === 'SELECT' || input.type === 'file') input.disabled = true;
+    if (input.tagName === 'SELECT') input.disabled = true;
   });
+
+  document.querySelectorAll('.editar-campo').forEach(btn => {
+    btn.innerHTML = '<img src="/static/img/lapiz.svg" alt="Editar" class="icono-editar" />';
+  });
+
   btnGuardar.disabled = true;
 }
 
 // ----- GUARDAR MODIFICACIONES -----
 formModificar.addEventListener('submit', async (e) => {
   e.preventDefault();
-  const data = new FormData(formModificar);
+
+  const formData = new FormData(formModificar);
   const jsonData = {};
 
-  data.forEach((value, key) => {
-    if (key === 'imagen' && value.size === 0) return; // ignorar si no hay imagen nueva
+  formData.forEach((value, key) => {
     jsonData[key] = value;
   });
 
-  const response = await fetch(`/productos/actualizar/${productoSeleccionado}/`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-CSRFToken': getCSRFToken()
-    },
-    body: JSON.stringify(jsonData)
-  });
+  try {
+    const response = await fetch(`/productos/actualizar/${productoSeleccionado}/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCSRFToken()
+      },
+      body: JSON.stringify(jsonData)
+    });
 
-  const result = await response.json();
-  if (result.success) {
-    alert('Producto actualizado correctamente');
-    location.reload();
-  } else {
-    alert('Error: ' + result.error);
+    const result = await response.json();
+    if (result.success) {
+      alert('Producto actualizado correctamente');
+      location.reload();
+    } else {
+      alert('Error: ' + result.error);
+    }
+  } catch (error) {
+    alert('Error en el servidor al actualizar');
   }
-  modalModificar.close();
 });
 
 // ----- MODAL ELIMINAR -----
-document.querySelectorAll('.btn-eliminar').forEach(boton => {
-  boton.addEventListener('click', () => {
-    productoSeleccionado = boton.dataset.id;
+document.querySelectorAll('.btn-eliminar').forEach(btn => {
+  btn.addEventListener('click', () => {
+    productoEliminarId = btn.dataset.id;
     modalEliminar.showModal();
   });
 });
 
 document.getElementById('confirmar-eliminar-producto').addEventListener('click', async () => {
-  const response = await fetch(`/productos/eliminar/${productoSeleccionado}/`, {
-    method: 'POST',
-    headers: { 'X-CSRFToken': getCSRFToken() }
-  });
-  const result = await response.json();
+  try {
+    const response = await fetch(`/productos/eliminar/${productoEliminarId}/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': getCSRFToken()
+      }
+    });
 
-  if (result.success) {
-    alert('Producto eliminado correctamente');
-    location.reload();
-  } else {
-    alert('Error: ' + result.error);
+    const result = await response.json();
+    if (result.success) {
+      alert('Producto eliminado');
+      location.reload();
+    } else {
+      alert(result.error);
+    }
+  } catch {
+    alert('Error al eliminar producto');
   }
-  modalEliminar.close();
 });
 
-// ----- CERRAR MODALES -----
-closeBtns.forEach(btn => btn.addEventListener('click', () => {
-  modalNuevo.close();
-  modalModificar.close();
-  modalEliminar.close();
-}));
+// ----- GESTIÓN DE DESCUENTOS -----
+document.getElementById('btn-descuentos').addEventListener('click', () => {
+  modalDescuentos.showModal();
+});
 
-// ----- CSRF -----
+// Tabs del modal de descuentos
+document.querySelectorAll('.tab-descuento').forEach(tab => {
+  tab.addEventListener('click', () => {
+    const tabName = tab.dataset.tab;
+
+    document.querySelectorAll('.tab-descuento').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content-descuento').forEach(c => c.classList.remove('active'));
+
+    tab.classList.add('active');
+    document.getElementById(`tab-${tabName}`).classList.add('active');
+  });
+});
+
+// Cambio de tipo de aplicación de descuento
+document.getElementById('aplicar-tipo').addEventListener('change', (e) => {
+  const tipo = e.target.value;
+  document.getElementById('selector-categoria').style.display = tipo === 'categoria' ? 'block' : 'none';
+  document.getElementById('selector-producto').style.display = tipo === 'producto' ? 'block' : 'none';
+});
+
+document.getElementById('quitar-tipo').addEventListener('change', (e) => {
+  const tipo = e.target.value;
+  document.getElementById('selector-categoria-quitar').style.display = tipo === 'categoria' ? 'block' : 'none';
+  document.getElementById('selector-producto-quitar').style.display = tipo === 'producto' ? 'block' : 'none';
+});
+
+// Búsqueda de productos en el modal de descuentos
+document.getElementById('buscar-producto-descuento').addEventListener('input', (e) => {
+  const searchTerm = e.target.value.toLowerCase();
+  const options = document.getElementById('producto-descuento').options;
+
+  for (let option of options) {
+    const text = option.text.toLowerCase();
+    option.style.display = text.includes(searchTerm) ? 'block' : 'none';
+  }
+});
+
+document.getElementById('buscar-producto-quitar').addEventListener('input', (e) => {
+  const searchTerm = e.target.value.toLowerCase();
+  const options = document.getElementById('producto-quitar').options;
+
+  for (let option of options) {
+    const text = option.text.toLowerCase();
+    option.style.display = text.includes(searchTerm) ? 'block' : 'none';
+  }
+});
+
+// Selección de porcentaje
+document.querySelectorAll('.btn-porcentaje').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.btn-porcentaje').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+
+    const valor = btn.dataset.valor;
+    document.getElementById('descuento-seleccionado').value = valor;
+    document.getElementById('descuento-preview').textContent = valor + '%';
+  });
+});
+
+// Aplicar descuento
+document.getElementById('form-aplicar-descuento').addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const tipo = document.getElementById('aplicar-tipo').value;
+  const descuento = document.getElementById('descuento-seleccionado').value;
+
+  if (!descuento) {
+    alert('Por favor selecciona un porcentaje de descuento');
+    return;
+  }
+
+  const data = { tipo, descuento };
+
+  if (tipo === 'categoria') {
+    data.categoria = document.getElementById('categoria-descuento').value;
+  } else if (tipo === 'producto') {
+    data.producto_id = document.getElementById('producto-descuento').value;
+  }
+
+  try {
+    const response = await fetch('/productos/aplicar-descuento/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCSRFToken()
+      },
+      body: JSON.stringify(data)
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      alert('Descuento aplicado correctamente');
+      location.reload();
+    } else {
+      alert('Error: ' + result.error);
+    }
+  } catch (error) {
+    alert('Error al aplicar descuento: ' + error);
+  }
+});
+
+// Quitar descuento
+document.getElementById('form-quitar-descuento').addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const tipo = document.getElementById('quitar-tipo').value;
+  const data = { tipo };
+
+  if (tipo === 'categoria') {
+    data.categoria = document.getElementById('categoria-quitar').value;
+  } else if (tipo === 'producto') {
+    data.producto_id = document.getElementById('producto-quitar').value;
+  }
+
+  try {
+    const response = await fetch('/productos/quitar-descuento/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCSRFToken()
+      },
+      body: JSON.stringify(data)
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      alert('Descuento quitado correctamente');
+      location.reload();
+    } else {
+      alert('Error: ' + result.error);
+    }
+  } catch (error) {
+    alert('Error en la comunicación con el servidor');
+  }
+});
+
+// ----- CIERRE DE MODALES AL HACER CLIC FUERA -----
+window.onclick = function(event) {
+  if (event.target == modalNuevo) modalNuevo.close();
+  if (event.target == modalModificar) modalModificar.close();
+  if (event.target == modalEliminar) modalEliminar.close();
+  if (event.target == modalDescuentos) modalDescuentos.close();
+};
+
+// Cerrar con los botones 'X' (close)
+document.querySelectorAll('.close').forEach(btn => {
+  btn.onclick = function() {
+    this.closest('dialog').close();
+  }
+});
+
+// ----- UTILIDADES -----
 function getCSRFToken() {
   return document.querySelector('[name=csrfmiddlewaretoken]').value;
 }
 </script>
-
-  </body>
-</html>

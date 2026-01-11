@@ -23,7 +23,7 @@ class ProductoRepository:
         Producto.objects.filter(id=id).delete()
 
 
-repo = ProductoRepository()
-producto = repo.obtener(2)
-if producto:
-    repo.actualizar(producto, {"nombre": "Nuevo nombre"})
+#repo = ProductoRepository()
+#producto = repo.obtener(2)
+#if producto:
+    #repo.actualizar(producto, {"nombre": "Nuevo nombre"})

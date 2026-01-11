@@ -326,6 +326,7 @@
     .stat-card.agotado .stat-value {
         color: #b91c1c;
     }
+<<<<<<< HEAD
     /* CONTENEDOR GENERAL */
 .admin-container {
     display: flex;
@@ -384,3 +385,31 @@
     flex: 1;
     padding: 30px;
 }
+/* ESTILOS ESPECIFICOS PARA LA VISTA DE INVENTARIO */
+.stock-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.stock-number {
+    font-weight: bold;
+    min-width: 20px;
+    text-align: center;
+}
+
+.btn-stock {
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: pointer;
+    padding: 2px 6px;
+    font-size: 10px;
+    transition: background 0.2s;
+}
+
+.btn-stock:hover {
+    background-color: #e0e0e0;
+}
+

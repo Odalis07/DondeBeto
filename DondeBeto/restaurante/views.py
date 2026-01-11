@@ -1,4 +1,5 @@
 from decimal import Decimal
+from django.db.models import F, Q
 
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
@@ -11,6 +12,8 @@ from django.urls import reverse
 from django.template.loader import get_template
 from xhtml2pdf import pisa
 from django.views.decorators.csrf import csrf_exempt
+from django.db import transaction
+
 import json
 from io import BytesIO
 from .factory import PedidoFactory
@@ -41,41 +44,44 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 # ---------------------------
 
 #Vista del login
+from django.contrib import messages
+from django.shortcuts import render, redirect
+
 def login_view(request):
     if request.method == "POST":
         email = request.POST.get("email")
         contraseña = request.POST.get("contraseña")
 
         try:
-            # Buscar usuario por correo
             usuario = Usuario.objects.get(email=email)
 
-            # Verificar contraseña
             if usuario.checkpassword(contraseña):
-                # Guardar el ID en sesión
                 request.session['usuario_id'] = usuario.id
                 request.session['rol'] = usuario.rol
-                # Redirección según el rol
+
                 rol = usuario.rol.strip().lower()
 
-                if rol == "administrador":
-                    return redirect('vista_adm')
-                elif rol == "cliente":
-                    return redirect('home_cliente')
-                elif rol == "cajero":
-                    return redirect('vista_cajero')
-                elif rol == "mesero":
-                    return redirect('vista_mesero')
-                elif rol == "repartidor":
-                    return redirect('vista_repartidor')
-                else:
-                    messages.error(request, "Rol de usuario no reconocido.")
-            else:
-                messages.error(request, "Contraseña incorrecta.")
-        except Usuario.DoesNotExist:
-            messages.error(request, "El correo no está registrado.")
+                return render(request, 'C1_Usuario/login.html', {
+                    'login_exitoso': True,
+                    'redirect_url': {
+                        'administrador': 'vista_adm',
+                        'cliente': 'home_cliente',
+                        'cajero': 'vista_cajero',
+                        'mesero': 'vista_mesero',
+                        'repartidor': 'vista_repartidor',
+                    }.get(rol)
+                })
 
-    # Si no es POST o hay error, mostrar login
+            else:
+                return render(request, 'C1_Usuario/login.html', {
+                    'error': 'No se pudo iniciar sesión, correo o contraseña incorrecta'
+                })
+
+        except Usuario.DoesNotExist:
+            return render(request, 'C1_Usuario/login.html', {
+                'error': 'No se pudo iniciar sesión, correo o contraseña incorrecta'
+            })
+
     return render(request, 'C1_Usuario/login.html')
 
 # Vista registro de usuario
@@ -587,6 +593,7 @@ def registrar_producto(request):
         nombre = request.POST['nombre']
         descripcion = request.POST['descripcion']
         precio = request.POST['precio']
+        iva = request.POST.get('iva')
         categoria = Categoria.objects.get(id=request.POST['categoria'])
         imagen = request.FILES.get('imagen')
 
@@ -594,8 +601,10 @@ def registrar_producto(request):
             nombre=nombre,
             descripcion=descripcion,
             precio=precio,
+            iva=iva,
             categoria=categoria,
-            imagen=imagen
+            imagen=imagen,
+            descuento=0
         )
         return redirect('productos')
 
@@ -605,43 +614,115 @@ def registrar_producto(request):
 #SE USA REPOSITORY AQUI:
 
 def actualizar_producto(request, id):
-    """Recibe datos JSON y actualiza un producto"""
     if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            producto = get_object_or_404(Producto, id=id)
+        data = json.loads(request.body)
+        producto = Producto.objects.get(id=id)
 
-            producto.nombre = data.get('nombre', producto.nombre)
-            producto.descripcion = data.get('descripcion', producto.descripcion)
-            producto.precio = data.get('precio', producto.precio)
-            producto.categoria_id = data.get('categoria_id', producto.categoria_id)
+        producto.nombre = data.get('nombre')
+        producto.descripcion = data.get('descripcion')
+        producto.precio = data.get('precio')
+        producto.iva = data.get('iva')
+        producto.categoria_id = data.get('categoria')
 
-            # Si manejas imagenes via MEDIA
-            if 'imagen' in data and data['imagen']:
-                producto.imagen = data['imagen']  # Asegúrate de que sea la ruta correcta
+        producto.save()
 
-            producto.save()
-            return JsonResponse({'success': True, 'message': 'Producto actualizado correctamente'})
-        except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)})
+        return JsonResponse({'success': True})
 
     return JsonResponse({'success': False, 'error': 'Método no permitido'})
 
 @csrf_exempt
 def eliminar_producto(request, id):
-    """Elimina un producto por ID"""
     if request.method == 'POST':
-        tiene_pedidos = DetallePedido.objects.filter(producto=id).exists()
-        if tiene_pedidos:
-            return JsonResponse({
-                'success': False,
-                'error': 'No se puede eliminar el producto porque está relacionado con uno o más pedidos'
-            })
-
         try:
-            producto = get_object_or_404(Producto, id=id)
-            producto.delete()
-            return JsonResponse({'success': True, 'message': 'Producto eliminado correctamente'})
+            Producto.objects.get(id=id).delete()
+            return JsonResponse({'success': True})
+        except Producto.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'No existe'})
+
+    return JsonResponse({'success': False})
+
+
+@csrf_exempt
+def aplicar_descuento(request):
+    """Aplica descuento a productos según el tipo seleccionado"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            tipo = data.get('tipo')
+            descuento = data.get('descuento')
+
+            if not descuento:
+                return JsonResponse({'success': False, 'error': 'Descuento no especificado'})
+
+            # Convertir a Decimal
+            descuento_decimal = Decimal(str(descuento))
+
+            if tipo == 'todos':
+                # Aplicar a todos los productos
+                productos = Producto.objects.all()
+                productos.update(descuento=descuento_decimal)
+                mensaje = f'Descuento del {descuento}% aplicado a todos los productos'
+
+            elif tipo == 'categoria':
+                # Aplicar a productos de una categoría
+                categoria_nombre = data.get('categoria')
+                productos = Producto.objects.filter(categoria__nombre=categoria_nombre)
+                productos.update(descuento=descuento_decimal)
+                mensaje = f'Descuento del {descuento}% aplicado a la categoría {categoria_nombre}'
+
+            elif tipo == 'producto':
+                # Aplicar a un producto específico
+                producto_id = data.get('producto_id')
+                producto = get_object_or_404(Producto, id=producto_id)
+                producto.descuento = descuento_decimal
+                producto.save()
+                mensaje = f'Descuento del {descuento}% aplicado a {producto.nombre}'
+
+            else:
+                return JsonResponse({'success': False, 'error': 'Tipo de aplicación no válido'})
+
+            return JsonResponse({'success': True, 'message': mensaje})
+
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+
+    return JsonResponse({'success': False, 'error': 'Método no permitido'})
+
+
+@csrf_exempt
+def quitar_descuento(request):
+    """Quita el descuento de productos según el tipo seleccionado"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            tipo = data.get('tipo')
+
+            if tipo == 'todos':
+                # Quitar de todos los productos
+                productos = Producto.objects.all()
+                productos.update(descuento=None)
+                mensaje = 'Descuento eliminado de todos los productos'
+
+            elif tipo == 'categoria':
+                # Quitar de productos de una categoría
+                categoria_nombre = data.get('categoria')
+                productos = Producto.objects.filter(categoria__nombre=categoria_nombre)
+                productos.update(descuento=None)
+                mensaje = f'Descuento eliminado de la categoría {categoria_nombre}'
+
+            elif tipo == 'producto':
+                # Quitar de un producto específico
+                producto_id = data.get('producto_id')
+                producto = get_object_or_404(Producto, id=producto_id)
+                producto.descuento = None
+                producto.save()
+                mensaje = f'Descuento eliminado de {producto.nombre}'
+
+            else:
+                return JsonResponse({'success': False, 'error': 'Tipo no válido'})
+
+            return JsonResponse({'success': True, 'message': mensaje})
+
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)})
 
@@ -1008,45 +1089,72 @@ def guardar_carrito_ajax(request):
 @csrf_exempt
 def guardar_carrito_ajax(request):
     """
-    Recibe los datos del carrito (productos, cantidad) vía AJAX y crea un Pedido.
-    Utiliza el PedidoFactory para la creación.
+    Recibe los datos del carrito, VALIDA EL STOCK y crea un Pedido.
     """
     if request.method != 'POST':
         return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
 
     try:
-        # 1. Decodificar el JSON enviado desde el frontend
+        # 1. Decodificar el JSON
         data = json.loads(request.body.decode('utf-8'))
-
         carrito_items = data.get('carrito', [])
         tipo_pedido = data.get('tipo_pedido')
-        # El frontend (cliente) solo envía null para mesa_id si el tipo_pedido no es 'local',
-        # en caso de ser 'local' un mesero podría asignarlo, pero aquí asumimos un flujo de cliente.
         mesa_id = data.get('mesa_id')
 
-        # 2. Obtener el ID del usuario actual (asumiendo que está en la sesión, como en tus otras vistas)
+        # 2. Validar Usuario
         usuario_id = request.session.get('usuario_id')
         if not usuario_id:
             return JsonResponse({'success': False, 'error': 'Usuario no autenticado'}, status=401)
 
-        # 3. Validar los datos del carrito
+        # 3. Validar que el carrito no esté vacío
         if not carrito_items:
             return JsonResponse({'success': False, 'error': 'El carrito está vacío.'}, status=400)
 
-        # 4. Formatear los ítems del carrito para el PedidoFactory
-        # Tu PedidoFactory espera: [{'producto_id': <id>, 'cantidad': <n>}, ...]
+        # =================================================================
+        # 4. NUEVA VALIDACIÓN DE STOCK (Antes de crear nada)
+        # =================================================================
+        errores_stock = []
+
+        for item in carrito_items:
+            prod_id = item.get('id')
+            cantidad_solicitada = int(item.get('cantidad', 0))
+
+            try:
+                producto_db = Producto.objects.get(id=prod_id)
+                
+                # Tratamos None como 0 (tu regla de oro)
+                stock_actual = producto_db.stock if producto_db.stock is not None else 0
+
+                if cantidad_solicitada > stock_actual:
+                    errores_stock.append(
+                        f"Solo quedan {stock_actual} unidades de '{producto_db.nombre}' (pediste {cantidad_solicitada})."
+                    )
+
+            except Producto.DoesNotExist:
+                errores_stock.append(f"El producto con ID {prod_id} ya no existe.")
+
+        # Si encontramos CUALQUIER error de stock, cancelamos todo aquí.
+        if errores_stock:
+            return JsonResponse({
+                'success': False, 
+                'error': "Stock insuficiente: " + " | ".join(errores_stock)
+            }, status=400)
+        # =================================================================
+
+
+        # 5. Formatear los ítems para el Factory
         productos_info = [
             {'producto_id': item['id'], 'cantidad': item['cantidad']}
             for item in carrito_items
         ]
 
-        # 5. Usar el Factory para crear el pedido y sus detalles
-        # Nota: El Factory debe manejar la lógica de obtener los objetos Usuario y Producto
+        # 6. Crear el pedido usando el Factory
+        # (Llegamos aquí solo si hay stock suficiente de TODO)
         nuevo_pedido = PedidoFactory.crear_pedido(
             usuario_id=usuario_id,
             tipo_pedido=tipo_pedido,
             productos_info=productos_info,
-            mesa_id=mesa_id  # Puede ser None
+            mesa_id=mesa_id 
         )
 
         return JsonResponse({
@@ -1058,18 +1166,70 @@ def guardar_carrito_ajax(request):
     except json.JSONDecodeError:
         return JsonResponse({'success': False, 'error': 'Formato JSON inválido.'}, status=400)
     except Exception as e:
-        # Capturar errores del Factory (ej. Producto no encontrado)
-        return JsonResponse({'success': False, 'error': f'Error interno al procesar el pedido: {str(e)}'}, status=500)
+        return JsonResponse({'success': False, 'error': f'Error interno: {str(e)}'}, status=500)
 
 
    
-def vistaPagos(request, pedido_id):
-    pedido = get_object_or_404(Pedido, id=pedido_id)
-    
-    detalles = DetallePedido.objects.filter(pedido=pedido).select_related("producto")
-    total = sum(d.subtotal for d in detalles)
+#########################################################################
+@csrf_exempt
+@transaction.atomic
+def confirmar_pago(request, pedido_id):
+    # 1. Validación del método
+    if request.method != "POST":
+        return JsonResponse({"error": "Método no permitido"}, status=405)
 
-     # 🔐 Stripe PaymentIntent
+    pedido = get_object_or_404(Pedido, id=pedido_id)
+
+    # 2. Parsear el JSON del cuerpo
+    try:
+        data = json.loads(request.body)
+    except Exception:
+        return JsonResponse({"error": "JSON inválido"}, status=400)
+
+    try:
+        # --- LÓGICA DE STOCK ---
+        detalles = DetallePedido.objects.filter(pedido=pedido)
+        total = 0
+        
+        for d in detalles:
+            producto = d.producto
+            cantidad_solicitada = d.cantidad
+            
+            # Limpieza y validación de stock
+            stock_actual = producto.stock if producto.stock is not None else 0
+            
+            if cantidad_solicitada > stock_actual:
+                # Esto lanza el error y salta directo al 'except' de abajo
+                raise Exception(f"No hay suficiente stock de {producto.nombre}. Disponibles: {stock_actual}")
+            
+            # Restar stock y guardar
+            producto.stock = stock_actual - cantidad_solicitada
+            producto.save()
+            
+            # Sumar al total
+            total += d.subtotal
+
+        # --- CREAR EL PAGO ---
+        # Si llegamos aquí, significa que había stock de todo
+        Pago.objects.create(
+            pedido=pedido,
+            metodo=data.get("metodo"),
+            monto=total,
+            direccion_entrega=data.get("direccion"),
+            telefono_contacto=data.get("telefono"),
+            estado="completado"
+        )
+
+    except Exception as e:
+        # Si algo falló (stock insuficiente o error de base de datos), 
+        # cancelamos TODOS los cambios (rollback)
+        transaction.set_rollback(True)
+        
+        return JsonResponse({
+            "error": str(e)
+        }, status=500)
+
+    return JsonResponse({"success": True})  
 
 
 def vistaPagos(request, pedido_id):
@@ -1131,61 +1291,6 @@ def vistaPagos(request, pedido_id):
 
 
 
-@csrf_exempt
-def confirmar_pago(request, pedido_id):
-    if request.method != "POST":
-
-        return JsonResponse({"error": "Método no permitido"}, status=405)
-
-    pedido = get_object_or_404(Pedido, id=pedido_id)
-    try:
-        data = json.loads(request.body)
-    except Exception as e:
-        return JsonResponse({"error": "JSON inválido"}, status=400)
-
-    try:
-        detalles = DetallePedido.objects.filter(pedido=pedido)
-        total = 0
-        for d in detalles:
-
-          total += d.subtotal
-
-      
-    except Exception as e:
-      
-
-            total += d.subtotal
-
-
-    except Exception as e:
-
-
-        return JsonResponse({
-            "error": f"Error calculando total: {str(e)}"
-        }, status=500)
-
-    try:
-        Pago.objects.create(
-            pedido=pedido,
-            metodo=data.get("metodo"),
-            monto=total,
-            direccion_entrega=data.get("direccion"),
-            telefono_contacto=data.get("telefono"),
-            estado="completado"
-        )
-    except Exception as e:
-
-        
-
-
-
-        return JsonResponse({
-            "error": f"Error guardando pago: {str(e)}"
-        }, status=500)
-
-    return JsonResponse({"success": True})
-
-
 
 
 
@@ -1196,6 +1301,7 @@ def confirmar_pago(request, pedido_id):
 
 
 def pedidos_list(request):
+
 
     # Verificar sesión
     usuario_id = request.session.get('usuario_id')
@@ -1636,6 +1742,87 @@ def imprimir_factura(request, pago_id):
         return HttpResponse('Error al generar el PDF: %s' % pisa_status.err)
 
     return response
+
 def vista_inventario(request):
 
     return render(request, "Vistas/Vista_adm/inventario.html")
+
+#important
+def vista_inventario(request):
+   
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id:
+        return redirect('login')
+    
+    try:
+        usuario = Usuario.objects.get(id=usuario_id)
+    except Usuario.DoesNotExist:
+        return redirect('login')
+
+    # 2. Empezamos trayendo TODOS los productos
+    productos = Producto.objects.all().order_by('nombre') 
+
+    # --- LÓGICA DEL BUSCADOR (Texto) ---
+    search_query = request.GET.get('search')
+    if search_query:
+        # Filtra si el nombre contiene el texto (icontains ignora mayúsculas/minúsculas)
+        productos = productos.filter(nombre__icontains=search_query)
+
+    # --- LÓGICA DEL FILTRO (Estado) ---
+    status_filter = request.GET.get('status')
+
+    if status_filter == 'agotado':
+        # Buscamos productos con stock 0 O stock vacío (None)
+        productos = productos.filter(Q(stock=0) | Q(stock__isnull=True))
+
+    elif status_filter == 'bajo':
+        # Buscamos: Stock menor/igual al mínimo Y que sea mayor a 0
+        productos = productos.filter(
+            stock__lte=F('stock_minimo'), 
+            stock__gt=0
+        )
+
+    elif status_filter == 'disponible':
+        # Buscamos: Stock mayor al mínimo
+        productos = productos.filter(stock__gt=F('stock_minimo'))
+
+    # 3. Preparamos el contexto
+    context = {
+        'usuario': usuario,
+        'productos': productos,
+        # Pasamos estadísticas simples para las tarjetitas de arriba (opcional)
+        'stats': {
+            'total': Producto.objects.count(),
+            'agotados': Producto.objects.filter(Q(stock=0) | Q(stock__isnull=True)).count(),
+        }
+    }
+
+    return render(request, "Vistas/Vista_adm/inventario.html", context)
+
+#####################################
+def actualizar_stock_api(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        product_id = data.get('product_id')
+        action = data.get('action')
+
+        try:
+            producto = Producto.objects.get(id=product_id)
+            
+            # Si el stock es None, lo convertimos a 0 para poder operar
+            if producto.stock is None:
+                producto.stock = 0
+
+            if action == 'increase':
+                producto.stock += 1
+            elif action == 'decrease':
+                if producto.stock > 0:
+                    producto.stock -= 1
+            
+            producto.save()
+            return JsonResponse({'status': 'success', 'new_stock': producto.stock})
+        
+        except Producto.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Producto no encontrado'})
+            
+    return JsonResponse({'status': 'error', 'message': 'Método no permitido'})

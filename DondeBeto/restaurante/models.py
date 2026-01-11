@@ -5,19 +5,17 @@ from django.contrib.auth.hashers import make_password, check_password
 # Modelo Usuario
 # ------------------------------
 class Usuario(models.Model):
-    cedula = models.CharField(max_length=10, null=False, blank=False)
-    nombre = models.CharField(max_length=100, null=False, blank=False)
-    apellido = models.CharField(max_length=100, null=False, blank=False)
-    email = models.EmailField(unique=True, null=False, blank=False)
-    contraseña = models.CharField(max_length=128, null=False, blank=False)
+    cedula = models.CharField(max_length=10)
+    nombre = models.CharField(max_length=100)
+    apellido = models.CharField(max_length=100)
+    email = models.EmailField(unique=True)
+    contraseña = models.CharField(max_length=128)
     rol = models.CharField(default='usuario', max_length=20)
     pregunta_clave = models.CharField(max_length=255, null=True, blank=True)
     respuesta_clave = models.CharField(max_length=255, null=True, blank=True)
 
     class Meta:
         db_table = "usuario"
-        verbose_name = "Usuario"
-        verbose_name_plural = "Usuarios"
 
     def __str__(self):
         return f"{self.nombre} {self.apellido}"
@@ -35,46 +33,82 @@ class Usuario(models.Model):
 class Mesa(models.Model):
     numero = models.PositiveIntegerField(unique=True)
     capacidad = models.PositiveIntegerField()
-    estado = models.CharField(max_length=20, default='disponible')  # disponible / ocupada / reservada
+    estado = models.CharField(max_length=20, default='disponible')
 
     class Meta:
         db_table = "mesa"
-        verbose_name = "Mesa"
-        verbose_name_plural = "Mesas"
 
     def __str__(self):
         return f"Mesa {self.numero} ({self.estado})"
 
 
 # ------------------------------
-# Modelo Categoria y Producto
+# Modelo Categoria
 # ------------------------------
 class Categoria(models.Model):
     nombre = models.CharField(max_length=100)
 
     class Meta:
         db_table = "categoria"
-        verbose_name = "Categoria"
-        verbose_name_plural = "Categorias"
 
     def __str__(self):
         return self.nombre
 
 
+# ------------------------------
+# Modelo Producto
+# ------------------------------
 class Producto(models.Model):
     nombre = models.CharField(max_length=100)
     descripcion = models.TextField(blank=True)
     precio = models.DecimalField(max_digits=8, decimal_places=2)
+
+    # Campo NUEVO (solo almacenamiento)
+    iva = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text="IVA en porcentaje (ej: 15.00)"
+    )
+
+    descuento = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text="Descuento en porcentaje (ej: 10.00)"
+    )
+
+    stock = models.PositiveIntegerField(null=True, blank=True)
+    stock_minimo = models.IntegerField(default=5)
+
     imagen = models.ImageField(upload_to='productos/', null=True, blank=True)
-    categoria = models.ForeignKey(Categoria, on_delete=models.SET_NULL, null=True, blank=True)
+    categoria = models.ForeignKey(
+        Categoria,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
 
     class Meta:
         db_table = "producto"
-        verbose_name = "Producto"
-        verbose_name_plural = "Productos"
 
     def __str__(self):
         return self.nombre
+    @property
+    def estado_inventario(self):
+        """
+        Calcula el estado dinámicamente.
+
+        """
+        stock_actual = self.stock if self.stock is not None else 0
+        if self.stock == 0:
+            return 'agotado'
+        elif self.stock <= self.stock_minimo:
+            return 'bajo'
+        else:
+            return 'disponible'
 
 
 # ------------------------------
@@ -91,16 +125,17 @@ class Pedido(models.Model):
     mesa = models.ForeignKey(Mesa, on_delete=models.SET_NULL, null=True, blank=True)
     tipo_pedido = models.CharField(max_length=20, choices=TIPO_CHOICES, default='local')
     fecha = models.DateTimeField(auto_now_add=True)
-    estado = models.CharField(max_length=20, default='pendiente')  # pendiente, en preparación, entregado, pagado
+    estado = models.CharField(max_length=20, default='pendiente')
 
     class Meta:
         db_table = "pedido"
-        verbose_name = "Pedido"
-        verbose_name_plural = "Pedidos"
 
     def __str__(self):
+
         return f"Pedido {self.id} ({self.tipo_pedido})"
     #arlin= metodo para calcular
+
+        return f"Pedido {self.id}"
 
 
 
@@ -111,19 +146,15 @@ class DetallePedido(models.Model):
     pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE, related_name='detalles')
     producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
     cantidad = models.PositiveIntegerField(default=1)
+
+    # Subtotal se guarda desde la vista
     subtotal = models.DecimalField(max_digits=8, decimal_places=2)
 
     class Meta:
         db_table = "detalle_pedido"
-        verbose_name = "Detalle de Pedido"
-        verbose_name_plural = "Detalles de Pedido"
 
     def __str__(self):
         return f"{self.cantidad} x {self.producto.nombre}"
-
-    def save(self, *args, **kwargs):
-        self.subtotal = self.cantidad * self.producto.precio
-        super().save(*args, **kwargs)
 
 
 # ------------------------------
@@ -131,17 +162,22 @@ class DetallePedido(models.Model):
 # ------------------------------
 class Pago(models.Model):
     pedido = models.OneToOneField(Pedido, on_delete=models.CASCADE)
-    metodo = models.CharField(max_length=50)  # efectivo, tarjeta, transferencia
+    metodo = models.CharField(max_length=50)
     monto = models.DecimalField(max_digits=8, decimal_places=2)
-    direccion_entrega = models.CharField(max_length=255, blank=True, null=True)  # solo si es domicilio
-    telefono_contacto = models.CharField(max_length=15, blank=True, null=True)
+
+    comprobante_transferencia = models.ImageField(
+        upload_to='comprobantes/',
+        null=True,
+        blank=True
+    )
+
+    direccion_entrega = models.CharField(max_length=255, null=True, blank=True)
+    telefono_contacto = models.CharField(max_length=15, null=True, blank=True)
     fecha_pago = models.DateTimeField(auto_now_add=True)
     estado = models.CharField(max_length=20, default='completado')
 
     class Meta:
         db_table = "pago"
-        verbose_name = "Factura"
-        verbose_name_plural = "Facturas"
 
     def __str__(self):
-        return f"Factura #{self.id} - Pedido {self.pedido.id}"
+        return f"Pago #{self.id} - Pedido {self.pedido.id}"
