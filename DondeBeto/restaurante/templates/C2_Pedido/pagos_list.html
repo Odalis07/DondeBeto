@@ -50,6 +50,12 @@
             <td data-label="Monto" class="monto">${{ pago.monto|floatformat:2 }}</td>
             <td data-label="Fecha">{{ pago.fecha_pago|date:"d/m/Y H:i" }}</td>
             <td data-label="Acciones" class="acciones">
+                {% if pago.metodo == 'transferencia' %}
+                <a href="{% url 'ver_transferencia' pago.id %}" class="btn-transferencia">
+                    Ver transferencia
+                </a>
+            {% endif %}
+
                 <a href="{% url 'editar_pago' pago.id %}" class="btn-editar">Editar</a>
                 <a href="{% url 'eliminar_pago' pago.id %}" class="btn-eliminar">Eliminar</a>
                 <a href="{% url 'imprimir_factura' pago.id %}" class="btn-imprimir" target="_blank">Imprimir Factura</a>
@@ -64,6 +70,16 @@
 </table>
 
 <style>
+    .btn-transferencia {
+    background-color: #6f42c1;
+    color: white;
+}
+
+.btn-transferencia:hover {
+    background-color: #59339d;
+    transform: translateY(-1px);
+}
+
     .btn-imprimir {
     background-color: #28a745;
     color: white;

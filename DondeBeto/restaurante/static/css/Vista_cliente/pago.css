@@ -91,6 +91,23 @@
     .btn-pagar:hover{
         background:#0b5ed7;
     }
+
+    .btn-cancelar-pedido{
+        margin-top:20px;
+        width:100%;
+        background: #d82a2a;
+        border:none;
+        color:white;
+        font-size:16px;
+        padding:12px;
+        border-radius:10px;
+        cursor:pointer;
+    }
+
+    .btn-cancelar-pedido:hover{
+        background: #e87e2a;
+    }
+
     .payment-method{
         display: flex;
         flex: row;
@@ -119,22 +136,134 @@
     color:white;
 }
 
-.mini-carrito{
-    background:#fff;
-    border-radius:10px;
-    padding: 15px;
-    box-shadow:0 2px 8px rgba(0,0,0,.1);
-    height: auto;
-    
+/* Estilos generales de la tabla del carrito */
+.mini-carrito {
+    margin-left: 50px;
+    padding: 20px;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+    margin-bottom: 30px;
 }
 
-.mini-carrito ul{
-    list-style:none;
-    padding:0;
+.mini-carrito h3 {
+    font-size: 1.4em;
+    font-weight: bold;
+    margin-bottom: 15px;
+    color: #333;
 }
 
-.mini-carrito li{
-    padding:5px 0;
-    border-bottom:1px solid #ddd;
-    
+/* Estilo de la tabla */
+#tabla-edicion-carrito {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+#tabla-edicion-carrito th,
+#tabla-edicion-carrito td {
+    padding: 10px;
+    text-align: left;
+}
+
+#tabla-edicion-carrito th {
+    background-color: #f1f1f1;
+    font-size: 1.1em;
+    color: #555;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+#tabla-edicion-carrito td {
+    background-color: #fff;
+    border-bottom: 1px solid #ddd;
+}
+
+#tabla-edicion-carrito .linea-subtotal {
+    font-weight: bold;
+    color: #27ae60;
+}
+
+#tabla-edicion-carrito input[type="number"] {
+    padding: 5px;
+    width: 60px;
+    text-align: center;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1em;
+}
+
+#tabla-edicion-carrito button {
+    background: none;
+    border: none;
+    color: #e74c3c;
+    cursor: pointer;
+    font-size: 1.2em;
+}
+
+#tabla-edicion-carrito button:hover {
+    color: #c0392b;
+}
+
+/* Estilo de los select y botones debajo de la tabla */
+#select-agregar-producto {
+    padding: 10px;
+    width: 70%;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    font-size: 1em;
+    margin-right: 10px;
+}
+
+button[type="button"] {
+    padding: 10px 15px;
+    background-color: #3498db;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+button[type="button"]:hover {
+    background-color: #2980b9;
+}
+
+/* Estilo para el contenedor de la mini lista */
+.mini-carrito div {
+    margin-top: 15px;
+}
+
+.mini-carrito select {
+    padding: 10px;
+    font-size: 1em;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+}
+
+.mini-carrito .form-group {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.mini-carrito .form-group label {
+    font-size: 1em;
+    color: #555;
+}
+
+.mini-carrito .form-group input,
+.mini-carrito .form-group select {
+    width: 70%;
+    padding: 8px;
+    font-size: 1em;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+}
+
+.mini-carrito .form-group input[type="file"] {
+    padding: 5px;
 }

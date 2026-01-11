@@ -130,7 +130,19 @@ class Producto(models.Model):
             precio += precio * self.iva / Decimal('100')
 
         return precio
+    @property
+    def estado_inventario(self):
+        """
+        Calcula el estado dinámicamente.
 
+        """
+        stock_actual = self.stock if self.stock is not None else 0
+        if self.stock == 0:
+            return 'agotado'
+        elif self.stock <= self.stock_minimo:
+            return 'bajo'
+        else:
+            return 'disponible'
 # ------------------------------
 # Modelo Pedido
 # ------------------------------
@@ -176,20 +188,66 @@ class DetallePedido(models.Model):
 # Modelo Pago
 # ------------------------------
 class Pago(models.Model):
-    pedido = models.OneToOneField(Pedido, on_delete=models.CASCADE)
-    metodo = models.CharField(max_length=50)
-    monto = models.DecimalField(max_digits=8, decimal_places=2)
 
+    BANCO_CHOICES = [
+        ('pichincha', 'Banco Pichincha'),
+        ('pacifico', 'Banco del Pacífico'),
+        ('guayaquil', 'Banco Guayaquil'),
+        ('produbanco', 'Produbanco'),
+        ('internacional', 'Banco Internacional'),
+        ('otro', 'Otro'),
+    ]
+
+    pedido = models.OneToOneField(Pedido, on_delete=models.CASCADE)
+    metodo = models.CharField(max_length=100)
+    monto = models.DecimalField(max_digits=10, decimal_places=2)
+
+    # 📸 Comprobante de transferencia
     comprobante_transferencia = models.ImageField(
         upload_to='comprobantes/',
         null=True,
         blank=True
     )
 
+
+    codigo_comprobante = models.CharField(
+        max_length=100,
+        null=True,
+        blank=True
+    )
+
+    numero_cuenta = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True
+    )
+
+    banco = models.CharField(
+        max_length=30,
+        choices=BANCO_CHOICES,
+        null=True,
+        blank=True
+    )
+
+
+    banco_otro = models.CharField(
+        max_length=100,
+        null=True,
+        blank=True,
+        help_text="Especifique el banco si selecciona 'Otro'"
+    )
+
+    nombre_pagador = models.CharField(
+        max_length=100,
+        null=True,
+        blank=True
+    )
+
     direccion_entrega = models.CharField(max_length=255, null=True, blank=True)
     telefono_contacto = models.CharField(max_length=15, null=True, blank=True)
+
     fecha_pago = models.DateTimeField(auto_now_add=True)
-    estado = models.CharField(max_length=20, default='completado')
+    estado = models.CharField(max_length=50, default='completado')
 
     class Meta:
         db_table = "pago"

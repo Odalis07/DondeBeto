@@ -8,7 +8,7 @@
 </div>
 
 <div class="form-container-large">
-    <form method="POST">
+    <form method="POST" enctype="multipart/form-data">
         {% csrf_token %}
 
         <div class="form-section">
@@ -16,7 +16,7 @@
 
             <div class="form-group">
                 <label>Método de Pago *</label>
-                <select name="metodo" class="form-control" required>
+                <select name="metodo" id="metodo_pago" class="form-control" required>
                     <option value="">Seleccione un método</option>
                     <option value="efectivo" {% if pago.metodo == 'efectivo' %}selected{% endif %}>Efectivo</option>
                     <option value="tarjeta" {% if pago.metodo == 'tarjeta' %}selected{% endif %}>Tarjeta</option>
@@ -37,6 +37,40 @@
                 <input type="text" name="telefono_contacto" class="form-control"
                        value="{{ pago.telefono_contacto }}">
             </div>
+
+            <!-- CAMPOS TRANSFERENCIA -->
+            <div id="transferencia-fields" style="display: {% if pago.metodo == 'transferencia' %}block{% else %}none{% endif %};">
+                <div class="form-group">
+                    <label>Código de Comprobante</label>
+                    <input type="text" name="codigo_comprobante" class="form-control"
+                           value="{{ pago.codigo_comprobante }}">
+                </div>
+                <div class="form-group">
+                    <label>Nombre del Pagador</label>
+                    <input type="text" name="nombre_pagador" class="form-control"
+                           value="{{ pago.nombre_pagador }}">
+                </div>
+                <div class="form-group">
+                    <label>Número de Cuenta</label>
+                    <input type="text" name="numero_cuenta" class="form-control"
+                           value="{{ pago.numero_cuenta }}">
+                </div>
+                <div class="form-group">
+                    <label>Banco</label>
+                    <input type="text" name="banco" class="form-control"
+                           value="{{ pago.banco }}">
+                </div>
+                <div class="form-group">
+                    <label>Comprobante de Transferencia</label>
+                    {% if pago.comprobante_transferencia %}
+                        <a href="{{ pago.comprobante_transferencia.url }}" target="_blank">Ver Comprobante</a>
+                    {% else %}
+                        <span>Este pago no posee comprobante de transferencia.</span>
+                    {% endif %}
+                    <input type="file" name="comprobante_transferencia" class="form-control">
+                </div>
+            </div>
+
         </div>
 
         <div class="form-actions">
@@ -45,6 +79,18 @@
         </div>
     </form>
 </div>
+
+<script>
+// Mostrar campos de transferencia solo si se selecciona método transferencia
+document.getElementById('metodo_pago').addEventListener('change', function() {
+    const transferenciaFields = document.getElementById('transferencia-fields');
+    if (this.value === 'transferencia') {
+        transferenciaFields.style.display = 'block';
+    } else {
+        transferenciaFields.style.display = 'none';
+    }
+});
+</script>
 
 <style>
 .form-container-large {

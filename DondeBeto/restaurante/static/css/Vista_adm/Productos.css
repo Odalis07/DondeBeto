@@ -135,11 +135,13 @@ html, body {
   transition: 0.25s ease;
 }
 
+/* Card cuando está en hover */
 .card-producto:hover {
   transform: translateY(-5px);
   box-shadow: 0px 8px 22px var(--shadow-color);
 }
 
+/* Imagen de la tarjeta */
 .card-producto img {
   width: 200px;
   height: 160px;
@@ -147,11 +149,13 @@ html, body {
   border-radius: 5%;
 }
 
+/* Nombre del producto */
 .card-producto .name {
   font-weight: 700;
   text-align: center;
 }
 
+/* Detalles del producto */
 .card-producto .detail {
   font-size: 14px;
   text-align: justify;
@@ -159,6 +163,32 @@ html, body {
   line-height: 2;
 }
 
+
+/* Badge de "No disponible" */
+.badge-no-disponible {
+  position: absolute;
+  top: 10px;
+  left: 10px;  /* Coloca el badge a la izquierda */
+  background-color: rgba(255, 0, 0, 0.7); /* Fondo rojo tenue */
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 13px;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(255, 0, 0, 0.4);
+}
+
+/* Card cuando el stock es 0 (No disponible) */
+.card-producto.no-disponible {
+  background-color: rgba(255, 0, 0, 0.1); /* Fondo rojo tenue */
+  border: 1px solid rgba(255, 0, 0, 0.3);  /* Borde rojo */
+}
+
+/* Ejemplo de la clase para los productos no disponibles */
+.card-producto.no-disponible:hover {
+  box-shadow: 0px 8px 22px rgba(255, 0, 0, 0.3);
+}
 
 /* ---------------------------------------------------
 9. BOTÓN NUEVO

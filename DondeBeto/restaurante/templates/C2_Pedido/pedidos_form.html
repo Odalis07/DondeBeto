@@ -91,18 +91,23 @@
                     {% for detalle in detalles_actuales %}
                     <div class="producto-row">
                         <div class="form-group" style="flex: 2;">
-                            <label>Producto</label><select class="form-control producto-select" name="producto_id[]" required>
-                            <option value="">Seleccione un producto</option>
-                            {% for producto in productos %}
-                            <option value="{{ producto.id }}"
-                                    data-precio="{{ producto.precio }}"
-                                    data-descuento="{{ producto.descuento|default:'0' }}"
-                                    data-iva="{{ producto.iva|default:'0' }}"
-                                    {% if detalle.producto.id == producto.id %}selected{% endif %}>
-                                {{ producto.nombre }} - ${{ producto.precio }}
-                            </option>
-                            {% endfor %}
-                        </select>
+                            <label>Producto</label> <select class="form-control producto-select" name="producto_id[]" required>
+           <select class="form-control producto-select" name="producto_id[]" required>
+    <option value="">Seleccione un producto</option>
+    {% for producto in productos %}
+        {# Filtramos para que solo aparezcan si tienen stock o si es el producto ya seleccionado #}
+        {% if producto.stock > 0 or detalle.producto.id == producto.id %}
+            <option value="{{ producto.id }}"
+                    data-precio="{{ producto.precio }}"
+                    data-descuento="{{ producto.descuento|default:'0' }}"
+                    data-iva="{{ producto.iva|default:'0' }}"
+                    {% if detalle.producto.id == producto.id %}selected{% endif %}>
+                {{ producto.nombre }} - ${{ producto.precio }} ${{ producto.stock }}
+            </option>
+        {% endif %}
+    {% endfor %}
+</select>
+        </select>
 
                         </div>
                         <div class="form-group">
@@ -126,7 +131,7 @@
                                 <option value="{{ producto.id }}" data-precio="{{ producto.precio }}"
 data-descuento="{{ producto.descuento|default:'0' }}"
 data-iva="{{ producto.iva|default:'0' }}">
-                                    {{ producto.nombre }} - ${{ producto.precio }}
+                                    {{ producto.nombre }} - ${{ producto.precio }}  (Stock: {{ producto.stock }})
                                 </option>
                                 {% endfor %}
                             </select>
@@ -452,7 +457,15 @@ function calcularFila(row) {
     const select = row.querySelector('.producto-select');
     const cantidad = parseInt(row.querySelector('.cantidad-input').value || 0);
     const subtotalInput = row.querySelector('.subtotal-input');
+const option = select.selectedOptions[0];
+const stockDisponible = parseInt(option.text.match(/Stock: (\d+)/)?.[1] || 999);
 
+if (cantidad > stockDisponible) {
+    alert(`Solo hay ${stockDisponible} unidades disponibles de este producto.`);
+    row.querySelector('.cantidad-input').value = stockDisponible;
+    // Recalcular con el máximo disponible
+    return calcularFila(row);
+}
     if (!select.value || cantidad === 0) {
         subtotalInput.value = '$0.00';
         row.dataset.subtotal = 0;
@@ -461,7 +474,7 @@ function calcularFila(row) {
         return;
     }
 
-    const option = select.selectedOptions[0];
+
 
     const precio = parseFloat(option.dataset.precio || 0);
     const descuentoPct = parseFloat(option.dataset.descuento || 0);
@@ -512,12 +525,18 @@ function calcularTotales() {
 // ================== AGREGAR PRODUCTO ==================
 function addProducto() {
     const container = document.getElementById('productos-container');
+    // Clonamos la primera fila
     const newRow = document.querySelector('.producto-row').cloneNode(true);
 
-    newRow.querySelector('.producto-select').selectedIndex = 0;
+    // Resetear el select a la opción por defecto ("Seleccione un producto")
+    const select = newRow.querySelector('.producto-select');
+    select.selectedIndex = 0;
+
+    // Resetear cantidad y subtotales visuales
     newRow.querySelector('.cantidad-input').value = 1;
     newRow.querySelector('.subtotal-input').value = '$0.00';
 
+    // Resetear los datos internos de cálculo
     newRow.dataset.subtotal = 0;
     newRow.dataset.descuento = 0;
     newRow.dataset.iva = 0;

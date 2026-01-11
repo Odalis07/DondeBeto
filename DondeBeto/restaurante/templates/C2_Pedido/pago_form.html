@@ -8,91 +8,312 @@
 </div>
 
 <div class="form-container-large">
-      <form method="POST">
+    <form method="POST" enctype="multipart/form-data">
         {% csrf_token %}
 
+        <!-- INFORMACIÓN DEL PEDIDO -->
         <div class="form-section pedido-info">
             <h3 class="section-title">Información del Pedido</h3>
-
             <div class="pedido-info-grid">
                 <div class="info-item">
                     <span class="info-label">Cliente</span>
-                    <span class="info-value">
-                        {{ pedido.usuario.nombre }} {{ pedido.usuario.apellido }}
-                    </span>
+                    <span class="info-value">{{ pedido.usuario.nombre }} {{ pedido.usuario.apellido }}</span>
                 </div>
-
                 <div class="info-item">
                     <span class="info-label">Tipo de Pedido</span>
-                    <span class="info-value">
-                        {{ pedido.get_tipo_pedido_display }}
-                    </span>
+                    <span class="info-value">{{ pedido.get_tipo_pedido_display }}</span>
                 </div>
-
                 <div class="info-item total">
                     <span class="info-label">Total a Pagar</span>
-                    <span class="info-value total-amount">
-                        ${{ total }}
-                    </span>
+                    <span class="info-value total-amount">${{ total|floatformat:2 }}</span>
                 </div>
             </div>
         </div>
 
         <br>
 
+        <!-- DATOS DEL PAGO -->
         <div class="form-section">
             <h3 class="section-title">Datos del Pago</h3>
-    <br>
+            <br>
 
-    <div class="form-group">
-        <label>Método de Pago *</label>
-        <select name="metodo" class="form-control" required>
-            <option value="">Seleccione un método</option>
-            <option value="efectivo">Efectivo</option>
-            <option value="tarjeta">Tarjeta</option>
-            <option value="transferencia">Transferencia</option>
-        </select>
-    </div>
+            <!-- MÉTODO DE PAGO -->
+            <div class="form-group">
+                <label>Método de Pago *</label>
+                <select name="metodo" id="metodo_pago" class="form-control" required>
+                    <option value="">Seleccione un método</option>
+                    <option value="efectivo" {% if pago.metodo == 'efectivo' %}selected{% endif %}>Efectivo</option>
+                    <option value="tarjeta" {% if pago.metodo == 'tarjeta' %}selected{% endif %}>Tarjeta</option>
+                    <option value="transferencia" {% if pago.metodo == 'transferencia' %}selected{% endif %}>Transferencia</option>
+                </select>
+            </div>
 
-    {% if pedido.tipo_pedido == 'domicilio' %}
-    <div class="form-group">
-        <label>Dirección de Entrega *</label>
-        <input type="text" name="direccion_entrega" class="form-control" required
-               value="{{ pedido.direccion_entrega }}">
-    </div>
-    {% endif %}
+            <!-- Campos Dinámicos -->
+            <div id="metodo-dinamico"></div>
 
-    <div class="form-group">
-        <label>Teléfono de Contacto</label>
-        <input type="text" name="telefono_contacto" class="form-control"
-               value="{{ pedido.telefono_contacto }}">
-    </div>
+            <!-- CAMPOS DE TRANSFERENCIA -->
+            <div id="transferencia-fields" style="display: none;">
+                <div class="form-group">
+                    <label>Código de Comprobante</label>
+                    <input type="text" name="codigo_comprobante" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Número de Cuenta</label>
+                    <input type="text" name="numero_cuenta" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Banco</label>
+                    <select name="banco" id="banco_select" class="form-control">
+                        <option value="">Seleccione un banco</option>
+                        <option value="pichincha">Banco Pichincha</option>
+                        <option value="pacifico">Banco del Pacífico</option>
+                        <option value="guayaquil">Banco Guayaquil</option>
+                        <option value="produbanco">Produbanco</option>
+                        <option value="internacional">Banco Internacional</option>
+                        <option value="otro">Otro</option>
+                    </select>
+                </div>
+                <div class="form-group" id="banco-otro-group" style="display:none;">
+                    <label>Especifique el banco</label>
+                    <input type="text" name="banco_otro" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Nombre del Pagador</label>
+                    <input type="text" name="nombre_pagador" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Comprobante de Transferencia</label>
+                    <input type="file" name="comprobante_transferencia" class="form-control">
+                </div>
+            </div>
 
-        <div class="form-actions">
-            <button type="submit" class="btn-primary">Registrar Pago</button>
-            <a href="{% url 'pedidos_list' %}" class="btn-secondary">Cancelar</a>
+            <!-- DIRECCIÓN DE ENTREGA -->
+            {% if pedido.tipo_pedido == 'domicilio' %}
+            <div class="form-group" id="direccion-group">
+                <label>Dirección de Entrega *</label>
+                <input type="text" name="direccion_entrega" class="form-control" required value="{{ pedido.direccion_entrega }}">
+            </div>
+            {% endif %}
+
+            <!-- TELÉFONO DE CONTACTO -->
+            <div class="form-group">
+                <label>Teléfono de Contacto</label>
+                <input type="text" name="telefono_contacto" class="form-control" value="{{ pedido.telefono_contacto }}">
+            </div>
+     <form id="payment-form">
+    <!-- TODO tu contenido actual -->
+    <div id="contenedor-form">
+
+            <!-- BOTONES -->
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">Registrar Pago</button>
+                <a href="{% url 'pedidos_list' %}" class="btn-secondary">Cancelar</a>
+            </div>
         </div>
     </form>
+
 </div>
 
+<!-- SCRIPTS -->
+<script src="https://js.stripe.com/v3/"></script>
+
 <script>
-// Mostrar u ocultar dirección según tipo de pago
-document.getElementById('metodo_pago').addEventListener('change', function() {
-    const direccionGroup = document.getElementById('direccion-group');
-    const direccionInput = direccionGroup.querySelector('input');
-
-    if (this.value === 'domicilio') {
-        direccionGroup.style.display = 'block';
-        direccionInput.required = true;
-    } else {
-        direccionGroup.style.display = 'none';
-        direccionInput.required = false;
-        direccionInput.value = '';
-    }
-});
+const stripe = Stripe("{{ STRIPE_PUBLIC_KEY }}");
 </script>
-<style>
 
+<script src="https://js.stripe.com/v3/">
+ // ===============================
+  // PAGO CON TARJETA (STRIPE)
+  // ===============================
+  async function procesarPagoTarjeta() {
+    const { paymentIntent, error } = await stripe.confirmCardPayment(
+      "{{ client_secret }}",
+      { payment_method: { card: card } }
+    );
+
+    if (error) {
+      document.getElementById("card-errors").textContent = error.message;
+      return;
+    }
+
+    const res = await enviarDatosPago({
+      stripe_intent: paymentIntent.id
+    });
+
+    if (!res.success) {
+      alert(res.error);
+      return;
+    }
+
+    window.location.href = "/home-Vista_cliente/";
+  }
+</script>
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+    let metodoSeleccionado = null;
+    let card = null;
+
+    document.querySelectorAll("input[name='metodo']").forEach(input => {
+        input.addEventListener("change", function () {
+            metodoSeleccionado = this.value;
+            const contenedor = document.getElementById("contenedor-form");
+            contenedor.innerHTML = ""; // Limpiar previo
+
+            if (this.value === "tarjeta") {
+                contenedor.innerHTML = `
+                    <h4>Pago con Tarjeta</h4>
+                    <div id="card-element"></div>
+                    <div id="card-errors" style="color:red;"></div>
+                `;
+                const elements = stripe.elements();
+                card = elements.create("card");
+                card.mount("#card-element");
+            }
+            else if (this.value === "efectivo") {
+                contenedor.innerHTML = `
+                    <h4>Pago en efectivo</h4>
+                    <p>El pago se realizará al momento de la entrega.</p>
+                `;
+            }
+            else if (this.value === "transferencia") {
+                contenedor.innerHTML = `
+                    <h4>Transferencia bancaria</h4>
+                    <p>Cuenta: 123456789 (Beto Restaurante)</p>
+                    <div id="transferencia-fields">
+                        <div class="form-group"><label>Código de Comprobante</label><input type="text" id="codigo_comprobante" class="form-control"></div>
+                        <div class="form-group"><label>Número de Cuenta</label><input type="text" id="numero_cuenta" class="form-control"></div>
+                        <div class="form-group">
+                            <label>Banco</label>
+                            <select id="banco_select" class="form-control">
+                                <option value="">Seleccione un banco</option>
+                                <option value="pichincha">Banco Pichincha</option>
+                                <option value="guayaquil">Banco Guayaquil</option>
+                                <option value="otro">Otro</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="banco-otro-group" style="display:none;">
+                            <label>Especifique el banco</label><input type="text" id="banco_otro" class="form-control">
+                        </div>
+                        <div class="form-group"><label>Nombre del Pagador</label><input type="text" id="nombre_pagador" class="form-control"></div>
+                        <div class="form-group"><label>Comprobante de Transferencia (Foto)</label><input type="file" id="comprobante_file" class="form-control"></div>
+                    </div>
+                `;
+
+                // Lógica para mostrar "Otro banco"
+                document.getElementById("banco_select").addEventListener("change", function() {
+                    document.getElementById("banco-otro-group").style.display = this.value === "otro" ? "block" : "none";
+                });
+            }
+        });
+    });
+
+    // CAMBIO IMPORTANTE: Usar FormData para enviar archivos
+    async function enviarDatosPago(extraData = {}) {
+        const formData = new FormData();
+
+        // Datos básicos
+        formData.append("nombre", document.getElementById("nombre").value.trim());
+        formData.append("direccion_entrega", document.getElementById("direccion").value.trim());
+        formData.append("telefono_contacto", document.getElementById("telefono").value.trim());
+        formData.append("metodo", metodoSeleccionado);
+
+        // Si es transferencia, agregar campos específicos y el archivo
+        if (metodoSeleccionado === "transferencia") {
+            formData.append("codigo_comprobante", document.getElementById("codigo_comprobante").value);
+            formData.append("numero_cuenta", document.getElementById("numero_cuenta").value);
+            formData.append("banco", document.getElementById("banco_select").value);
+            formData.append("banco_otro", document.getElementById("banco_otro")?.value || "");
+            formData.append("nombre_pagador", document.getElementById("nombre_pagador").value);
+
+            const fileInput = document.getElementById("comprobante_file");
+            if (fileInput.files[0]) {
+                formData.append("comprobante_transferencia", fileInput.files[0]);
+            }
+        }
+
+        // Agregar datos de Stripe si existen
+        for (const key in extraData) {
+            formData.append(key, extraData[key]);
+        }
+
+        const response = await fetch("{% url 'confirmar_pago' pedido.id %}", {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": "{{ csrf_token }}"
+                // Nota: No se pone Content-Type cuando se usa FormData para que el navegador ponga el boundary correcto
+            },
+            body: formData
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            alert("Pago registrado con éxito");
+            window.location.href = "/home-Vista_cliente/";
+        } else {
+            alert("Error: " + data.error);
+        }
+        return data;
+    }
+
+    // Submit del formulario
+    document.getElementById("payment-form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        if (!metodoSeleccionado) return alert("Selecciona un método de pago");
+
+        if (metodoSeleccionado === "tarjeta") {
+            await procesarPagoTarjeta();
+        } else {
+            await enviarDatosPago();
+        }
+    });
+});
+// Variables
+const metodoPago = document.getElementById('metodo_pago');
+const transferenciaFields = document.getElementById('transferencia-fields');
+const metodoDinamico = document.getElementById('metodo-dinamico');
+let card = null;
+
+// Función para manejar la renderización del método de pago
+function renderMetodo() {
+    const metodo = metodoPago.value;
+
+    // Reset de los campos dinámicos
+    metodoDinamico.innerHTML = '';
+    transferenciaFields.style.display = 'none';
+
+    // Efectivo
+    if (metodo === 'efectivo') {
+        metodoDinamico.innerHTML = `
+            <p>El dinero en efectivo será recibido en caja al momento del pago.</p>
+        `;
+    }
+
+    // Tarjeta
+    if (metodo === 'tarjeta') {
+        metodoDinamico.innerHTML = `
+            <h4>Pago con tarjeta</h4>
+            <div id="card-element"></div>
+            <div id="card-errors" style="color:red;"></div>
+        `;
+        const elements = stripe.elements();
+        card = elements.create("card");
+        card.mount("#card-element");
+    }
+
+    // Transferencia
+    if (metodo === 'transferencia') {
+        transferenciaFields.style.display = 'block';
+    }
+}
+
+// Listener para cambio de método de pago
+metodoPago.addEventListener('change', renderMetodo);
+
+// Render inicial si ya hay un método seleccionado
+renderMetodo();
+</script>
+
+<style>
 .form-container-large {
     background-color: white;
     border-radius: 10px;
@@ -134,7 +355,6 @@ document.getElementById('metodo_pago').addEventListener('change', function() {
     font-size: 14px;
 }
 
-/* BOTONES */
 .btn-primary {
     background-color: #4a93e3;
     color: white;
@@ -165,7 +385,6 @@ document.getElementById('metodo_pago').addEventListener('change', function() {
     background-color: #5a6268;
 }
 
-/* PEDIDO INFO */
 .pedido-info-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -205,7 +424,6 @@ document.getElementById('metodo_pago').addEventListener('change', function() {
     font-weight: bold;
     color: #ff5722;
 }
-
 </style>
 
 {% endblock %}

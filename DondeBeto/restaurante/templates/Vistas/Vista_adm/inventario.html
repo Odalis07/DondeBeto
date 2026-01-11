@@ -74,6 +74,7 @@
             <section class="content">
                      <div class="inventory-container">
 
+
             <!-- Header -->
             <div class="inventory-header">
                 <div class="inventory-title">
@@ -81,7 +82,7 @@
                         <span class="icon-package"></span>
                         Control de Inventario
                     </h2>
-                    <a href="{% url 'registrar_producto' %}" class="btn-primary">
+                    <a href="{% url 'productos' %}" class="btn-primary">
                         <span class="icon-plus"></span>
                         Agregar Producto
                     </a>
@@ -91,25 +92,7 @@
                 </p>
             </div>
 
-            <!-- Estadísticas -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-label">Total Productos</div>
-                    <div class="stat-value">{{ stats.total }}</div>
-                </div>
-                <div class="stat-card disponible">
-                    <div class="stat-label">Disponibles</div>
-                    <div class="stat-value">{{ stats.disponibles }}</div>
-                </div>
-                <div class="stat-card bajo">
-                    <div class="stat-label">Stock Bajo</div>
-                    <div class="stat-value">{{ stats.bajo_stock }}</div>
-                </div>
-                <div class="stat-card agotado">
-                    <div class="stat-label">Agotados</div>
-                    <div class="stat-value">{{ stats.agotados }}</div>
-                </div>
-            </div>
+
 
             <!-- Buscador -->
             <form method="GET" class="search-filter-bar">
@@ -144,7 +127,7 @@
                             <th class="center">Mínimo</th>
                             <th class="center">Estado</th>
                             <th class="center">Precio</th>
-                            <th class="center">Acciones</th>
+
                         </tr>
                     </thead>
                     <tbody>
@@ -153,15 +136,30 @@
                             <tr>
                                 <td>{{ producto.nombre }}</td>
                                 <td>{{ producto.categoria.nombre }}</td>
-                                <td class="center">{{ producto.stock }}</td>
-                                <td class="center">{{ producto.stock_minimo }}</td>
+                                <td class="center stock-controls">
+                                  <button class="btn-stock" onclick="updateStock({{ producto.id }}, 'decrease')"> &#9660; </button>
+
+                                   <span id="stock-count-{{ producto.id }}" class="stock-number">
+                                     {{ producto.stock|default:"0" }}
+                                   </span>
+
+                                  <button class="btn-stock" onclick="updateStock({{ producto.id }}, 'increase')">  &#9650; </button>
+                                </td>
+
                                 <td class="center">
-                                    {{ producto.get_status_display }}
+                                    {{ producto.stock_minimo }}
+                                </td>
+                                <td class="center">
+                                {% if producto.estado_inventario == 'agotado' %}
+                                <span class="badge badge-danger">Agotado</span>
+                                {% elif producto.estado_inventario == 'bajo' %}
+                                <span class="badge badge-warning">Stock Bajo</span>
+                                {% else %}
+                                 <span class="badge badge-success">Disponible</span>
+                                  {% endif %}
                                 </td>
                                 <td class="center">${{ producto.precio }}</td>
-                                <td class="center">
-                                    <a href="{% url 'producto_editar' producto.id %}" class="btn-icon edit">✏️</a>
-                                </td>
+
                             </tr>
                             {% endfor %}
                         {% else %}
@@ -181,11 +179,76 @@
 
         </div>
 
+    </main>
+
+</div>
+
+
 
 
 
             </section>
         </main>
     </div>
+    <script>
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function updateStock(productId, action) {
+        const url = "/actualizar_stock/"; // Esta URL la crearemos en el paso 3
+        const csrftoken = getCookie('csrftoken');
+        const spanElement = document.getElementById(`stock-count-${productId}`);
+        let currentStock = parseInt(spanElement.innerText);
+
+        // Optimismo en la interfaz (actualizamos visualmente antes de esperar al servidor)
+        if (action === 'increase') {
+            spanElement.innerText = currentStock + 1;
+        } else if (action === 'decrease' && currentStock > 0) {
+            spanElement.innerText = currentStock - 1;
+        } else {
+            return; // No hacer nada si intenta bajar de 0
+        }
+
+        // Enviamos los datos al servidor
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify({
+                'product_id': productId,
+                'action': action
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status !== 'success') {
+                alert("Hubo un error al guardar el stock.");
+                // Revertimos el cambio si falló
+                spanElement.innerText = currentStock;
+            }
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+            spanElement.innerText = currentStock;
+        });
+     }
+</script>
+
+
+
 </body>
 </html>

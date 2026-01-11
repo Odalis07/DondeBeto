@@ -1,0 +1,220 @@
+{% extends 'Vistas/Vista_adm/Vista_Adm.html' %}
+
+{% block title %}Comprobante de Transferencia{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <h2 class="content-title">Transferencia - Pedido #{{ pago.pedido.id }}</h2>
+</div>
+
+<div class="transferencia-container">
+
+    {% if pago.comprobante_transferencia %}
+
+        <div class="transferencia-info">
+            <p><strong>Banco:</strong>
+                {% if pago.banco == 'otro' %}
+                    {{ pago.banco_otro }}
+                {% else %}
+                    {{ pago.get_banco_display }}
+                {% endif %}
+            </p>
+
+            <p><strong>Código de comprobante:</strong> {{ pago.codigo_comprobante|default:"—" }}</p>
+            <p><strong>Nombre del pagador:</strong> {{ pago.nombre_pagador|default:"—" }}</p>
+        </div>
+
+        <div class="comprobante-box">
+            <img src="{{ pago.comprobante_transferencia.url }}"
+                 alt="Comprobante de transferencia"
+                 class="comprobante-img"
+                 onclick="abrirImagen(this.src)">
+        </div>
+
+        <div class="transferencia-actions">
+            <a href="{{ pago.comprobante_transferencia.url }}"
+               download
+               class="btn-descargar">
+                Descargar comprobante
+            </a>
+
+            <a href="{% url 'pagos_list' %}" class="btn-volver">
+                Volver
+            </a>
+        </div>
+
+    {% else %}
+
+        <div class="alert-warning">
+            <h4>Sin comprobante</h4>
+            <p>Este pago no posee comprobante de transferencia.</p>
+            <a href="{% url 'pagos_list' %}" class="btn-volver">Volver</a>
+        </div>
+
+    {% endif %}
+</div>
+
+<!-- MODAL IMAGEN -->
+<div id="modalImagen" class="modal" onclick="cerrarImagen()">
+    <span class="modal-close">&times;</span>
+    <img class="modal-content" id="imgModal">
+</div>
+
+<style>
+/* CONTENEDOR */
+.transferencia-container {
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    max-width: 900px;
+    margin: auto;
+}
+
+/* INFO */
+.transferencia-info p {
+    font-size: 15px;
+    margin-bottom: 8px;
+}
+
+/* IMAGEN */
+.comprobante-box {
+    text-align: center;
+    margin: 25px 0;
+}
+
+.comprobante-img {
+    max-width: 100%;
+    max-height: 420px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    cursor: zoom-in;
+    transition: transform 0.3s ease;
+}
+
+.comprobante-img:hover {
+    transform: scale(1.02);
+}
+
+/* BOTONES */
+.transferencia-actions {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+.btn-descargar {
+    background-color: #28a745;
+    color: white;
+    padding: 10px 22px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.btn-descargar:hover {
+    background-color: #218838;
+}
+
+.btn-volver {
+    background-color: #6c757d;
+    color: white;
+    padding: 10px 22px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.btn-volver:hover {
+    background-color: #5a6268;
+}
+
+/* ALERTA */
+.alert-warning {
+    background-color: #fff3cd;
+    border: 1px solid #ffeeba;
+    color: #856404;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.alert-warning h4 {
+    margin-bottom: 10px;
+}
+
+/* MODAL */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    padding-top: 40px;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.85);
+}
+
+.modal-content {
+    margin: auto;
+    display: block;
+    max-width: 95vw;
+    max-height: 95vh;
+    transform: scale(1);
+    transition: transform 0.1s ease-out;
+    cursor: zoom-in;
+}
+
+
+.modal-close {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    font-size: 40px;
+    color: white;
+    cursor: pointer;
+}
+</style>
+
+<script>
+let scale = 1;
+const scaleStep = 0.1;
+const minScale = 0.5;
+const maxScale = 4;
+
+function abrirImagen(src) {
+    const modal = document.getElementById("modalImagen");
+    const img = document.getElementById("imgModal");
+
+    scale = 1;
+    img.style.transform = "scale(1)";
+    img.src = src;
+
+    modal.style.display = "block";
+
+    // Evento de zoom con rueda
+    img.onwheel = function (event) {
+        event.preventDefault();
+
+        if (event.deltaY < 0) {
+            // Zoom in
+            scale += scaleStep;
+        } else {
+            // Zoom out
+            scale -= scaleStep;
+        }
+
+        scale = Math.min(Math.max(scale, minScale), maxScale);
+        img.style.transform = `scale(${scale})`;
+    };
+}
+
+function cerrarImagen() {
+    const modal = document.getElementById("modalImagen");
+    modal.style.display = "none";
+}
+</script>
+
+
+{% endblock %}

@@ -33,21 +33,28 @@
         <!-- Resumen -->
         <p class="section-title">Resumen del Pedido</p>
         <div class="summary-box">
-            <div class="row">
-                <span>Subtotal</span>
-                <strong>$ {{ subtotal }}</strong>
-            </div>
-
-            <div class="row">
-                <span>Envío</span>
-                <strong>$0,00</strong>
-            </div>
-
-            <div class="row">
-                <span>Total</span>
-                <strong>$ {{ total }}</strong>
-            </div>
-        </div>
+    <div class="row">
+        <span>Subtotal (Sin desc.)</span>
+        <strong id="resumen-subtotal">$ 0.00</strong>
+    </div>
+    <div class="row" style="color: #e74c3c;">
+        <span>Descuento</span>
+        <strong id="resumen-descuento">-$ 0.00</strong>
+    </div>
+    <div class="row">
+        <span>IVA</span>
+        <strong id="resumen-iva">$ 0.00</strong>
+    </div>
+    <div class="row">
+        <span>Envío</span>
+        <strong>$ 0.00</strong>
+    </div>
+    <hr>
+    <div class="row">
+        <span>Total Final</span>
+        <strong id="resumen-total">$ 0.00</strong>
+    </div>
+</div>
 
         <!-- Métodos de pago -->
         <p class="section-title">Método de Pago</p>
@@ -89,25 +96,67 @@
     <button class="btn-pagar" type="submit">
         Confirmar y pagar
     </button>
+       <button class="btn-cancelar-pedido" type="button" id="btn-cancelar-pedido">
+            ✕ Cancelar Pedido
+        </button>
 </form>
 
     </div>
     <div class="mini-carrito">
-        <h3>Tu lista de compras</h3>
-        <ul>
+    <h3>Tu lista de compras</h3>
+
+    <table style="width:100%; border-collapse: collapse;" id="tabla-edicion-carrito">
+        <thead>
+            <tr style="border-bottom: 1px solid #ddd; text-align: left;">
+                <th>Producto</th>
+                <th>Cant.</th>
+                <th>Subtotal</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody id="cuerpo-carrito">
             {% for item in carrito %}
-
-            <li> 
-
-                -{{item.nombre}}
-                x{{item.cantidad}}
-                ${{item.subtotal}}
-
-            </li>
+            <tr data-id="{{ item.id }}" data-precio="{{ item.precio_base }}" data-iva="{{ item.iva_porcentaje }}" data-desc="{{ item.descuento_porcentaje }}">
+                <td>{{ item.nombre }}</td>
+                <td>
+                    <input type="number" value="{{ item.cantidad }}" min="1" class="edit-cant" style="width: 40px;" onchange="recalcularTodo()">
+                </td>
+                <td class="linea-subtotal">${{ item.subtotal|floatformat:2 }}</td>
+                <td><button type="button" onclick="eliminarFila(this)" style="color:red; border:none; background:none; cursor:pointer;">&times;</button></td>
+            </tr>
             {% endfor %}
-        </ul>
+        </tbody>
+    </table>
 
+    <div style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px;">
+        <select id="select-agregar-producto" style="width: 70%;">
+            <option value="">-- Agregar otro producto --</option>
+            {% for p in todos_los_productos %}
+                <option value="{{ p.id }}" data-nombre="{{ p.nombre }}" data-precio="{{ p.precio }}" data-iva="{{ p.iva }}" data-desc="{{ p.descuento }}">
+                    {{ p.nombre }} (${{ p.precio }})
+                </option>
+            {% endfor %}
+        </select>
+        <button type="button" onclick="agregarProductoAlPago()">Agregar</button>
     </div>
+</div>
+<!-- Modal de Confirmación de Cancelación -->
+<dialog id="modal-cancelar">
+    <div class="modal-content-cancel">
+        <div class="modal-icon">⚠️</div>
+        <h2>¿Cancelar Pedido?</h2>
+        <p>¿Estás seguro de que deseas cancelar este pedido? Esta acción no se puede deshacer.</p>
+
+        <div class="modal-buttons-cancel">
+            <button type="button" class="btn-volver" id="btn-volver-modal">
+                No, volver
+            </button>
+            <button type="button" class="btn-confirmar-cancelar" id="btn-confirmar-cancelar">
+                Sí, cancelar pedido
+            </button>
+        </div>
+    </div>
+</dialog>
 
 </div>
 <!--arlin: scripts para que funciones stripe-->
@@ -115,13 +164,139 @@
 
 <script>
 const stripe = Stripe("{{ STRIPE_PUBLIC_KEY }}");
+ // ===============================
+  // MODAL DE CANCELACIÓN
+  // ===============================
+  const modalCancelar = document.getElementById('modal-cancelar');
+  const btnCancelarPedido = document.getElementById('btn-cancelar-pedido');
+  const btnVolverModal = document.getElementById('btn-volver-modal');
+  const btnConfirmarCancelar = document.getElementById('btn-confirmar-cancelar');
+
+  // Abrir modal al hacer clic en "Cancelar Pedido"
+  btnCancelarPedido.addEventListener('click', () => {
+    modalCancelar.showModal();
+  });
+
+  // Cerrar modal al hacer clic en "No, volver"
+  btnVolverModal.addEventListener('click', () => {
+    modalCancelar.close();
+  });
+
+  // Confirmar cancelación y redirigir
+  btnConfirmarCancelar.addEventListener('click', () => {
+    // Aquí puedes agregar tu URL de redirección
+    window.location.href = "{% url 'home_cliente' %}"; // Cambia 'home_cliente' por el nombre de tu URL
+
+    // O si prefieres una URL hardcodeada:
+    // window.location.href = "/home-Vista_cliente/";
+  });
+
+  // Cerrar modal al hacer clic fuera de él
+  modalCancelar.addEventListener('click', (e) => {
+    if (e.target === modalCancelar) {
+      modalCancelar.close();
+    }
+  });
+
+
+
 </script>
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
+    let metodoSeleccionado = null;
+    let card = null;
 
-  let metodoSeleccionado = null;
-  let card = null;
+    // --- FUNCIÓN DE RECALCULO ---
+    function recalcularTodo() {
+        let subtotalBruto = 0;
+        let descuentoTotal = 0;
+        let ivaTotal = 0;
+
+        const filas = document.querySelectorAll("#cuerpo-carrito tr");
+
+        filas.forEach(fila => {
+            const cant = parseInt(fila.querySelector(".edit-cant").value) || 0;
+            const precio = parseFloat(fila.dataset.precio) || 0;
+            const pDesc = parseFloat(fila.dataset.desc) || 0;
+            const pIva = parseFloat(fila.dataset.iva) || 0;
+
+            const brutoLinea = precio * cant;
+            const ahorroLinea = brutoLinea * (pDesc / 100);
+            const baseImponible = brutoLinea - ahorroLinea;
+            const impuestoLinea = baseImponible * (pIva / 100);
+            const netoLinea = baseImponible + impuestoLinea;
+
+            fila.querySelector(".linea-subtotal").textContent = `$${netoLinea.toFixed(2)}`;
+
+            subtotalBruto += brutoLinea;
+            descuentoTotal += ahorroLinea;
+            ivaTotal += impuestoLinea;
+        });
+
+        const totalFinal = (subtotalBruto - descuentoTotal) + ivaTotal;
+
+        document.getElementById("resumen-subtotal").textContent = `$ ${subtotalBruto.toFixed(2)}`;
+        document.getElementById("resumen-descuento").textContent = `-$ ${descuentoTotal.toFixed(2)}`;
+        document.getElementById("resumen-iva").textContent = `$ ${ivaTotal.toFixed(2)}`;
+        document.getElementById("resumen-total").textContent = `$ ${totalFinal.toFixed(2)}`;
+    }
+
+    // --- AGREGAR PRODUCTO (IMPORTANTE: Definir dentro del scope o usar window) ---
+    window.agregarProductoAlPago = function() {
+        const select = document.getElementById("select-agregar-producto");
+        const opt = select.options[select.selectedIndex];
+
+        if (!opt.value) return;
+
+        const cuerpo = document.getElementById("cuerpo-carrito");
+        const nuevaFila = document.createElement("tr");
+
+        // Extraer datos de los data-attributes del option
+        nuevaFila.dataset.id = opt.value;
+        nuevaFila.dataset.precio = opt.dataset.precio;
+        nuevaFila.dataset.iva = opt.dataset.iva;
+        nuevaFila.dataset.desc = opt.dataset.desc;
+
+        nuevaFila.innerHTML = `
+            <td>${opt.dataset.nombre}</td>
+            <td><input type="number" value="1" min="1" class="edit-cant" style="width: 40px;"></td>
+            <td class="linea-subtotal">$0.00</td>
+            <td><button type="button" class="btn-eliminar-fila" style="color:red; border:none; background:none; cursor:pointer;">&times;</button></td>
+        `;
+
+        cuerpo.appendChild(nuevaFila);
+
+        // Vincular evento de cambio a la nueva fila
+        nuevaFila.querySelector(".edit-cant").addEventListener("change", recalcularTodo);
+        nuevaFila.querySelector(".btn-eliminar-fila").addEventListener("click", function() {
+            this.closest("tr").remove();
+            recalcularTodo();
+        });
+
+        recalcularTodo();
+        select.value = "";
+    };
+
+    // --- INICIALIZACIÓN ---
+    // Ejecutar calculo inicial
+    recalcularTodo();
+
+    // Vincular inputs existentes (los que vienen de base de datos)
+    document.querySelectorAll(".edit-cant").forEach(input => {
+        input.addEventListener("change", recalcularTodo);
+    });
+
+    // Delegación para botones de eliminar existentes
+    window.eliminarFila = function(btn) {
+        btn.closest("tr").remove();
+        recalcularTodo();
+    };
+
+
+
+
+
 
   // ===============================
   // SELECCIÓN DE MÉTODO DE PAGO
@@ -151,11 +326,48 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       if (this.value === "transferencia") {
-        contenedor.innerHTML = `
-          <h4>Transferencia bancaria</h4>
-          <p>Cuenta: 123456789</p>
-        `;
-      }
+  contenedor.innerHTML = `
+    <h4>Transferencia bancaria</h4>
+    <p style="font-size: 0.9em; color: #666;">Por favor, realice la transferencia a la cuenta: <strong>123456789</strong> y adjunte el comprobante.</p>
+
+    <div id="transferencia-fields" style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
+        <div class="form-group">
+            <label style="display:block; font-weight:bold;">Código de Comprobante</label>
+            <input type="text" id="codigo_comprobante" class="form-control" placeholder="Ej: 0012345" style="width:100%; padding:8px;">
+        </div>
+        <div class="form-group">
+            <label style="display:block; font-weight:bold;">Número de Cuenta</label>
+            <input type="text" id="numero_cuenta" class="form-control" placeholder="Tu número de cuenta" style="width:100%; padding:8px;">
+        </div>
+        <div class="form-group">
+            <label style="display:block; font-weight:bold;">Banco</label>
+            <select id="banco_select" class="form-control" style="width:100%; padding:8px;">
+                <option value="">Seleccione un banco</option>
+                <option value="pichincha">Banco Pichincha</option>
+                <option value="guayaquil">Banco Guayaquil</option>
+                <option value="otro">Otro</option>
+            </select>
+        </div>
+        <div class="form-group" id="banco-otro-group" style="display:none;">
+            <label style="display:block; font-weight:bold;">Especifique el banco</label>
+            <input type="text" id="banco_otro" class="form-control" style="width:100%; padding:8px;">
+        </div>
+        <div class="form-group">
+            <label style="display:block; font-weight:bold;">Nombre del Pagador</label>
+            <input type="text" id="nombre_pagador" class="form-control" style="width:100%; padding:8px;">
+        </div>
+        <div class="form-group">
+            <label style="display:block; font-weight:bold;">Comprobante (Imagen)</label>
+            <input type="file" id="comprobante_file" class="form-control" accept="image/*" style="width:100%;">
+        </div>
+    </div>
+  `;
+
+  // Listener para mostrar el campo "Otro" si seleccionan esa opción
+  document.getElementById("banco_select").addEventListener("change", function() {
+      document.getElementById("banco-otro-group").style.display = this.value === "otro" ? "block" : "none";
+  });
+}
     });
   });
 
@@ -163,59 +375,151 @@ document.addEventListener("DOMContentLoaded", () => {
   // ENVÍO DE DATOS AL BACKEND
   // ===============================
 async function enviarDatosPago(extraData = {}) {
-  const payload = {
-    nombre: document.getElementById("nombre").value.trim(),
-    direccion: document.getElementById("direccion").value.trim(),
-    telefono: document.getElementById("telefono").value.trim(),
-    metodo: metodoSeleccionado,
-    ...extraData
-  };
+    const formData = new FormData();
 
-  const response = await fetch("{% url 'confirmar_pago' pedido.id %}", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-CSRFToken": "{{ csrf_token }}"
-    },
-    body: JSON.stringify(payload)
-  });
+    // 1. Carrito actualizado
+    const items = [];
+    document.querySelectorAll("#cuerpo-carrito tr").forEach(fila => {
+        items.push({
+            id: fila.dataset.id,
+            cantidad: parseInt(fila.querySelector(".edit-cant").value)
+        });
+    });
+    formData.append("carrito_actualizado", JSON.stringify(items));
 
-  const data = await response.json();
+    // 2. Datos de contacto (Validación)
+    const nombre = document.getElementById("nombre").value.trim();
+    const direccion = document.getElementById("direccion").value.trim();
+    const telefono = document.getElementById("telefono").value.trim();
 
-  if (!response.ok) {
-    alert("ERROR BACKEND:\n" + (data.error || JSON.stringify(data)));
-  } else {
-    alert("RESPUESTA BACKEND:\n" + JSON.stringify(data));
-  }
-
-  return data;
-}
-  // ===============================
-  // PAGO CON TARJETA (STRIPE)
-  // ===============================
-  async function procesarPagoTarjeta() {
-    const { paymentIntent, error } = await stripe.confirmCardPayment(
-      "{{ client_secret }}",
-      { payment_method: { card: card } }
-    );
-
-    if (error) {
-      document.getElementById("card-errors").textContent = error.message;
-      return;
+    if (!nombre || !direccion || !telefono) {
+        alert("Por favor completa todos los campos de contacto");
+        return { success: false, error: "Campos incompletos" };
     }
 
-    const res = await enviarDatosPago({
-      stripe_intent: paymentIntent.id
-    });
+    formData.append("nombre", nombre);
+    formData.append("direccion_entrega", direccion);
+    formData.append("telefono_contacto", telefono);
 
-    if (!res.success) {
-      alert(res.error);
-      return;
+    // 3. Método de pago (IMPORTANTE: asegurar que sea corto)
+    formData.append("metodo", metodoSeleccionado);
+
+    // 4. Datos específicos de transferencia
+    if (metodoSeleccionado === "transferencia") {
+        const codigoComprobante = document.getElementById("codigo_comprobante")?.value || "";
+        const numeroCuenta = document.getElementById("numero_cuenta")?.value || "";
+        const bancoSelect = document.getElementById("banco_select")?.value || "";
+        const bancoOtro = document.getElementById("banco_otro")?.value || "";
+        const nombrePagador = document.getElementById("nombre_pagador")?.value || "";
+
+        // Validar campos obligatorios de transferencia
+        if (!codigoComprobante || !numeroCuenta || !bancoSelect || !nombrePagador) {
+            alert("Por favor completa todos los campos de transferencia bancaria");
+            return { success: false, error: "Campos de transferencia incompletos" };
+        }
+
+        formData.append("codigo_comprobante", codigoComprobante);
+        formData.append("numero_cuenta", numeroCuenta);
+        formData.append("banco", bancoSelect);
+        formData.append("banco_otro", bancoOtro);
+        formData.append("nombre_pagador", nombrePagador);
+
+        const fileInput = document.getElementById("comprobante_file");
+        if (fileInput && fileInput.files[0]) {
+            formData.append("comprobante_transferencia", fileInput.files[0]);
+        } else {
+            alert("Por favor adjunta el comprobante de transferencia");
+            return { success: false, error: "Falta comprobante" };
+        }
+    }
+
+    // 5. Datos de Stripe (si aplica)
+    if (extraData.stripe_intent) {
+        formData.append("stripe_intent", extraData.stripe_intent);
+    }
+
+    // PETICIÓN AL BACKEND
+    try {
+        const response = await fetch("{% url 'confirmar_pago' pedido.id %}", {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": "{{ csrf_token }}"
+            },
+            body: formData
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.error || 'Error en el servidor');
+        }
+
+        return result;
+
+    } catch (error) {
+        console.error("Error en la petición:", error);
+        return {
+            success: false,
+            error: error.message || "Error de conexión con el servidor"
+        };
+    }
+}
+
+// Actualizar también la función procesarPagoOffline
+async function procesarPagoOffline() {
+    // Validar que se haya seleccionado un método
+    if (!metodoSeleccionado) {
+        alert("Selecciona un método de pago");
+        return;
+    }
+
+    const res = await enviarDatosPago();
+
+    if (!res || !res.success) {
+        alert(res?.error || "Error al procesar el pago");
+        return;
+    }
+
+    // Mostrar mensaje de éxito antes de redirigir
+    if (metodoSeleccionado === "transferencia") {
+        alert("Tu pago está pendiente de verificación. Te notificaremos cuando sea confirmado.");
+    } else {
+        alert("¡Pago procesado exitosamente!");
     }
 
     window.location.href = "/home-Vista_cliente/";
-  }
+}
 
+// Actualizar la función procesarPagoTarjeta
+async function procesarPagoTarjeta() {
+    try {
+        const { paymentIntent, error } = await stripe.confirmCardPayment(
+            "{{ client_secret }}",
+            { payment_method: { card: card } }
+        );
+
+        if (error) {
+            document.getElementById("card-errors").textContent = error.message;
+            return;
+        }
+
+        const res = await enviarDatosPago({
+            stripe_intent: paymentIntent.id
+        });
+
+        if (!res || !res.success) {
+            alert(res?.error || "Error al confirmar el pago");
+            return;
+        }
+
+        alert("¡Pago procesado exitosamente!");
+        window.location.href = "/home-Vista_cliente/";
+
+    } catch (error) {
+        console.error("Error en pago con tarjeta:", error);
+        alert("Error al procesar el pago con tarjeta: " + error.message);
+    }
+}
   // ===============================
   // PAGO OFFLINE (EFECTIVO / TRANSFERENCIA)
   // ===============================

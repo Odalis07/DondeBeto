@@ -68,4 +68,8 @@ urlpatterns = [
 
     path("admin/inventario/", views.vista_inventario, name="vista_inventario"),
 
+path('pagos/<int:pago_id>/transferencia/', views.ver_transferencia, name='ver_transferencia'),
+
+    path('actualizar_stock/', views.actualizar_stock_api, name='actualizar_stock'),
+
 ]

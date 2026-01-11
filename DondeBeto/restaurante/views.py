@@ -1,9 +1,9 @@
 from decimal import Decimal
-
+from django.db import transaction
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
-from django.db.models import Q
+from django.db.models import F,Q
 from django.http import JsonResponse, HttpResponseRedirect, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
@@ -1134,86 +1134,223 @@ def guardar_carrito_ajax(request):
 def vistaPagos(request, pedido_id):
     pedido = get_object_or_404(Pedido, id=pedido_id)
 
+    if pedido.estado == 'pagado':
+        messages.info(request, "Este pedido ya ha sido cancelado o pagado.")
+        return redirect('home_cliente')
+
+    todos_los_productos = Producto.objects.filter(stock__gt=0)
     detalles = DetallePedido.objects.filter(pedido=pedido).select_related("producto")
-    total = sum(d.subtotal for d in detalles)
 
-    # 🔐 Stripe PaymentIntent
-    intent = stripe.PaymentIntent.create(
-        amount=int(total * 100),  # Stripe usa centavos
-        currency="usd",
-        metadata={
-            "pedido_id": pedido.id
-        }
-    )
-
-    carrito = [
-        {
+    carrito = []
+    for d in detalles:
+        carrito.append({
+            "id": d.producto.id,
             "nombre": d.producto.nombre,
             "cantidad": d.cantidad,
+            "precio_base": float(d.producto.precio),
+            "iva_porcentaje": float(d.producto.iva or 0),
+            "descuento_porcentaje": float(d.producto.descuento or 0),
+            # El subtotal lo recalcula el JS, pero enviamos el inicial por si acaso
             "subtotal": float(d.subtotal)
+        })
 
-        }
-        for d in detalles
-    ]
+    # Cálculo inicial para Stripe
+    total_inicial = sum(d.subtotal for d in detalles)
+
+    try:
+        intent = stripe.PaymentIntent.create(
+            amount=int(total_inicial * 100),
+            currency="usd",
+            metadata={"pedido_id": pedido.id}
+        )
+        client_secret = intent.client_secret
+    except Exception as e:
+        client_secret = None
 
     contexto = {
         "pedido": pedido,
-        "detalles": detalles,
-        "subtotal": sum(d.subtotal for d in detalles),
-        "total": pedido.total if hasattr(pedido, "total") else sum(d.subtotal for d in detalles),
         "carrito": carrito,
-        "client_secret": intent.client_secret,
+        "todos_los_productos": todos_los_productos,
+        "client_secret": client_secret,
         "STRIPE_PUBLIC_KEY": settings.STRIPE_PUBLIC_KEY,
     }
-
     return render(request, "Vistas/Vista_cliente/pago.html", contexto)
 
 
 @csrf_exempt
+@csrf_exempt
 def confirmar_pago(request, pedido_id):
-    if request.method != "POST":
-        return JsonResponse({"error": "Método no permitido"}, status=405)
+    if request.method == "POST":
+        try:
+            with transaction.atomic():
+                pedido = get_object_or_404(Pedido, id=pedido_id)
 
-    pedido = get_object_or_404(Pedido, id=pedido_id)
-    try:
-        data = json.loads(request.body)
-    except Exception as e:
-        return JsonResponse({"error": "JSON inválido"}, status=400)
+                # 1. Actualizar Carrito (Edición en tiempo real)
+                carrito_json = request.POST.get("carrito_actualizado")
+                if carrito_json:
+                    items = json.loads(carrito_json)
+                    DetallePedido.objects.filter(pedido=pedido).delete()
 
-    try:
-        detalles = DetallePedido.objects.filter(pedido=pedido)
-        total = 0
-        for d in detalles:
-            total += d.subtotal
+                    # Variables para calcular totales
+                    subtotal_bruto = Decimal('0')
+                    descuento_total = Decimal('0')
+                    iva_total = Decimal('0')
 
+                    for item in items:
+                        producto = get_object_or_404(Producto, id=item['id'])
+                        cantidad = int(item['cantidad'])
 
-    except Exception as e:
+                        # Cálculo paso a paso
+                        precio_base = Decimal(str(producto.precio))
+                        precio_total_linea = precio_base * cantidad
 
-        return JsonResponse({
-            "error": f"Error calculando total: {str(e)}"
-        }, status=500)
+                        # Calcular descuento
+                        porcentaje_desc = Decimal(str(producto.descuento or 0))
+                        monto_descuento = (precio_total_linea * porcentaje_desc) / Decimal('100')
 
-    try:
-        Pago.objects.create(
-            pedido=pedido,
-            metodo=data.get("metodo"),
-            monto=total,
-            direccion_entrega=data.get("direccion"),
-            telefono_contacto=data.get("telefono"),
-            estado="completado"
-        )
-    except Exception as e:
+                        # Base imponible (después del descuento)
+                        base_imponible = precio_total_linea - monto_descuento
 
-        return JsonResponse({
-            "error": f"Error guardando pago: {str(e)}"
-        }, status=500)
+                        # Calcular IVA
+                        porcentaje_iva = Decimal(str(producto.iva or 0))
+                        monto_iva = (base_imponible * porcentaje_iva) / Decimal('100')
 
-    return JsonResponse({"success": True})
+                        # Subtotal de la línea (con descuento e IVA)
+                        subtotal_linea = base_imponible + monto_iva
 
+                        # Crear el detalle del pedido
+                        DetallePedido.objects.create(
+                            pedido=pedido,
+                            producto=producto,
+                            cantidad=cantidad,
+                            subtotal=subtotal_linea
+                        )
 
+                        # Acumular totales
+                        subtotal_bruto += precio_total_linea
+                        descuento_total += monto_descuento
+                        iva_total += monto_iva
 
+                    # Total final
+                    total_final = subtotal_bruto - descuento_total + iva_total
+                else:
+                    # Si no hay carrito actualizado, calcular desde los detalles existentes
+                    subtotal_bruto = Decimal('0')
+                    descuento_total = Decimal('0')
+                    iva_total = Decimal('0')
 
+                    for detalle in pedido.detalles.all():
+                        precio_total = Decimal(str(detalle.producto.precio)) * detalle.cantidad
+                        descuento = precio_total * Decimal(str(detalle.producto.descuento or 0)) / Decimal('100')
+                        base_imponible = precio_total - descuento
+                        iva = base_imponible * Decimal(str(detalle.producto.iva or 0)) / Decimal('100')
 
+                        subtotal_bruto += precio_total
+                        descuento_total += descuento
+                        iva_total += iva
+
+                    total_final = subtotal_bruto - descuento_total + iva_total
+
+                # 2. Obtener el método de pago
+                metodo_completo = request.POST.get("metodo", "")
+
+                # CORRECCIÓN: Truncar el método a 20 caracteres para que quepa en la BD
+                # Mapeo de métodos comunes
+                metodo_map = {
+                    'tarjeta': 'tarjeta',
+                    'efectivo': 'efectivo',
+                    'transferencia': 'transferencia',
+                    'transferencia bancaria': 'transferencia',
+                    'credito': 'credito',
+                    'debito': 'debito'
+                }
+
+                metodo_limpio = metodo_map.get(metodo_completo.lower().strip(), metodo_completo[:20])
+
+                # 3. Crear el registro de pago
+                pago = Pago.objects.create(
+                    pedido=pedido,
+                    metodo=metodo_limpio,  # Método truncado/mapeado
+                    monto=total_final,
+                    direccion_entrega=request.POST.get("direccion_entrega", "")[:255],
+                    telefono_contacto=request.POST.get("telefono_contacto", "")[:15],
+                    estado='pendiente'  # Estado inicial
+                )
+
+                # 4. Procesar según el método de pago
+                if metodo_completo.lower().strip() in ['transferencia', 'transferencia bancaria']:
+                    # Datos específicos de transferencia
+                    pago.codigo_comprobante = request.POST.get("codigo_comprobante", "")
+                    pago.numero_cuenta = request.POST.get("numero_cuenta", "")
+
+                    banco = request.POST.get("banco", "")
+                    if banco == "otro":
+                        pago.banco = request.POST.get("banco_otro", "")[:100]
+                    else:
+                        pago.banco = banco[:100]
+
+                    pago.nombre_pagador = request.POST.get("nombre_pagador", "")
+
+                    # Procesar archivo de comprobante
+                    if request.FILES.get("comprobante_transferencia"):
+                        pago.comprobante_transferencia = request.FILES.get("comprobante_transferencia")
+
+                    pago.estado = 'pendiente'  # Requiere verificación
+                    pedido.estado = "pendiente"  # O "esperando_verificacion" si tienes ese estado
+
+                elif metodo_limpio == 'tarjeta':
+                    # Para pagos con tarjeta (Stripe)
+                    stripe_intent = request.POST.get("stripe_intent")
+                    if stripe_intent:
+                        # Aquí podrías verificar el pago con Stripe si es necesario
+                        pago.estado = 'completado'
+                        pedido.estado = "pagado"
+                    else:
+                        pago.estado = 'completado'
+                        pedido.estado = "pagado"
+
+                elif metodo_limpio == 'efectivo':
+                    # Para pagos en efectivo
+                    pago.estado = 'completado'
+                    pedido.estado = "pagado"
+
+                else:
+                    # Método desconocido, marcar como completado por defecto
+                    pago.estado = 'completado'
+                    pedido.estado = "pagado"
+
+                # Guardar cambios
+                pago.save()
+                pedido.save()
+
+                return JsonResponse({
+                    "success": True,
+                    "redirect_url": "/home-Vista_cliente/",
+                    "mensaje": "Pago procesado correctamente"
+                })
+
+        except json.JSONDecodeError as e:
+            return JsonResponse({
+                "success": False,
+                "error": f"Error al procesar el carrito: {str(e)}"
+            }, status=400)
+
+        except Producto.DoesNotExist as e:
+            return JsonResponse({
+                "success": False,
+                "error": f"Producto no encontrado: {str(e)}"
+            }, status=404)
+
+        except Exception as e:
+            return JsonResponse({
+                "success": False,
+                "error": f"Error al procesar el pago: {str(e)}"
+            }, status=400)
+
+    return JsonResponse({
+        "success": False,
+        "error": "Método no permitido"
+    }, status=405)
 
 #ESTO ES NUEVO EL MODULO DE PEDIDO SE HA MODIFICADO POR LO DE PAGO
 
@@ -1350,12 +1487,25 @@ def pedidos_create(request):
             for producto_id, cantidad in zip(productos_ids, cantidades):
                 if producto_id and cantidad:
                     producto = Producto.objects.get(id=producto_id)
-                    DetallePedido.objects.create(
-                        pedido=pedido,
-                        producto=producto,
-                        cantidad=int(cantidad),
-                        subtotal=producto.precio * int(cantidad)
-                    )
+                    cantidad_int = int(cantidad)
+
+                    # VALIDACIÓN DE SEGURIDAD: Verificar stock antes de restar
+                    if producto.stock >= cantidad_int:
+                        # Restar stock
+                        producto.stock -= cantidad_int
+                        producto.save()
+
+                        # Crear el detalle
+                        DetallePedido.objects.create(
+                            pedido=pedido,
+                            producto=producto,
+                            cantidad=cantidad_int,
+                            subtotal=producto.precio * cantidad_int
+                        )
+                    else:
+                        # Si por alguna razón el JS falló y no hay stock
+                        messages.error(request, f'No hay suficiente stock para {producto.nombre}')
+                        # Aquí podrías decidir si cancelar todo el pedido o continuar
 
             messages.success(request, f'Pedido #{pedido.id} creado exitosamente')
             return redirect('pedidos_detail', id=pedido.id)
@@ -1385,6 +1535,51 @@ def pedidos_detail(request, id):
 
     pedido = get_object_or_404(Pedido.objects.select_related('usuario', 'mesa'), id=id)
     detalles = pedido.detalles.select_related('producto').all()
+
+    if request.method == 'POST':
+        try:
+            # ... (código de actualización de mesa y datos básicos) ...
+
+            # --- LÓGICA DE STOCK PARA EDICIÓN ---
+            # 1. Devolver el stock de los detalles actuales antes de borrarlos
+            detalles_viejos = pedido.detalles.all()
+            for detalle in detalles_viejos:
+                prod = detalle.producto
+                prod.stock += detalle.cantidad  # Devolvemos al inventario
+                prod.save()
+
+            # 2. Ahora sí, eliminar detalles antiguos
+            detalles_viejos.delete()
+
+            # 3. Agregar nuevos productos y volver a restar stock
+            productos_ids = request.POST.getlist('producto_id[]')
+            cantidades = request.POST.getlist('cantidad[]')
+
+            for producto_id, cantidad in zip(productos_ids, cantidades):
+                if producto_id and cantidad:
+                    producto = Producto.objects.get(id=producto_id)
+                    cantidad_int = int(cantidad)
+
+                    # Restar el nuevo stock
+                    producto.stock -= cantidad_int
+                    producto.save()
+
+                    DetallePedido.objects.create(
+                        pedido=pedido,
+                        producto=producto,
+                        cantidad=cantidad_int,
+                        subtotal=producto.precio * cantidad_int
+                    )
+            # -------------------------------------
+
+            messages.success(request, f'Pedido #{pedido.id} actualizado e inventario ajustado')
+            return redirect('pedidos_detail', id=pedido.id)
+        except Exception as e:
+            messages.error(request, f'Error: {str(e)}')
+
+
+
+
 
     # Calcular subtotal, descuento, IVA y total
     subtotal = 0
@@ -1509,6 +1704,7 @@ def pedidos_delete(request, id):
 
     pedido = get_object_or_404(Pedido, id=id)
 
+
     # RESTRICCIÓN: Verificar si el pedido tiene un pago registrado
     if Pago.objects.filter(pedido=pedido).exists():
         messages.error(request, 'No se puede eliminar este pedido porque ya tiene un pago registrado.')
@@ -1597,7 +1793,7 @@ def registrar_pago(request, pedido_id):
         messages.warning(request, 'Este pedido ya tiene un pago registrado.')
         return redirect('pagos_list')
 
-    # Calcular subtotal, descuento, IVA y total
+    # Calcular totales
     subtotal = 0
     descuento_total = 0
     iva_total = 0
@@ -1612,12 +1808,41 @@ def registrar_pago(request, pedido_id):
     total = subtotal - descuento_total + iva_total
 
     if request.method == 'POST':
+        metodo = request.POST.get('metodo')
+
+        # Crear PaymentIntent si es tarjeta
+        if metodo == 'tarjeta':
+            intent = stripe.PaymentIntent.create(
+                amount=int(total * 100),
+                currency="usd",
+                metadata={"pedido_id": pedido.id}
+            )
+            client_secret = intent.client_secret
+        else:
+            client_secret = None
+            # 🔐 Stripe PaymentIntent
+        intent = stripe.PaymentIntent.create(
+            amount=int(total * 100),  # Stripe usa centavos
+            currency="usd",
+            metadata={
+                "pedido_id": pedido.id
+            }
+        )
+        # Crear el pago
         Pago.objects.create(
             pedido=pedido,
-            metodo=request.POST['metodo'],
+            metodo=metodo,
             monto=Decimal(total),
             direccion_entrega=request.POST.get('direccion_entrega'),
-            telefono_contacto=request.POST.get('telefono_contacto')
+            telefono_contacto=request.POST.get('telefono_contacto'),
+            # Campos de transferencia
+            codigo_comprobante=request.POST.get('codigo_comprobante'),
+            numero_cuenta=request.POST.get('numero_cuenta'),
+            banco=request.POST.get('banco'),
+            banco_otro=request.POST.get('banco_otro'),
+            nombre_pagador=request.POST.get('nombre_pagador'),
+            comprobante_transferencia=request.FILES.get('comprobante_transferencia'),
+
         )
 
         pedido.estado = 'pagado'
@@ -1627,11 +1852,12 @@ def registrar_pago(request, pedido_id):
         return redirect('pagos_list')
 
     return render(request, 'C2_Pedido/pago_form.html', {
-         'pedido': pedido,
-    'subtotal': subtotal,
-    'descuento_total': descuento_total,
-    'iva_total': iva_total,
-    'total': total
+        'pedido': pedido,
+        'subtotal': subtotal,
+        'descuento_total': descuento_total,
+        'iva_total': iva_total,
+        'total': total,
+        'STRIPE_PUBLIC_KEY': settings.STRIPE_PUBLIC_KEY,
     })
 
 
@@ -1640,11 +1866,31 @@ def editar_pago(request, pago_id):
     pedido = pago.pedido
 
     if request.method == 'POST':
+        # Campos generales
         pago.metodo = request.POST['metodo']
         pago.direccion_entrega = request.POST.get('direccion_entrega')
         pago.telefono_contacto = request.POST.get('telefono_contacto')
-        pago.save()
 
+        # Campos de transferencia solo si el método es transferencia
+        if pago.metodo == 'transferencia':
+            pago.codigo_comprobante = request.POST.get('codigo_comprobante')
+            pago.nombre_pagador = request.POST.get('nombre_pagador')
+            pago.numero_cuenta = request.POST.get('numero_cuenta')
+            pago.banco = request.POST.get('banco')
+
+            # Subir nuevo comprobante si se proporciona uno
+            comprobante = request.FILES.get('comprobante_transferencia')
+            if comprobante:
+                pago.comprobante_transferencia = comprobante
+        else:
+            # Si se cambia a otro método, limpiar los campos de transferencia
+            pago.codigo_comprobante = ''
+            pago.nombre_pagador = ''
+            pago.numero_cuenta = ''
+            pago.banco = ''
+            pago.comprobante_transferencia = None
+
+        pago.save()
         messages.success(request, 'Pago actualizado correctamente.')
         return redirect('pagos_list')
 
@@ -1652,6 +1898,7 @@ def editar_pago(request, pago_id):
         'pago': pago,
         'pedido': pedido
     })
+
 
 
 def eliminar_pago(request, pago_id):
@@ -1725,6 +1972,150 @@ def imprimir_factura(request, pago_id):
     return response
 
 
+def ver_transferencia(request, pago_id):
+    pago = get_object_or_404(Pago, id=pago_id)
+
+    if pago.metodo != 'transferencia':
+        messages.warning(request, 'Este pago no es una transferencia.')
+        return redirect('pagos_list')
+
+    return render(request, 'C2_Pedido/ver_transferencia.html', {
+        'pago': pago
+    })
+
 def vista_inventario(request):
 
     return render(request, "Vistas/Vista_adm/inventario.html")
+
+
+# important
+def vista_inventario(request):
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id:
+        return redirect('login')
+
+    try:
+        usuario = Usuario.objects.get(id=usuario_id)
+    except Usuario.DoesNotExist:
+        return redirect('login')
+
+    # 2. Empezamos trayendo TODOS los productos
+    productos = Producto.objects.all().order_by('nombre')
+
+    # --- LÓGICA DEL BUSCADOR (Texto) ---
+    search_query = request.GET.get('search')
+    if search_query:
+        # Filtra si el nombre contiene el texto (icontains ignora mayúsculas/minúsculas)
+        productos = productos.filter(nombre__icontains=search_query)
+
+    # --- LÓGICA DEL FILTRO (Estado) ---
+    status_filter = request.GET.get('status')
+
+    if status_filter == 'agotado':
+        # Buscamos productos con stock 0 O stock vacío (None)
+        productos = productos.filter(Q(stock=0) | Q(stock__isnull=True))
+
+    elif status_filter == 'bajo':
+        # Buscamos: Stock menor/igual al mínimo Y que sea mayor a 0
+        productos = productos.filter(
+            stock__lte=F('stock_minimo'),
+            stock__gt=0
+        )
+
+    elif status_filter == 'disponible':
+        # Buscamos: Stock mayor al mínimo
+        productos = productos.filter(stock__gt=F('stock_minimo'))
+
+    # 3. Preparamos el contexto
+    context = {
+        'usuario': usuario,
+        'productos': productos,
+        # Pasamos estadísticas simples para las tarjetitas de arriba (opcional)
+        'stats': {
+            'total': Producto.objects.count(),
+            'agotados': Producto.objects.filter(Q(stock=0) | Q(stock__isnull=True)).count(),
+        }
+    }
+
+    return render(request, "Vistas/Vista_adm/inventario.html", context)
+
+
+# important
+def vista_inventario(request):
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id:
+        return redirect('login')
+
+    try:
+        usuario = Usuario.objects.get(id=usuario_id)
+    except Usuario.DoesNotExist:
+        return redirect('login')
+
+    # 2. Empezamos trayendo TODOS los productos
+    productos = Producto.objects.all().order_by('nombre')
+
+    # --- LÓGICA DEL BUSCADOR (Texto) ---
+    search_query = request.GET.get('search')
+    if search_query:
+        # Filtra si el nombre contiene el texto (icontains ignora mayúsculas/minúsculas)
+        productos = productos.filter(nombre__icontains=search_query)
+
+    # --- LÓGICA DEL FILTRO (Estado) ---
+    status_filter = request.GET.get('status')
+
+    if status_filter == 'agotado':
+        # Buscamos productos con stock 0 O stock vacío (None)
+        productos = productos.filter(Q(stock=0) | Q(stock__isnull=True))
+
+    elif status_filter == 'bajo':
+        # Buscamos: Stock menor/igual al mínimo Y que sea mayor a 0
+        productos = productos.filter(
+            stock__lte=F('stock_minimo'),
+            stock__gt=0
+        )
+
+    elif status_filter == 'disponible':
+        # Buscamos: Stock mayor al mínimo
+        productos = productos.filter(stock__gt=F('stock_minimo'))
+
+    # 3. Preparamos el contexto
+    context = {
+        'usuario': usuario,
+        'productos': productos,
+        # Pasamos estadísticas simples para las tarjetitas de arriba (opcional)
+        'stats': {
+            'total': Producto.objects.count(),
+            'agotados': Producto.objects.filter(Q(stock=0) | Q(stock__isnull=True)).count(),
+        }
+    }
+
+    return render(request, "Vistas/Vista_adm/inventario.html", context)
+
+
+#####################################
+def actualizar_stock_api(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        product_id = data.get('product_id')
+        action = data.get('action')
+
+        try:
+            producto = Producto.objects.get(id=product_id)
+
+            # Si el stock es None, lo convertimos a 0 para poder operar
+            if producto.stock is None:
+                producto.stock = 0
+
+            if action == 'increase':
+                producto.stock += 1
+            elif action == 'decrease':
+                if producto.stock > 0:
+                    producto.stock -= 1
+
+            producto.save()
+            return JsonResponse({'status': 'success', 'new_stock': producto.stock})
+
+        except Producto.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Producto no encontrado'})
+
+    return JsonResponse({'status': 'error', 'message': 'Método no permitido'})
